@@ -1,0 +1,4 @@
+numpy
+scipy
+matplotlib      # for 2D/3D plotting
+pytest          # for testing
