@@ -1,4 +1,6 @@
 numpy
+pandas
+scikit-learn
+tensorflow
 scipy
-matplotlib      # for 2D/3D plotting
-pytest          # for testing
+matplotlib
