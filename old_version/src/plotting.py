@@ -1,6 +1,6 @@
 from src.point import Point
 from src.face import Face
-from src.container import Container
+from old_container import Container
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection

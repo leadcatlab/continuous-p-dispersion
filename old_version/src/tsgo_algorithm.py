@@ -1,6 +1,6 @@
 import numpy as np
 from src.point import Point
-from src.container import Container
+from old_container import Container
 from src.energy_functions import candidate_quality
 from src.tsgo_helpers import local_optimization, select_high_energy_points, find_vacancy_sites, move_point, monotonic_basin_hopping, local_optimization_phi, maximize_distance, is_feasible, update_tabu_list, forbidden
 
