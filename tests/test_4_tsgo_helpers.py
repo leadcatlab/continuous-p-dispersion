@@ -1,6 +1,6 @@
 from src.tsgo_algorithm import tsgo_algorithm, tabu_search, adjust_distance
 from src.tsgo_helpers import is_feasible
-from src.sample_polyhedron import cube, h_box
+from src.sample_polyhedron import cube, h_container
 
 def test_is_feasible():
     # generate 100 random points in the cube container

@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from src.point import Point
-from src.face import Face
 from src.container import Container
 from src.energy_functions import candidate_quality, E, phi
 from scipy.optimize import minimize, basinhopping

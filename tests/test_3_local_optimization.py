@@ -7,7 +7,7 @@ from src.energy_functions import candidate_quality
 from src.point import Point
 from src.face import Face
 from src.energy_functions import lij, Oi0
-from src.sample_polyhedron import cube, h_box
+from src.sample_polyhedron import cube, h_container
 
 def test_minimize_convex_1d():
     # Simple scalar function in one variable

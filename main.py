@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 import numpy as np
 from tsgo_algorithm import tsgo_algorithm
-from src.sample_polyhedron import cube, h_box
+from src.sample_polyhedron import cube, h_container
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from src.plotting import plot_container_with_spheres
