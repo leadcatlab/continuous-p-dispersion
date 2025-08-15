@@ -1,7 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from old_version.src.container import Container
 from src.energy_functions import candidate_quality, E, phi
 from scipy.optimize import minimize, basinhopping
 import heapq
