@@ -46,3 +46,20 @@ Minimum distance between points: 0.5000000267
 Energy of the system: 1.710936e-14
 Time taken: 1166.48 seconds
 """
+
+"""
+p = 10, square_container, side_length=2.0, iterations = 2, rho = 0.5
+Optimal configuration of points: [[0.82704 1.7036 ]
+ [1.70269 0.89212]
+ [1.26532 1.30444]
+ [1.7036  0.29766]
+ [0.51782 0.29644]
+ [0.29641 1.4393 ]
+ [1.7036  1.7036 ]
+ [1.1108  0.2964 ]
+ [0.2964  0.84643]
+ [0.8892  0.84623]]
+Minimum distance between points: 0.2964017173
+Energy of the system: 3.365183403e-11
+Time taken: 4990.71 seconds
+"""

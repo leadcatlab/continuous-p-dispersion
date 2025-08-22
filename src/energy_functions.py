@@ -84,8 +84,3 @@ def find_vacancy_sites(X, D, container, Q):
     # create a heap with the lowest Q energies
     random_points.sort(key=lambda x: x[1])
     return np.array([point for point, _ in random_points[:Q]])
-
-
-    # Return the vacancy sites sorted by energy
-    vacancy_sites.sort(key=lambda x: x[0])
-    return np.array([site[1] for site in vacancy_sites[:Q]])
