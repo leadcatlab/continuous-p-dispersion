@@ -1,0 +1,9 @@
+Number of Points: 1
+Iterations: 1
+Rho: 0.5
+
+Optimal Arrangement of Points:
+-0.0, -0.0, -0.0
+
+Optimal Minimum Distance between Points: 0.9999999963
+Time taken: 15.40 seconds
