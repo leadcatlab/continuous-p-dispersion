@@ -1,0 +1,10 @@
+[project]
+name = "tsgo"
+version = "1.0.0"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+run-tsgo = "tsgo.cli:main"
