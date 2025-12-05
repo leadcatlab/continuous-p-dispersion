@@ -71,7 +71,7 @@ def Oi0(x_i: Union[Point, np.ndarray], D: float, container: Container, metric: c
         result = np.sum([(max(0, D - metric(x_i, v.as_array()))) ** 2 for v in vertices_and_footpoints])
         # add a violation for the distance to every edge if it < D
         for e in container.edges:
-            dist = point_to_line_dist(x_i_point, e)
+            dist = point_to_line_dist(x_i_point, e, metric=metric)
             if dist is not None:
                 result += max(0, D - dist) ** 2
     else:
