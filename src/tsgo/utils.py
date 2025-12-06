@@ -214,6 +214,7 @@ def save_to_file(p: int, iterations: int, D_init: float, X_opt: Union[np.ndarray
             string += str(point) + "\n"
     
     string += f"\nOptimal Minimum Distance between Points: {D_opt}\n"
+    string += f"Radius: {D_opt / 2}\n"
     string += f"Time taken: {elapsed_time:.2f} seconds\n"
     filename = f"TSGO_{p}_data.txt"
     with open(filename, "w") as f:

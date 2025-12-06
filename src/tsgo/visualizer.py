@@ -2,18 +2,21 @@ import pickle
 from typing import Optional
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 
-from tsgo.container import Container
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+from tsgo.point import Point
+from tsgo.container import Container
 from tsgo.metric_enums import MetricType
 
 
 def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, colors=None,
+                title=None,
                 face_colors: Optional[list] = None,
                 sphere_u: int = 24, sphere_v: int = 16,
                 face_alpha: float = 0.08, face_edge_alpha: float = 0.35, sphere_alpha: float = 0.35,
-                show: bool = True, ax=None, show_normals: bool = False, metric_name: str = 'EUCLIDEAN') -> plt.Axes:
+                show: bool = True, ax=None, show_normals: bool = False, metric_name: str = 'EUCLIDEAN', grid: bool = True) -> plt.Axes:
     """
     Plot a polyhedral container and p spheres (centers given by points_xyz) with radius D.
 
@@ -32,6 +35,9 @@ def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, color
         sphere_alpha: fill transparency for spheres.
         show: whether to call plt.show().
         ax: optional existing 3D axis to draw into.
+        show_normals: whether to plot face normals as red arrows.
+        metric_name: the name of the metric to use for sphere plotting.
+        grid: whether to show grid lines.
 
     Returns:
         The matplotlib Axes3D instance used.
@@ -194,8 +200,11 @@ def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, color
         face_polys.append(verts)
 
         # determine face color: red if fi in face_colors, else blue
-        if face_colors is not None and fi in face_colors:
-            fcol = 'red'
+        if face_colors is not None:
+            if fi in face_colors:
+                fcol = 'magenta'
+            else:
+                fcol = 'cyan'
         else:
             fcol = 'blue'
         face_fill_colors.append(fcol)
@@ -241,7 +250,9 @@ def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, color
     ax.set_ylabel('y')
     ax.set_zlabel('z')
     ax.set_box_aspect([1, 1, 1])
-    ax.set_title(f'{len(points_xyz)} spheres (r={D:g}) in container')
+    ax.set_title(f'{len(points_xyz)} spheres (r={D:g}) in container' if title is None else title)
+    
+    ax.grid(grid)
     
     if show_normals:
         for face in container.faces:
@@ -255,6 +266,39 @@ def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, color
         plt.show()
 
     return ax
+
+def plot_active_faces(point: Point, container: Container, title: str = None) -> None:
+    """
+    Plots the container with faces that are active for the given points highlighted.
+
+    Args:
+        points (np.ndarray): The configuration of dispersion points.
+        container (Container): The container object.
+    """
+    active_face_indices = set()
+    for index, face in enumerate(container.faces):
+        if container._is_active_plane(face, point):
+            active_face_indices.add(index)
+    
+    points = point.as_array().reshape(1, 3)
+
+    plot_result(points, D=0.05, container=container, face_colors=list(active_face_indices), show=True, grid=False, title=title)
+
+def plot_active_footpoints(point: Point, container: Container, title: str = None) -> None:
+    """
+    Plots the container with active footpoints for a given point highlighted.
+
+    Args:
+        point (np.ndarray): A single dispersion point.
+        container (Container): The container object.
+    """
+    points = np.array([[point.x, point.y, point.z]])
+    footpoints = container.get_active_footpoints(point)
+    footpoint_coords = np.array([fp.as_array() for fp in footpoints])
+    colors = ['red'] + ['blue'] * len(footpoints)
+    points = np.vstack([points, footpoint_coords]) if footpoint_coords.size > 0 else points
+
+    plot_result(points, D=0.05, container=container, colors=colors, show=True, title=title, grid=False)
 
 def plot_from_file(file_path: str) -> None:
     """
@@ -273,4 +317,4 @@ def plot_from_file(file_path: str) -> None:
     metric = data.get("metric", MetricType['EUCLIDEAN'])
 
     # Plot the points
-    plot_result(points, D, container=container, metric=metric)
+    plot_result(points, D, container=container, metric_name=metric)
