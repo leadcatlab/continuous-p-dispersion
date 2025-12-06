@@ -2,6 +2,8 @@ import numpy as np
 import glob
 import os
 import argparse
+import pickle
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--p", type=int, default=None, help="P value for results directory")
@@ -42,12 +44,12 @@ def main():
     print("beta_max:", best_result["beta_max"])
     print("eps:", best_result["eps"])
     print("======= END =======")
-
-    np.savez("results/best_global.npz", **best_result)
+    
+    best_result["elapsed_time"] = elapsed_time
+    np.savez(f"results/{args.container}/p{args.p}/best_global.npz", **best_result)
     
     # save all the data to a pickle file
-    import pickle
-    with open(f"results/best_global_p={args.p}.pkl", "wb") as f:
+    with open(f"results/{args.container}/p{args.p}/best_global.pkl", "wb") as f:
         pickle.dump({
             "X": best_result["X"],
             "D": best_result["D"],
@@ -61,6 +63,36 @@ def main():
             "beta_max": best_result["beta_max"],
             "eps": best_result["eps"]
         }, f)
+
+def get_best():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--p", type=int, default=None, help="P value for results directory")
+    parser.add_argument("--container", type=str, default="cube", help="Container shape (not used)")
+    args = parser.parse_args()
+    
+    if args.p is not None:
+        pattern = f"results/{args.container}/p{args.p}/best_global.pkl"
+    else:
+        pattern = "results/best_global.pkl"
+
+    with open(pattern, "rb") as f:
+        best_global = pickle.load(f)
+        print(best_global)
+    
+    print("=== GLOBAL BEST ===")
+    print("D:", best_global["D"])
+    print("Radius:", best_global["D"] / 2)
+    print("X:", best_global["X"])
+    print("seed:", best_global["seed"])
+    print("elapsed_time:", best_global["elapsed_time"])
+    print("metric:", best_global["metric"])
+    print("iterations:", best_global["iterations"])
+    print("D_init:", best_global["D_init"])
+    print("container:", best_global["container"])
+    print("Q:", best_global["Q"])
+    print("beta_max:", best_global["beta_max"])
+    print("eps:", best_global["eps"])
+    print("======= END =======")
 
 if __name__ == "__main__":
     main()

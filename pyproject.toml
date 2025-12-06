@@ -9,3 +9,4 @@ where = ["src"]
 [project.scripts]
 run-tsgo = "tsgo.cli:main"
 collect-best = "tsgo.collect_best:main"
+open-results = "tsgo.collect_best:get_best"
