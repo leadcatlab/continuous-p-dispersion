@@ -22,7 +22,7 @@ def main():
     args = parser.parse_args()
     
     if args.output_dir is None:
-        args.output_dir = f"results/p{args.p}"
+        args.output_dir = f"results/{args.container}/p{args.p}"
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Assign workers from SLURM

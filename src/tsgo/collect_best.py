@@ -5,10 +5,11 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--p", type=int, default=None, help="P value for results directory")
+    parser.add_argument("--container", type=str, default="cube", help="Container shape (not used)")
     args = parser.parse_args()
     
     if args.p is not None:
-        pattern = f"results/p{args.p}/best_task_*.npz"
+        pattern = f"results/{args.container}/p{args.p}/best_task_*.npz"
     else:
         pattern = "results/best_task_*.npz"
     
@@ -16,7 +17,6 @@ def main():
     best_D = -1
     best_result = None
     best_file = None
-    elapsed_time = None
 
     for f in files:
         data = np.load(f)
@@ -25,11 +25,8 @@ def main():
             best_D = D
             best_result = data
             best_file = f
-        if elapsed_time is None:
-            elapsed_time = float(data.get("elapsed_time", 0.0))
-        else:
-            elapsed_time = max(elapsed_time, float(data.get("elapsed_time", 0.0)))
-    
+    elapsed_time = max([data.get("elapsed_time", 0.0) for f in files for data in [np.load(f)]])
+
     print("=== GLOBAL BEST ===")
     print("D:", best_D)
     print("Radius:", best_D / 2)
