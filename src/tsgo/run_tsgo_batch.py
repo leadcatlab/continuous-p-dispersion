@@ -13,8 +13,9 @@ def main():
     parser.add_argument("--metric", type=str, default="EUCLIDEAN")
     parser.add_argument("--solver", type=str, default="L-BFGS-B")
     parser.add_argument("--Q", type=int, default=3)
-
-    parser.add_argument("--output-dir", type=str, default="results")
+    parser.add_argument("--beta_max", type=int, default=5)
+    parser.add_argument("--eps", type=float, default=1e-16)
+    parser.add_argument("--output-dir", type=str, default="results", help="Directory to save per-task results")
 
     args = parser.parse_args()
 
@@ -45,7 +46,9 @@ def main():
         plot=False,
         num_workers=num_workers,
         optimization_method=args.solver,
-        Q=args.Q
+        Q=args.Q,
+        beta_max=args.beta_max,
+        eps=args.eps,
     )
 
     # Save output
