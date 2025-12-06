@@ -4,6 +4,7 @@ import numpy as np
 import time
 
 from tsgo.cli import run_tsgo, polyhedron_examples
+from tsgo.utils import get_datetime
 
 def main():
     parser = argparse.ArgumentParser()
@@ -40,9 +41,9 @@ def main():
 
     container = polyhedron_examples[args.container]
 
-    print(f"[Task {task_id}] Running TSGO with {num_workers} workers and seed {seed}")
-    
     start_time = time.time()
+    print(f"[Task {task_id} @ {get_datetime()}] Running TSGO with {num_workers} workers and seed {seed}")
+    
 
     X_best, D_best = run_tsgo(
         p=args.p,
