@@ -27,7 +27,8 @@ def main():
             best_D = D
             best_result = data
             best_file = f
-    elapsed_time = max([data.get("elapsed_time", 0.0) for f in files for data in [np.load(f)]])
+    elapsed_times = [data.get("elapsed_time", 0.0) for f in files for data in [np.load(f)]]
+    elapsed_time = max(elapsed_times) if elapsed_times else 0.0
 
     print("=== GLOBAL BEST ===")
     print("D:", best_D)
