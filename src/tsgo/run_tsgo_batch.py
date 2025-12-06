@@ -15,9 +15,13 @@ def main():
     parser.add_argument("--Q", type=int, default=3)
     parser.add_argument("--beta_max", type=int, default=5)
     parser.add_argument("--eps", type=float, default=1e-16)
-    parser.add_argument("--output-dir", type=str, default="results", help="Directory to save per-task results")
+    parser.add_argument("--output-dir", type=str, default=None)
 
     args = parser.parse_args()
+    
+    if args.output_dir is None:
+        args.output_dir = f"results/p{args.p}"
+    os.makedirs(args.output_dir, exist_ok=True)
 
     # Assign workers from SLURM
     slurm_cpus = os.getenv("SLURM_CPUS_PER_TASK")
