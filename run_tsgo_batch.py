@@ -35,7 +35,7 @@ def main():
 
     # Compute seed from SLURM array ID
     task_id = int(os.getenv("SLURM_ARRAY_TASK_ID", "0"))
-    seed = 1337 + task_id
+    seed = np.random.randint(0, 2 ** 31 - 1)
 
     np.random.seed(seed)
 
