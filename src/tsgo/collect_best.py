@@ -36,7 +36,7 @@ def main():
     print("From:", best_file)
     print("X:", best_result["X"])
     print("seed:", best_result["seed"])
-    print("elapsed_time:", best_result["elapsed_time"])
+    print("elapsed_time:", elapsed_time)
     print("metric:", best_result["metric"])
     print("iterations:", best_result["iterations"])
     print("D_init:", best_result["D_init"])
