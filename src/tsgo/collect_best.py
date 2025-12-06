@@ -25,9 +25,13 @@ def main():
             best_result = data
             best_file = f
 
+    print("All DATA: ", best_result)
+    
     print("=== GLOBAL BEST ===")
     print("D:", best_D)
+    print("Radius:", best_D / 2)
     print("From:", best_file)
+    print("======= END =======")
 
     np.savez("results/best_global.npz", **best_result)
 
