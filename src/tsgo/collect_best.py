@@ -1,9 +1,18 @@
 import numpy as np
 import glob
 import os
-
+import argparse
 def main():
-    files = sorted(glob.glob("results/best_task_*.npz"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--p", type=int, default=None, help="P value for results directory")
+    args = parser.parse_args()
+    
+    if args.p is not None:
+        pattern = f"results/p{args.p}/best_task_*.npz"
+    else:
+        pattern = "results/best_task_*.npz"
+    
+    files = sorted(glob.glob(pattern))
     best_D = -1
     best_result = None
     best_file = None
