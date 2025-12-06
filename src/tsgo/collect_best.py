@@ -45,7 +45,6 @@ def main():
     print("eps:", best_result["eps"])
     print("======= END =======")
     
-    best_result["elapsed_time"] = elapsed_time
     np.savez(f"results/{args.container}/p{args.p}/best_global.npz", **best_result)
     
     # save all the data to a pickle file
