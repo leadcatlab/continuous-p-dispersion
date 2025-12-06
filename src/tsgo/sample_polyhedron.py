@@ -9,7 +9,7 @@ import numpy as np
 # Y POSITIVE is BACK
 # Z POSITIVE is UP
 
-def cube(radius: float = 1.0):
+def cube(radius: float = 0.5):
     return Container([
         Face([Point(radius, -radius, radius), Point(radius, radius, radius), Point(radius, radius, -radius), Point(radius, -radius, -radius)], [-1, 0, 0], "Right Face of Cube"),
         Face([Point(-radius, -radius, -radius), Point(-radius, -radius, radius), Point(-radius, radius, radius), Point(-radius, radius, -radius)], [1, 0, 0], "Left Face of Cube"),

@@ -10,7 +10,7 @@ from tsgo.tsgo_algorithm import tsgo_algorithm_parallel
 from tsgo.metric_enums import MetricType, get_metric_function, list_metrics
 
 polyhedron_examples = {
-    "cube": cube(radius=1.0),
+    "cube": cube(radius=0.5),
     "h-box": h_box(),
     "tetrahedron": triangular_pyramid(),
     "pointy-star": pointy_star()

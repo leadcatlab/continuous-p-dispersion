@@ -310,6 +310,9 @@ def plot_from_file(file_path: str) -> None:
     # load the pickle object
     with open(file_path, 'rb') as f:
         data = pickle.load(f)
+    
+    print(data["D"] / 2)
+    print(data["optimized points"])
 
     points = data.get("optimized points")
     D = data.get("D")
