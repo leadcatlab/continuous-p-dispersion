@@ -43,6 +43,7 @@ def main():
 
     start_time = time.time()
     print(f"[Task {task_id} @ {get_datetime()}] Running TSGO with {num_workers} workers and seed {seed}")
+    print(f"[Task {task_id}] Container: {args.container}, p: {args.p}, iterations: {args.iterations}, D_init: {args.D_init}, metric: {args.metric}")
     
 
     X_best, D_best = run_tsgo(
