@@ -201,7 +201,17 @@ def monotonic_basin_hopping(X: np.ndarray, D: float, container: Container, itera
 
     return result.x.reshape(-1, 3)
 
-def save_to_file(p: int, iterations: int, D_init: float, X_opt: Union[np.ndarray, List[Point]], D_opt: float, container: Container, elapsed_time: float, metric_name: str = 'EUCLIDEAN') -> None:
+def save_to_file(
+    p: int, 
+    iterations: int, 
+    D_init: float, 
+    X_opt: Union[np.ndarray, List[Point]], 
+    D_opt: float, 
+    container: Container, 
+    elapsed_time: float, 
+    metric_name: str = 'EUCLIDEAN',
+    output_dir: str = "output"
+) -> None:
     string = ""
     string += f"Number of Points: {p}\nIterations: {iterations}\nD_initial: {D_init}\n"
     string += "\nOptimal Arrangement of Points:\n"
@@ -214,7 +224,6 @@ def save_to_file(p: int, iterations: int, D_init: float, X_opt: Union[np.ndarray
             string += str(point) + "\n"
     
     string += f"\nOptimal Minimum Distance between Points: {D_opt}\n"
-    string += f"Radius: {D_opt / 2}\n"
     string += f"Time taken: {elapsed_time:.2f} seconds\n"
     filename = f"TSGO_{p}_data.txt"
     with open(filename, "w") as f:
@@ -234,7 +243,7 @@ def save_to_file(p: int, iterations: int, D_init: float, X_opt: Union[np.ndarray
         }, f)
         f.close()
 
-    subfolder_name = os.path.join("output", metric_name.lower(), container.description.replace(" ", "_"), f"p={p}", f"iterations={iterations}", f"D_init={D_init}")
+    subfolder_name = os.path.join(output_dir, metric_name.lower(), container.description.replace(" ", "_"), f"p={p}", f"iterations={iterations}", f"D_init={D_init}")
     os.makedirs(subfolder_name, exist_ok=True)
     
     dest_txt = os.path.join(subfolder_name, os.path.basename(filename))
