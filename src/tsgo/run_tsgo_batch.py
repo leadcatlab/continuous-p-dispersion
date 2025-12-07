@@ -18,7 +18,7 @@ def main():
     parser.add_argument("--Q", type=int, default=3)
     parser.add_argument("--beta_max", type=int, default=5)
     parser.add_argument("--eps", type=float, default=1e-16)
-    parser.add_argument("--output_dir", type=str, default="")
+    parser.add_argument("--output_dir", type=str, default="output")
     args = parser.parse_args()
     
     # Setup output directory
@@ -37,7 +37,7 @@ def main():
     # Create unique seed for each task
     task_id = int(os.getenv("SLURM_ARRAY_TASK_ID", "0"))
     seed = np.random.randint(0, 2 ** 31 - 1)
-    seed = np.random.seed(seed)
+    np.random.seed(seed)
 
     # Select container
     container = polyhedron_examples[args.container]

@@ -212,6 +212,7 @@ def save_to_file(
     metric_name: str = 'EUCLIDEAN',
     output_dir: str = "output"
 ) -> None:
+    print("[TSGO] Saving results to file.")
     string = ""
     string += f"Number of Points: {p}\nIterations: {iterations}\nD_initial: {D_init}\n"
     string += "\nOptimal Arrangement of Points:\n"

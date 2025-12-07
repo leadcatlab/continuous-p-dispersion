@@ -8,4 +8,5 @@ where = ["src"]
 
 [project.scripts]
 run-tsgo = "tsgo.cli:main"
+run-tsgo-batch = "tsgo.run_tsgo_batch:main"
 collect-best = "tsgo.collect_best:main"
