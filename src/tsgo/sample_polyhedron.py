@@ -17,7 +17,7 @@ def cube(radius: float = 0.5):
         Face([Point(-radius, -radius, -radius), Point(radius, -radius, -radius), Point(radius, radius, -radius), Point(-radius, radius, -radius)], [0, 0, 1], "Bottom Face of Cube"),
         Face([Point(-radius, -radius, radius), Point(radius, -radius, radius), Point(radius, -radius, -radius), Point(-radius, -radius, -radius)], [0, 1, 0], "Front Face of Cube"),
         Face([Point(-radius, radius, -radius), Point(radius, radius, -radius), Point(radius, radius, radius), Point(-radius, radius, radius)], [0, -1, 0], "Back Face of Cube")
-    ], description=f"cube with radius {radius}")
+    ], description=f"cube")
 
 def h_box():
     return Container([

@@ -25,6 +25,7 @@ def run_tsgo(
     container: Container = cube(radius=0.5),
     metric_name: str = 'EUCLIDEAN',
     save: bool = True,
+    output_dir: str = "",
     plot: bool = False,
     num_workers: int = 6,
     optimization_method: str = "BFGS",
@@ -59,7 +60,7 @@ def run_tsgo(
 
     # save to file
     if save:
-        save_to_file(p, iterations, D_init, X_opt, D_opt, container, elapsed_time, metric_name=metric_name)
+        save_to_file(p, iterations, D_init, X_opt, D_opt, container, elapsed_time, metric_name=metric_name, output_dir=output_dir)
 
     # plot the result
     if plot:
