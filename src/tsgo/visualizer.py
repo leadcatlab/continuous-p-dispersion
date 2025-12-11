@@ -1,3 +1,4 @@
+import argparse
 import pickle
 from typing import Optional
 import numpy as np
@@ -11,12 +12,25 @@ from tsgo.container import Container
 from tsgo.metric_enums import MetricType
 
 
-def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, colors=None,
-                title=None,
-                face_colors: Optional[list] = None,
-                sphere_u: int = 24, sphere_v: int = 16,
-                face_alpha: float = 0.08, face_edge_alpha: float = 0.35, sphere_alpha: float = 0.35,
-                show: bool = True, ax=None, show_normals: bool = False, metric_name: str = 'EUCLIDEAN', grid: bool = True) -> plt.Axes:
+def plot_result(
+    points_xyz: np.ndarray, 
+    D: float, 
+    container: Container, 
+    *, 
+    colors=None,
+    title=None,
+    face_colors: Optional[list] = None,
+    sphere_u: int = 24, 
+    sphere_v: int = 16,
+    face_alpha: float = 0.08, 
+    face_edge_alpha: float = 0.35,
+    sphere_alpha: float = 0.35,
+    show: bool = True, ax=None, 
+    show_normals: bool = False, 
+    metric_name: str = 'EUCLIDEAN', 
+    grid: bool = True,
+    boundary_limits: Optional[tuple] = None
+) -> plt.Axes:
     """
     Plot a polyhedral container and p spheres (centers given by points_xyz) with radius D.
 
@@ -52,12 +66,12 @@ def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, color
     # --- resolve colors per point ---
     if isinstance(colors, str):
         cmap = plt.cm.get_cmap(colors)
-        colors_list = [cmap(i / (p - 1) if p > 1 else 0.0) for i in range(p)]
+        colors_list = [cmap(0.5 + 0.5 * i / (p - 1) if p > 1 else 0.5) for i in range(p)]
     elif colors is None:
         # default colormap: use a qualitative colormap if few points, otherwise a continuous one
         cmap_name = 'tab20' if p <= 20 else 'viridis'
         cmap = plt.cm.get_cmap(cmap_name)
-        colors_list = [cmap(i / (p - 1) if p > 1 else 0.0) for i in range(p)]
+        colors_list = [cmap(0.5 + 0.5 * i / (p - 1) if p > 1 else 0.5) for i in range(p)]
     else:
         # assume iterable of color specs
         colors_list = list(colors)
@@ -236,14 +250,20 @@ def plot_result(points_xyz: np.ndarray, D: float, container: Container, *, color
         container_pts = np.zeros((1, 3))
     all_pts = np.vstack([container_pts, points_xyz]) if len(points_xyz) else container_pts
 
-    mins = all_pts.min(axis=0) - D
-    maxs = all_pts.max(axis=0) + D
-    centers = (mins + maxs) / 2.0
-    ranges = (maxs - mins)
-    radius = 0.5 * np.max(ranges)
-    ax.set_xlim(centers[0] - radius, centers[0] + radius)
-    ax.set_ylim(centers[1] - radius, centers[1] + radius)
-    ax.set_zlim(centers[2] - radius, centers[2] + radius)
+    if boundary_limits is not None:
+        xmin, xmax, ymin, ymax, zmin, zmax = boundary_limits
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        ax.set_zlim(zmin, zmax)
+    else: 
+        mins = all_pts.min(axis=0) - D
+        maxs = all_pts.max(axis=0) + D
+        centers = (mins + maxs) / 2.0
+        ranges = (maxs - mins)
+        radius = 0.5 * np.max(ranges)
+        ax.set_xlim(centers[0] - radius, centers[0] + radius)
+        ax.set_ylim(centers[1] - radius, centers[1] + radius)
+        ax.set_zlim(centers[2] - radius, centers[2] + radius)
 
     # --- labels and aesthetics ---
     ax.set_xlabel('x')
@@ -300,7 +320,7 @@ def plot_active_footpoints(point: Point, container: Container, title: str = None
 
     plot_result(points, D=0.05, container=container, colors=colors, show=True, title=title, grid=False)
 
-def plot_from_file(file_path: str) -> None:
+def plot_from_file(file_path: str, boundary_limits: tuple, colors: str = None) -> None:
     """
     Plots the 3D configuration of points from a file.
 
@@ -311,13 +331,34 @@ def plot_from_file(file_path: str) -> None:
     with open(file_path, 'rb') as f:
         data = pickle.load(f)
     
-    print(data["D"] / 2)
+    print(data["D"])
     print(data["optimized points"])
 
     points = data.get("optimized points")
+    p = points.shape[0]
     D = data.get("D")
     container = data.get("container")
     metric = data.get("metric", MetricType['EUCLIDEAN'])
+    
+    if isinstance(colors, str):
+        colors = [colors for _ in range(p)]
 
     # Plot the points
-    plot_result(points, D, container=container, metric_name=metric)
+    plot_result(points, D, container=container, metric_name=metric, boundary_limits=boundary_limits, colors=colors, show=True, grid=True)
+    
+def main():
+    parser = argparse.ArgumentParser(description="Plot 3D configuration of points from a file.")
+    parser.add_argument("--filepath", type=str, help="Path to the file containing point data.", required=True)
+    parser.add_argument("--limits", type=float, nargs=6, help="Boundary limits for the plot as xmin xmax ymin ymax zmin zmax", required=False, default=None)
+    parser.add_argument("--colors", type=str, default=None, help="Color map name or comma-separated list of colors for points.")
+    args = parser.parse_args()
+    
+    boundary_limits = tuple(args.limits) if args.limits is not None else None
+    if args.colors is not None and ',' in args.colors:
+        args.colors = args.colors.split(',')
+    elif args.colors is not None:
+        args.colors = args.colors.strip()
+    plot_from_file(args.filepath, boundary_limits=boundary_limits, colors=args.colors)
+    
+if __name__ == "__main__":
+    main()
