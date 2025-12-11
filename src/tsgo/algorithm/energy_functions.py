@@ -3,10 +3,10 @@ import numpy as np
 import heapq
 from typing import List, Union
 
-from tsgo.point import Point
-from tsgo.container import Container
-from tsgo.metric_enums import MetricType, get_metric_function
-from tsgo.utils import point_to_line_dist
+from tsgo.container.point import Point
+from tsgo.container.container import Container
+from tsgo.utils.metric_enums import MetricType, get_metric_function
+from tsgo.container.geometry import point_to_line_dist
 
 ALPHA = 1.0
 GAMMA = 2.0
@@ -59,6 +59,7 @@ def Oi0(x_i: Union[Point, np.ndarray], D: float, container: Container, metric: c
     """
     # check the cache first
     x_i_point = Point.from_array(x_i) if isinstance(x_i, np.ndarray) else x_i
+    x_i = x_i_point.as_array()
 
     if (x_i_point, D, container) in Oi0_cache:
         return Oi0_cache[(x_i_point, D, container)]
@@ -159,7 +160,7 @@ def point_energy(X: Union[List[Point], np.ndarray], i: int, D: float, container:
     Returns:
         float: The energy of the point X[i] within the system.
     """
-    dispersion_penalty = np.sum(l_ij(X[i], X[j], D, metric) ** 2 for j in range(len(X)) if j != i)
+    dispersion_penalty = sum(l_ij(X[i], X[j], D, metric) ** 2 for j in range(len(X)) if j != i)
     container_penalty = Oi0(X[i], D, container, metric)
     return dispersion_penalty + ALPHA * container_penalty
 
@@ -178,7 +179,7 @@ def vacancy_energy(X: Union[List[Point], np.ndarray], vacancy_point: Union[Point
         float: The energy of the vacancy point within the system.
     """
 
-    dispersion_penalty = np.sum(l_ij(vacancy_point, X[j], D, metric) ** 2 for j in range(len(X)))
+    dispersion_penalty = sum(l_ij(vacancy_point, X[j], D, metric) ** 2 for j in range(len(X)))
     container_penalty = Oi0(vacancy_point, D, container, metric)
     return dispersion_penalty + ALPHA * container_penalty
 
@@ -218,7 +219,7 @@ def select_high_energy_points(X: List[Point], D: float, container: Container, Q:
     high_energy_points = [heapq.heappop(energies)[1] for _ in range(Q)]
     return high_energy_points
 
-def find_vacancy_sites(X: List[Point], D: float, container: Container, Q: int, metric: callable = MetricType['EUCLIDEAN']) -> List[Point]:
+def find_vacancy_sites(X: List[Point], D: float, container: Container, Q: int, metric: callable = MetricType['EUCLIDEAN']) -> List[np.ndarray]:
     random_points = [container._sample_random_point() for _ in range(5 * len(X))]
     random_points = [(point, vacancy_energy(X, point, D, container, metric)) for point in random_points]
 

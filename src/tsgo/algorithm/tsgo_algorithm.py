@@ -1,16 +1,16 @@
 
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 import time
 import numpy as np
 from typing import List, Optional, Tuple
-from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from tsgo.metric_enums import MetricType, get_metric_function
-import tsgo.utils as utils
-import tsgo.energy_functions as ef
-from tsgo.container import Container
-from tsgo.point import Point
-from tsgo.utils import local_optimization, local_optimization_phi, get_datetime
+from tsgo.algorithm.optimization import local_optimization, local_optimization_phi
+from tsgo.container.container import Container
+from tsgo.container.point import Point
+from tsgo.utils.metric_enums import get_metric_function
+import tsgo.algorithm.energy_functions as ef
+from tsgo.utils.io import get_datetime
 
 def _tsgo_algorithm(
     p: int, 
@@ -127,17 +127,17 @@ def tabu_search(
         X_best_neighbor = X_best.copy()
         for i in range(Q):
             for j in range(Q):
-                X_neighbor = utils.move_point(X, i, low_energy_points[j])
+                X_neighbor = tabu_list.move_point(X, i, low_energy_points[j])
                 X_neighbor = local_optimization(X_neighbor, D, container, method=method, metric=metric)
                 
-                if not utils.forbidden(high_energy_points[i], tabu_list, iterations):
+                if not tabu_list.forbidden(high_energy_points[i], tabu_list, iterations):
                     if ef.E(X_neighbor, D, container, metric=metric) < ef.E(X_best_neighbor, D, container, metric=metric):
                         X_best_neighbor = X_neighbor.copy()
                         I = (high_energy_points[i], low_energy_points[j])
 
         X = X_best_neighbor.copy()
-        tabu_list = utils.update_tabu_list(I, tabu_list, iterations)
-        X = utils.monotonic_basin_hopping(X, D, container, iterations=10, metric=metric)
+        tabu_list = tabu_list.update_tabu_list(I, tabu_list, iterations)
+        X = tabu_list.monotonic_basin_hopping(X, D, container, iterations=10, metric=metric)
 
         # Check if the point locations have changed
         if np.allclose(X_best, X, atol=1e-8):

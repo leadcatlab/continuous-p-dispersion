@@ -1,10 +1,7 @@
 import numpy as np
 from typing import List
 
-from tsgo.point import Point
-
-def wedge(v1, v2):
-    return 
+from tsgo.container.point import Point
 
 class Face:
     def __init__(self, vertices: List[Point], normal: np.ndarray, description: str = ""):
@@ -30,7 +27,9 @@ class Face:
         v1 = self.vertices[1].as_array() - self.vertices[0].as_array()
         v2 = self.vertices[2].as_array() - self.vertices[0].as_array()
         computed_normal = np.cross(v1, v2).astype(float)
-        computed_normal /= np.linalg.norm(computed_normal)
+        norm = np.linalg.norm(computed_normal)
+        if norm > 0:
+            computed_normal /= norm
 
         # if the direction is opposite to the existing self.normal, then flip the resultant cross product
         if np.dot(computed_normal, self.normal) < 0:
@@ -83,8 +82,7 @@ class Face:
 
         V = [v.as_array() for v in self.vertices]
         n = len(V)
-        if n < 3:
-            return False
+        assert n >= 3, "Face must have at least 3 vertices."
 
         # Plane normal from a non-collinear triple
         P0 = V[0]
