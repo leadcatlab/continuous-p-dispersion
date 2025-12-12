@@ -5,12 +5,13 @@ import time
 import numpy as np
 from typing import List, Optional, Tuple
 
-from tsgo.algorithm.optimization import local_optimization, local_optimization_phi
+from tsgo.algorithm.optimization import local_optimization, local_optimization_phi, monotonic_basin_hopping as mbh
 from tsgo.container.container import Container
 from tsgo.container.point import Point
 from tsgo.utils.metric_enums import get_metric_function
 import tsgo.algorithm.energy_functions as ef
 from tsgo.utils.io import get_datetime
+from tsgo.utils import tabu_list as tl
 
 def _tsgo_algorithm(
     p: int, 
@@ -20,7 +21,7 @@ def _tsgo_algorithm(
     # algorithm control
     beta_max: int = 3, 
     Q: int = 3, 
-    eps: float = 1e-16, 
+    eps: float = 1e-25, 
     # optimization
     optimization_method: str = 'BFGS'
 ) -> Tuple[np.ndarray, float]:
@@ -33,7 +34,7 @@ def _tsgo_algorithm(
     else:
         X, D = _tsgo_algorithm(p, container, D_init, metric_name, beta_max, Q, eps, optimization_method)
     
-    return X, D
+    return X, D, ef.E(X, D, container, metric=metric_name)
 
 # ALGORITHM 1: Main Framework of the TSGO Algorithm
 # Output: The best configuration found (X_opt) and the maximal minimum distance between points
@@ -93,8 +94,8 @@ def tsgo_algorithm_parallel(
         ]
 
         for fut in as_completed(futures):
-            X_i, D_i = fut.result()
-            if D_i > best_D:
+            X_i, D_i, E_i = fut.result()
+            if D_i > best_D and E_i == 0.0:
                 best_D = D_i
                 best_X = X_i
 
@@ -131,17 +132,17 @@ def tabu_search(
         X_best_neighbor = X_best.copy()
         for i in range(Q):
             for j in range(Q):
-                X_neighbor = tabu_list.move_point(X, i, low_energy_points[j])
+                X_neighbor = tl.move_point(X, i, low_energy_points[j])
                 X_neighbor = local_optimization(X_neighbor, D, container, method=method, metric=metric)
                 
-                if not tabu_list.forbidden(high_energy_points[i], tabu_list, iterations):
+                if not tl.forbidden(high_energy_points[i], tabu_list, iterations):
                     if ef.E(X_neighbor, D, container, metric=metric) < ef.E(X_best_neighbor, D, container, metric=metric):
                         X_best_neighbor = X_neighbor.copy()
                         I = (high_energy_points[i], low_energy_points[j])
 
         X = X_best_neighbor.copy()
-        tabu_list = tabu_list.update_tabu_list(I, tabu_list, iterations)
-        X = tabu_list.monotonic_basin_hopping(X, D, container, iterations=10, metric=metric)
+        tabu_list = tl.update_tabu_list(I, tabu_list, iterations)
+        X = mbh(X, D, container, iterations=10, metric=metric)
 
         # Check if an improvement has been made
         if ef.E(X_best_neighbor, D, container, metric=metric) >= ef.E(X_best, D, container, metric=metric):
