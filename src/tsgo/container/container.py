@@ -1,33 +1,8 @@
 import numpy as np
 from typing import Dict, List, Union
 
-from tsgo.face import Face
-from tsgo.point import Point
-
-
-def is_counter_clockwise(p1, p2, p3):
-    """
-    Determines if the sequence of points p1, p2, p3 is counter-clockwise.
-    Works for both 2D and 3D points.
-    For 2D: returns True if p3 is to the left of the line from p1 to p2.
-    For 3D: returns True if the triple product (p2-p1) x (p3-p1) has positive z-component.
-    """
-    p1 = np.array(p1)
-    p2 = np.array(p2)
-    p3 = np.array(p3)
-    if p1.shape[0] == 2:
-        # 2D case
-        return (p3[1] - p1[1]) * (p2[0] - p1[0]) > (p2[1] - p1[1]) * (p3[0] - p1[0])
-    elif p1.shape[0] == 3:
-        # 3D case: use the sign of the scalar triple product
-        v1 = p2 - p1
-        v2 = p3 - p1
-        cross = np.cross(v1, v2)
-        # You may want to specify a reference normal direction for the polygon's plane.
-        # Here, we just check if the cross product is not zero (i.e., not collinear).
-        return np.linalg.norm(cross) > 0
-    else:
-        raise ValueError("Points must be 2D or 3D coordinates.")
+from tsgo.container.face import Face
+from tsgo.container.point import Point
 
 class Container:
 
@@ -74,7 +49,7 @@ class Container:
         first = point - a
         second = b - a
 
-        return np.linalg.norm(np.cross(first, second)) == 0 and np.dot(first, second) > 0
+        return bool(np.linalg.norm(np.cross(first, second)) == 0 and np.dot(first, second) > 0)
 
     def contains(self, point: Union[Point, np.ndarray]) -> bool:
         """
@@ -87,7 +62,7 @@ class Container:
         """
         TOL = 1e-8
         
-        if isinstance(point, list):
+        if isinstance(point, list) or isinstance(point, tuple):
             point = Point(point[0], point[1], point[2])
         elif isinstance(point, np.ndarray):
             point = Point.from_array(point)
@@ -107,8 +82,6 @@ class Container:
 
         for face in self.faces:
             V = [v.as_array() for v in face.vertices]
-            if len(V) < 3:
-                continue
 
             # Plane normal from a non-collinear triple
             P0 = V[0]

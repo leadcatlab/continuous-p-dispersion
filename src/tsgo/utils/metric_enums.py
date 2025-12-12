@@ -19,9 +19,6 @@ MetricType = {
     'N_NORM': n_norm
 }
 
-def list_metrics() -> list:
-    return list(MetricType.keys())
-
 def get_metric_function(metric_name: str) -> callable:
     metric_name = metric_name.upper()
     if metric_name in MetricType:

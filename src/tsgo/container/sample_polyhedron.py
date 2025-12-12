@@ -1,6 +1,6 @@
-from tsgo.point import Point
-from tsgo.face import Face
-from tsgo.container import Container
+from tsgo.container.point import Point
+from tsgo.container.face import Face
+from tsgo.container.container import Container
 
 import numpy as np
 

@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-from tsgo.point import Point
-from tsgo.container import Container
-from tsgo.metric_enums import MetricType
+from tsgo.container.point import Point
+from tsgo.container.container import Container
+from tsgo.utils.metric_enums import MetricType
 
 
 def plot_result(

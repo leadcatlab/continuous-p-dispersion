@@ -1,13 +1,37 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "tsgo"
 version = "1.0.0"
 dependencies = []
+requires-python = ">=3.11"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+# Ensure src/ is on the import path so `import tsgo` works from tests
+pythonpath = ["src"]
+
+# Your tests live in src/tests, but you can just run `pytest`
+testpaths = [
+    "src/tests",
+]
+
+# Coverage options: measure tsgo only, show missing lines, fail if < 75%
+addopts = "--cov=tsgo --cov-report=term-missing --cov-fail-under=75"
+
+[tool.coverage.run]
+source = ["tsgo"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+
 [project.scripts]
-run-tsgo = "tsgo.cli:main"
-run-tsgo-batch = "tsgo.run_tsgo_batch:main"
-collect-best = "tsgo.collect_best:main"
-plot-results = "tsgo.visualizer:main"
+run-tsgo = "tsgo.algorithm.cli:main"
+collect-best = "tsgo.utils.collect_best:main"
+plot-results = "tsgo.plotting.visualizer:main"

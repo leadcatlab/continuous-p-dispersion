@@ -5,8 +5,8 @@ import os
 import argparse
 import pickle
 
-from tsgo.sample_polyhedron import cube, h_box, triangular_pyramid, pointy_star
-from tsgo.cli import polyhedron_examples
+from src.tsgo.container.sample_polyhedron import cube, h_box, triangular_pyramid, pointy_star
+from src.tsgo.algorithm.cli import polyhedron_examples
 
 def collect_best(p: int, container: str, output_dir: str = "output", metric_name: str = "euclidean") -> None:
     """
