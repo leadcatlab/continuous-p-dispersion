@@ -109,8 +109,10 @@ def tabu_search(
     beta_max: int = 3, 
     Q: int = 3, 
     method: str = 'BFGS', 
-    metric: str = 'EUCLIDEAN'
+    metric: str = 'EUCLIDEAN',
+    eps: float = 1e-16
 ) -> List[Point]:
+    print(f"[TABU SEARCH @ {get_datetime()}] Starting.")
     start_time = time.time()
     Q = min(Q, len(X0))  # Ensure Q does not exceed the number of points in X0
     metric = get_metric_function(metric)
@@ -119,8 +121,10 @@ def tabu_search(
     
     no_improve, tabu_list, iterations, I = 0, [], 0, None
 
-    while (no_improve <= beta_max) and (ef.E(X_best, D, container) > 1e-8):
-        start_time = time.time()
+    while (no_improve <= beta_max) and (ef.E(X_best, D, container, metric=metric) > eps):
+        print(f"[TABU SEARCH @ {get_datetime()}] Beginning iteration {iterations}, Current Energy: {ef.E(X_best, D, container, metric=metric):.8f}")
+        print(f"[TABU SEARCH @ {get_datetime()}] No improvement count: {no_improve}/{beta_max}")
+        iteration_start_time = time.time()
         high_energy_points = ef.select_high_energy_points(X, D, container, Q, metric=metric)
         low_energy_points = ef.find_vacancy_sites(X, D, container, Q, metric=metric)
 
@@ -139,17 +143,18 @@ def tabu_search(
         tabu_list = tabu_list.update_tabu_list(I, tabu_list, iterations)
         X = tabu_list.monotonic_basin_hopping(X, D, container, iterations=10, metric=metric)
 
-        # Check if the point locations have changed
-        if np.allclose(X_best, X, atol=1e-8):
+        # Check if an improvement has been made
+        if ef.E(X_best_neighbor, D, container, metric=metric) >= ef.E(X_best, D, container, metric=metric):
             no_improve += 1
         else:
-            X_best = X.copy()
+            X_best = X_best_neighbor.copy()
             no_improve = 0
 
         iterations += 1
         
         energy = round(ef.E(X_best, D, container, metric=metric), 10)
-        elapsed_time = time.time() - start_time
+        iteration_elapsed_time = time.time() - iteration_start_time
+        print(f"[TABU SEARCH @ {get_datetime()}] Iteration {iterations} completed in {iteration_elapsed_time:.4f} seconds -- Energy: {energy}\n")
 
     elapsed_time = time.time() - start_time
     print(f"[TABU SEARCH @ {get_datetime()}] Total time: {elapsed_time:.4f} seconds")
@@ -166,15 +171,24 @@ def adjust_distance(
     metric: str = 'EUCLIDEAN'
 ) -> Tuple[np.ndarray, float]:
     start_time = time.time()
+    
     metric = get_metric_function(metric)
-    X, D, mu = X0.copy(), D0, 10.0
+    X, D, mu = X0.copy(), D0, 1
+    
     no_change_counter = 0
     prev_X = X.copy()
     prev_D = D
+    
+    iterations = 0
 
-    for _ in range(iter_max):
-        X_new, D_new = local_optimization_phi(X, D, container, mu, method=method, metric=metric)
+    while iterations < iter_max:
         mu *= 10.0
+        
+        print(f"[ADJUST DISTANCE @ {get_datetime()}] Starting iteration with D: {D}, mu: {mu}")
+        print(f"[ADJUST DISTANCE @ {get_datetime()}] Current Energy: {ef.phi(X, D, mu, container, metric=metric):.8f}")
+        print(f"[ADJUST DISTANCE @ {get_datetime()}] No change counter: {no_change_counter} / 3")
+        iteration_start_time = time.time()
+        X_new, D_new = local_optimization_phi(X, D, container, mu, method=method, metric=metric)
 
         x_same = np.allclose(prev_X, X_new, atol=1e-8)
         d_same = np.isclose(prev_D, D_new, atol=1e-12)
@@ -186,10 +200,13 @@ def adjust_distance(
         prev_D = D_new
         X, D = X_new, D_new
 
+        iteration_elapsed_time = time.time() - iteration_start_time
+        print(f"[ADJUST DISTANCE] Iteration completed in {iteration_elapsed_time:.4f} seconds -- New D: {D}, Quality: {ef.E(X, D, container, metric=metric):.8f}")
+
         if no_change_counter >= 3:
-            elapsed_time = time.time() - start_time
-            print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed in {elapsed_time:.4f} seconds -- D: {D}, Quality: {ef.E(X, D, container, metric=metric):.8f}")
-            return X, D
+            break
+
+        iterations += 1
 
     elapsed_time = time.time() - start_time
     print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed in {elapsed_time:.4f} seconds -- D: {D}, Quality: {ef.E(X, D, container, metric=metric):.8f}")
