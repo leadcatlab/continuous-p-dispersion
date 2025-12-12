@@ -1,3 +1,4 @@
+import time
 from typing import Tuple
 
 import numpy as np
@@ -5,6 +6,7 @@ from scipy.optimize import Bounds, basinhopping, minimize
 
 from tsgo.algorithm import energy_functions as ef
 from tsgo.container.container import Container
+from tsgo.utils.io import get_datetime
 from tsgo.utils.metric_enums import MetricType
 
 def local_optimization(
@@ -25,10 +27,15 @@ def local_optimization(
     Returns:
         List[Point]: Locally optimized 3D points.
     """
+    print(f"[Local Optimization @ {get_datetime()}] Starting.")
+    start_time = time.time()
     function = lambda X: ef.E(X, D0, container, metric)
     X0 = X0.flatten()
     result = minimize(fun=function, x0=X0, method=method, options={'maxiter': 100, 'disp': False})
     optimized_points = result.x.reshape(-1, 3)
+    
+    elapsed_time = time.time() - start_time
+    print(f"[Local Optimization @ {get_datetime()}] Completed in {elapsed_time:.4f} seconds.")
 
     return optimized_points
 
@@ -57,6 +64,8 @@ def local_optimization_phi(
         X = X[:-1].reshape(-1, 3)
         return ef.phi(X, D, mu, container, metric=metric)
 
+    print(f"[Local Optimization Phi @ {get_datetime()}] Starting.")
+    start_time = time.time()
     x0 = np.append(X0.flatten(), D0)
 
     # Set bounds: all coordinates unbounded, last variable (D) >= 0
@@ -71,6 +80,8 @@ def local_optimization_phi(
 
     optimized_points = result.x[:-1].reshape(-1, 3)
     optimized_d = result.x[-1]
+    elapsed_time = time.time() - start_time
+    print(f"[Local Optimization Phi @ {get_datetime()}] Completed in {elapsed_time:.4f} seconds.")
 
     return optimized_points, optimized_d
 
@@ -87,10 +98,13 @@ def monotonic_basin_hopping(X: np.ndarray, D: float, container: Container, itera
     Returns:
         np.ndarray: _description_
     """
-
+    print(f"[Monotonic Basin Hopping @ {get_datetime()}] Starting.")
+    start_time = time.time()
     x0 = X.flatten()
 
     # Perform basin hopping to escape local minima
     result = basinhopping(func=lambda x: ef.E(x.reshape(-1, 3), D, container, metric=metric), x0=x0, niter=iterations)
+    elapsed_time = time.time() - start_time
+    print(f"[Monotonic Basin Hopping @ {get_datetime()}] Completed in {elapsed_time:.4f} seconds.")
 
     return result.x.reshape(-1, 3)
