@@ -21,7 +21,7 @@ def _tsgo_algorithm(
     # algorithm control
     beta_max: int = 3, 
     Q: int = 3, 
-    eps: float = 1e-25, 
+    eps: float = 1e-16, 
     # optimization
     optimization_method: str = 'BFGS'
 ) -> Tuple[np.ndarray, float]:
@@ -30,7 +30,7 @@ def _tsgo_algorithm(
     X = tabu_search(X, D, container, beta_max=beta_max, Q=Q, method=optimization_method, metric=metric_name)
     
     if np.isclose(ef.E(X, D, container, metric=metric_name), 0.0, atol=eps):
-        X, D = adjust_distance(X, D, container, method=optimization_method, metric=metric_name)
+        X, D = adjust_distance(X, D, container, method=optimization_method, metric=metric_name, tol=eps)
     else:
         X, D = _tsgo_algorithm(p, container, D_init, metric_name, beta_max, Q, eps, optimization_method)
     
@@ -96,7 +96,7 @@ def tsgo_algorithm_parallel(
         for fut in as_completed(futures):
             X_i, D_i, E_i = fut.result()
             print(f"[TSGO PARALLEL] Completed a run with D={D_i}, E={E_i}")
-            if D_i > best_D and E_i == 0.0:
+            if D_i > best_D and np.isclose(E_i, 0.0, atol=eps):
                 best_D = D_i
                 best_X = X_i
 
@@ -248,7 +248,8 @@ def adjust_distance(
     mu: float = 1.0,
     iter_max: int = 15, 
     method: str = 'BFGS', 
-    metric: str = 'EUCLIDEAN'
+    metric: str = 'EUCLIDEAN',
+    tol: float=1e-16
 ) -> Tuple[np.ndarray, float]:
     start_time = time.time()
     
@@ -279,15 +280,23 @@ def adjust_distance(
         X, D = X_new, D_new
 
         iteration_elapsed_time = time.time() - iteration_start_time
-        print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed in {iteration_elapsed_time:.4f} seconds. Current Energy: {ef.E(X, D, container, metric=metric_fn):.8f}/{ef.phi(X, D, mu, container, metric=metric_fn):.8f}, D: {D}.")
+        decimal_places = max(0, -int(np.log10(tol)) + 1)
+        energy = round(ef.E(X, D, container, metric=metric_fn), decimal_places)
+        phi = round(ef.phi(X, D, mu, container, metric=metric_fn), decimal_places)
+        print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed in {iteration_elapsed_time:.4f} seconds. Current Energy: {energy:.{decimal_places}f}/{phi:.{decimal_places}f}, D: {D}.")
 
         if no_change_counter >= 3:
             break
 
         iterations += 1
 
-    if ef.E(X, D, container, metric=metric) >= 1e-25:
+    if ef.E(X, D, container, metric=metric) >= tol:
         print(f"[ADJUST DISTANCE @ {get_datetime()}] Energy not sufficiently minimized, restarting adjustment.")
+        
+        # Decrease D slightly and retry
+        D *= 0.95
+        X, D = local_optimization(X, D, container, method=method, metric=metric_fn)
+        
         X, D = adjust_distance(X, D, container, mu, iter_max, method, metric)
 
     elapsed_time = time.time() - start_time
