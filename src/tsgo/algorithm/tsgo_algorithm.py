@@ -23,7 +23,7 @@ def _tsgo_algorithm(
     Q: int = 3, 
     eps: float = 1e-16, 
     # optimization
-    optimization_method: str = 'BFGS'
+    optimization_method: str = 'L-BFGS-B'
 ) -> Tuple[np.ndarray, float]:
     D = D_init
     X = container.generate_initial_solution(p)  # np.ndarray
