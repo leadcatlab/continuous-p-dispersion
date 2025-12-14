@@ -9,6 +9,7 @@ from tsgo.container.sample_polyhedron import cube, h_box, triangular_pyramid, po
 from tsgo.plotting.visualizer import plot_result
 from tsgo.utils.io import save_to_file
 
+# NOTE: This inverse of this map is the description of each container in sample_polyhedron.py
 polyhedron_examples = {
     "cube": cube(radius=0.5),
     "h-box": h_box(),

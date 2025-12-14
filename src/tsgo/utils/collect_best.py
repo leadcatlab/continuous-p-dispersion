@@ -8,7 +8,7 @@ import pickle
 from tsgo.container.sample_polyhedron import cube, h_box, triangular_pyramid, pointy_star
 from tsgo.algorithm.cli import polyhedron_examples
 
-def collect_best(p: int, container: str, output_dir: str = "output", metric_name: str = "euclidean") -> None:
+def collect_best(p: int, container_name: str, output_dir: str = "output", metric_name: str = "euclidean") -> None:
     """
     Scan through every .pkl file recursively in the output directory and collect the best results.
 
@@ -19,7 +19,7 @@ def collect_best(p: int, container: str, output_dir: str = "output", metric_name
     """
     best_result = None
     best_D = -np.inf
-    search_pattern = os.path.join(output_dir, "**", container, f"p={p}", "**", "*.pkl")
+    search_pattern = os.path.join(output_dir, container_name, f"p{p}", "**", "*.pkl")
     output_path = ""
     
     for filepath in glob.iglob(search_pattern, recursive=True):
@@ -32,15 +32,15 @@ def collect_best(p: int, container: str, output_dir: str = "output", metric_name
                 output_path = filepath
                 
     if best_result is not None:
-        output_dir = os.path.join(output_dir, metric_name.lower(), container, f"p={p}")
-        output_path = os.path.join(output_dir, f"best_result_p={p}.pkl")
+        output_dir = os.path.join(output_dir, container_name, f"p{p}")
+        output_path = os.path.join(output_dir, f"best_result_p{p}.pkl")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, "wb") as f:
             pickle.dump(best_result, f)
-        print(f"Best result for p={p} in container={container} saved to {output_path}")
+        print(f"Best result for p={p} in container={container_name} saved to {output_path}")
         print(f"==> Best D: {best_D}")
     else:
-        print(f"No results found for p={p} in container={container} within {output_dir}")
+        print(f"No results found for p={p} in container={container_name} within {output_dir}")
         
 def main():
     parser = argparse.ArgumentParser(description="Collect best TSGO results.")

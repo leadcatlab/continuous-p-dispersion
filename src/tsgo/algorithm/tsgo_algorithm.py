@@ -295,7 +295,7 @@ def adjust_distance(
         
         # Decrease D slightly and retry
         D *= 0.95
-        X, D = local_optimization(X, D, container, method=method, metric=metric_fn)
+        X = local_optimization(X, D, container, method=method, metric=metric_fn)
         
         X, D = adjust_distance(X, D, container, mu, iter_max, method, metric)
 
