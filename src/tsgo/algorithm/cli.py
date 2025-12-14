@@ -94,12 +94,12 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     
     # Assign workers from SLURM environment variable if available
-    slurm_cpu_per_task = os.getenv("SLURM_CPU_PER_TASK")
-    if slurm_cpu_per_task is None:
+    slurm_cpus_per_task = os.getenv("SLURM_CPUS_PER_TASK")
+    if slurm_cpus_per_task is None:
         num_workers = args.num_workers if args.num_workers > 0 else 6
     else:
-        print(f"[TSGO] Using 'SLURM_CPU_PER_TASK' environment variable to set number of workers: {slurm_cpu_per_task}.")
-        num_workers = int(slurm_cpu_per_task)
+        print(f"[TSGO] Using 'SLURM_CPUS_PER_TASK' environment variable to set number of workers: {slurm_cpus_per_task}.")
+        num_workers = int(slurm_cpus_per_task)
         
     
     # Get the task_id from SLURM environment variable if available
