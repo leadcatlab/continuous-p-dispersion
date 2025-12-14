@@ -1,46 +1,56 @@
-from typing import List
+from typing import Any, List, Tuple
 
 import numpy as np
 
 from tsgo.container.point import Point
 
-def move_point(X: List[Point], i: int, low_energy_point: Point) -> List[Point]:
+def quantize(v: np.ndarray, delta) -> Tuple[int, int, int]:
     """
-    Move the high energy point to the low energy point.
+    Quantize a continuous vector into a discrete cell identifier.
+
+    This function converts a continuous n-dimensional vector into a stable discrete
+    representation by dividing each component by a delta value and flooring the result
+    to obtain integer cell coordinates.
+
+    Args:
+        v (np.ndarray): A continuous vector to be quantized.
+        delta: The quantization step size. Each component of the vector is divided
+               by this value before discretization.
+
+    Returns:
+        Tuple[int, int, int]: A tuple of integers representing the discrete cell
+                              identifier corresponding to the quantized vector.
+    """
+    # Convert continuous dest to a stable discrete "cell id"
+    return tuple(np.floor(v / delta).astype(int).tolist())
+
+def is_tabu(tabu_list: List[Tuple[Any, ...]], key: Tuple[Any, ...], it: int) -> bool:
+    """
+    Determines whether a given key is considered 'tabu' based on the current iteration.
+    A key is deemed 'tabu' if it exists in the tabu list and the current iteration 
+    is less than the associated expiration iteration.
+    Args:
+        key (Tuple[Any, ...]): The key to check against the tabu list.
+        it (int): The current iteration number.
+    Returns:
+        bool: True if the key is tabu (exists in the tabu list and is not expired), 
+               False otherwise.
+    """
+    exp = tabu_list.get(key)
+    return (exp is not None) and (it < exp)
+
+def tabu_add(tabu_list: List[Tuple[Any, ...]], key: Tuple[Any, ...], it: int, tabu_tenure: int, tabu_max_size: int) -> None:
+    """
+    Adds a key to the tabu list with an expiration iteration based on the current
+    iteration and the predefined tabu tenure. If the tabu list exceeds its maximum
+    size, the oldest entries are removed to maintain the size constraint.
     
     Args:
-        X (List[Point]): The array of points.
-        high_energy_point (int): The index of the point in X considered to have high energy.
-        low_energy_point (Point): The point to which the high energy point will be moved.
-
-    Returns
-    -------
-    List[Point]
-        A copy of X with the high energy point replaced by the low energy point.
+        key (Tuple[Any, ...]): The key to add to the tabu list.
+        it (int): The current iteration number.
     """
-    
-    X_copy = X.copy()
-    X_copy[i] = low_energy_point
-    return X_copy
-
-def forbidden(high_energy_point: Point, tabu_list: list, iterations: int):
-    # Check if the high energy point is in the tabu list
-    # 0th index: movement (high energy point, low energy point)
-    # 1st index: iteration when the move becomes valid again
-
-    for entry in tabu_list:
-        if entry is None:
-            continue
-        if entry[0][0] == high_energy_point and entry[1] > iterations:
-            return True
-    return False
-
-def update_tabu_list(I: tuple, tabu_list: list, iterations: int, max_size: int = 100):
-    if I is None or I[0] is None or I[1] is None:
-        return tabu_list
-    # Add a new entry to the tabu list
-    tabu_list.append((I, iterations + 10))
-    # Remove the oldest entry if the list exceeds max_size
-    while len(tabu_list) > max_size:
-        tabu_list.pop(0)
-    return tabu_list
+    tabu_list[key] = it + tabu_tenure
+    # Enforce max size by dropping oldest keys
+    while len(tabu_list) > tabu_max_size:
+        oldest_key = next(iter(tabu_list))
+        tabu_list.pop(oldest_key, None)
