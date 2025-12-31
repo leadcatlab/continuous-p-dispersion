@@ -5,45 +5,33 @@ from tsgo.container.point import Point
 from tsgo.utils.metric_enums import MetricType
 
 
-def point_to_line_dist(
-    point: Point, 
-    line: Tuple[Point, Point], 
-    metric: callable = MetricType['EUCLIDEAN']
-) -> float:
-    """
-    Computes the distance from a point to a line.
+def point_to_line_dist(point, line, metric=MetricType["EUCLIDEAN"]) -> float:
+    p = point.as_array() if isinstance(point, Point) else np.asarray(point, dtype=float)
+    a = line[0].as_array() if isinstance(line[0], Point) else np.asarray(line[0], dtype=float)
+    b = line[1].as_array() if isinstance(line[1], Point) else np.asarray(line[1], dtype=float)
 
-    Args:
-        point (Point): The point.
-        line (Tuple[Point, Point]): The line defined by two endpoints.
-        metric (callable, optional): The distance metric to use. Defaults to MetricType['EUCLIDEAN'].
+    ab = b - a
+    ap = p - a
+    denom = float(np.dot(ab, ab))
 
-    Returns:
-        float: The distance from the point to the line.
-    """
-    p = point.as_array() if isinstance(point, Point) else np.array(point)
-    a = line[0].as_array() if isinstance(line[0], Point) else np.array(line[0])
-    b = line[1].as_array() if isinstance(line[1], Point) else np.array(line[1])
+    # Degenerate segment
+    if denom <= 1e-30:
+        if metric is MetricType["EUCLIDEAN"] or metric is np.linalg.norm:
+            return float(np.linalg.norm(p - a))
+        return float(metric(p, a))
 
-    line_vec = b - a
-    point_vec = p - a
-    denom = np.dot(line_vec, line_vec)
-    
-    # If the line endpoints coincide, treat as distance to a point
-    if np.isclose(a, b, atol=1e-16).all():
-        return metric(p, a)
+    t = float(np.dot(ap, ab) / denom)
 
-    # projection parameter t along the segment (0 -> a, 1 -> b)
-    t = np.dot(point_vec, line_vec) / denom
+    # Clamp projection to segment [0, 1] (avoids two metric calls)
+    if t <= 0.0:
+        closest = a
+    elif t >= 1.0:
+        closest = b
+    else:
+        closest = a + t * ab
 
-    # If projection falls outside the segment, return distance to nearest endpoint using the metric
-    if t < 0 or t > 1:
-        d0 = metric(p, a)
-        d1 = metric(p, b)
-        return float(min(d0, d1))
-
-    # Closest point on the segment
-    closest = a + t * line_vec
+    if metric is MetricType["EUCLIDEAN"] or metric is np.linalg.norm:
+        return float(np.linalg.norm(p - closest))
     return float(metric(p, closest))
 
 def is_counter_clockwise(p1: Union[Point, np.ndarray], p2: Union[Point, np.ndarray], p3: Union[Point, np.ndarray]) -> bool:

@@ -5,7 +5,7 @@ from tsgo.algorithm import energy_functions as ef
 from tsgo.algorithm.tsgo_algorithm import tsgo_algorithm_parallel
 from tsgo.container.container import Container
 from tsgo.container.point import Point
-from tsgo.container.sample_polyhedron import cube, h_box, triangular_pyramid, pointy_star
+from tsgo.container.sample_polyhedron import cube, h_box, triangular_pyramid, pointy_star, ribbed_cage
 from tsgo.plotting.visualizer import plot_result
 from tsgo.utils.io import save_to_file
 
@@ -14,7 +14,8 @@ polyhedron_examples = {
     "cube": cube(radius=0.5),
     "h-box": h_box(),
     "tetrahedron": triangular_pyramid(),
-    "pointy-star": pointy_star()
+    "pointy-star": pointy_star(),
+    "cage": ribbed_cage(),
 }
 
 def run_tsgo(
@@ -72,7 +73,7 @@ def main():
     
     parser = argparse.ArgumentParser(description="Run TSGO Algorithm for Continuous p-Dispersion Problem")
     parser.add_argument("--p", type=int, default=3, help="Number of points to place")
-    parser.add_argument("--iterations", type=int, default=10, help="Number of iterations")
+    parser.add_argument("--iterations", type=int, default=6, help="Number of iterations")
     parser.add_argument("--D_init", type=float, default=0.1, help="Initial minimum distance")
     parser.add_argument("--container", type=str, default="cube", choices=polyhedron_examples.keys(), help="Container shape")
     parser.add_argument("--metric", type=str, default="EUCLIDEAN", help="Distance metric to use")
@@ -83,6 +84,7 @@ def main():
     parser.add_argument("--num_workers", type=int, default=6, help="Number of parallel workers")
     parser.add_argument("--output_dir", type=str, default="", help="Output directory for saved files")
     parser.add_argument("--plot", type=bool, default=False, help="Whether to plot the final configuration")
+    parser.add_argument("--eps", type=float, default=1e-16, help="Epsilon tolerance for optimization")
     
     args = parser.parse_args()
     
@@ -116,7 +118,8 @@ def main():
         num_workers=num_workers, 
         optimization_method=args.solver, 
         Q=args.Q, 
-        metric_name=args.metric
+        metric_name=args.metric,
+        eps=args.eps
     )
     
     if slurm_task_id is not None:

@@ -27,7 +27,8 @@ share/python-wheels/
 MANIFEST
 output/*
 old_output/*
-*.pkl
+output/*.pkl
+logs/*
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

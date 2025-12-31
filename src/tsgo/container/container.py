@@ -35,22 +35,6 @@ class Container:
         vertices_as_list = list(vertices)
         return vertices_as_list
 
-
-    # @param point: a coordinate (ex. point = [0.0, 0.0]) to check.
-    # @param edge: a line segment defined by two points (start and end).
-    # @return: True if the point lies on the segment, False otherwise.
-    @staticmethod
-    def _point_on_segment(point: Point, edge: tuple[Point, Point]) -> bool:
-        # The cross-product of (point - A) and (B - A) is zero and dot product is positive iff point is on the line.
-        a, b = edge
-        a, b = a.as_array(), b.as_array()
-        point = point.as_array() 
-
-        first = point - a
-        second = b - a
-
-        return bool(np.linalg.norm(np.cross(first, second)) == 0 and np.dot(first, second) > 0)
-
     def contains(self, point: Union[Point, np.ndarray]) -> bool:
         """
         Ray-casting test in 3D: cast a single ray from `point` in a generic direction,
@@ -143,29 +127,35 @@ class Container:
         # otherwise, false
         return False
 
-    def get_active_footpoints(self, point: Union[Point, np.ndarray, List[float]]) -> List[Point]:
-        """
-        Get all active footpoints for a given point.
-        An active footpoint is one where the point is on the same side as the face normal.
-
-        :param point (Point, np.ndarray, List[float]): The point for which to find active footpoints.
-        :return: A list of active footpoints.
-        """
-        
-        # convert point to a Point object
+    def get_active_footpoints(self, point) -> List[Point]:
+        # normalize input
         if isinstance(point, list):
-            point = Point(point[0], point[1], point[2])
+            x, y, z = float(point[0]), float(point[1]), float(point[2])
+            point = Point(x, y, z)
         elif isinstance(point, np.ndarray):
-            point = Point.from_array(point)
-        
-        cache_result = self.active_footpoints.get((point.x, point.y, point.z))
-        if cache_result is not None: 
-            return cache_result 
+            # avoid Point.from_array overhead if it's simple
+            point = Point(float(point[0]), float(point[1]), float(point[2]))
+        # else assume Point
 
-        active_footpoints = [footpoint for face in self.faces if self._is_active_plane(face, point) and face.contains(footpoint := face.project_point(point))]
+        # quantized key so cache actually hits during local optimization
+        key = (round(point.x, 6), round(point.y, 6), round(point.z, 6))
+        cached = self.active_footpoints.get(key)
+        if cached is not None:
+            return cached
 
-        self.active_footpoints[(point.x, point.y, point.z)] = active_footpoints
-        return active_footpoints
+        out: List[Point] = []
+        for face in self.faces:
+            if not self._is_active_plane(face, point):
+                continue
+
+            fp = face.project_point(point)
+
+            # If you add cached 2D bbox inside Face.contains, this is already fast.
+            if face.contains(fp):
+                out.append(fp)
+
+        self.active_footpoints[key] = out
+        return out
 
     def _bounding_box(self) -> Dict[str, float]:
         """

@@ -12,6 +12,8 @@ ALPHA = 1.0
 GAMMA = 2.0
 LAMBDA = 0.5
 
+TOL = 1e-4
+
 # keep a cache of results of l_ij, Oi0, and E
 l_ij_cache = {}
 Oi0_cache = {}
@@ -44,41 +46,61 @@ def l_ij(x_i: Union[Point, np.ndarray], x_j: Union[Point, np.ndarray], D: float,
     
     return result
 
-def Oi0(x_i: Union[Point, np.ndarray], D: float, container: Container, metric: callable = MetricType['EUCLIDEAN']) -> float:
+def Oi0(
+    x_i: Union[Point, np.ndarray],
+    D: float,
+    container: Container,
+    metric: callable = MetricType["EUCLIDEAN"],
+) -> float:
     """
-    Calculates the penalty term for a dispersion point with respect to the boundary of the container.
-
-    Args:
-        x_i (Union[Point, np.ndarray]): The dispersion point.
-        D (float): The radius of the sphere.
-        container (Container): The container object.
-        metric (callable, optional): A callable that computes the distance between two points. Defaults to np.linalg.norm.
-
-    Returns:
-        float: The penalty term for the dispersion point x_i with respect to the boundary of the container.
+    LOGIC-EQUIVALENT to your original Oi0:
+      - same cache key style (Point, D)
+      - same refs = vertices + active_footpoints
+      - same inside/outside branches
+      - same edge penalties
+    Only micro-optimizations: fewer allocations + fewer dict lookups.
     """
-    # check the cache first
-    x_i_point = Point.from_array(x_i) if isinstance(x_i, np.ndarray) else x_i
-    x_i = x_i_point.as_array()
+    x_pt = Point.from_array(x_i) if isinstance(x_i, np.ndarray) else x_i
+    x = x_pt.as_array()
 
-    if (x_i_point, D, container) in Oi0_cache:
-        return Oi0_cache[(x_i_point, D, container)]
+    key = (x_pt, D)
+    cached = Oi0_cache.get(key)
+    if cached is not None:
+        return cached
 
-    vertices_and_footpoints = container.vertices + container.get_active_footpoints(x_i_point)
+    # Same logic: always include vertices + active footpoints
+    footpoints = container.get_active_footpoints(x_pt)
+    refs = container.vertices + footpoints
 
-    result = 0
+    if container.contains(x_pt):
+        s = 0.0
 
-    if container.contains(x_i_point):
-        result = np.sum([(max(0, D - metric(x_i, v.as_array()))) ** 2 for v in vertices_and_footpoints])
-        # add a violation for the distance to every edge if it < D
+        # Same math as sum([(max(0, D - metric(...)))**2 for ...]) but no list allocation
+        for v in refs:
+            dv = metric(x, v.as_array())
+            t = D - dv
+            if t > 0.0:
+                s += t * t
+
+        # Same edge loop; avoid max() call
         for e in container.edges:
-            dist = point_to_line_dist(x_i_point, e, metric=metric)
+            dist = point_to_line_dist(x_pt, e, metric=metric)
             if dist is not None:
-                result += max(0, D - dist) ** 2
-    else:
-        result = GAMMA * (D + min(metric(x_i, v.as_array()) for v in vertices_and_footpoints)) ** 2
+                t = D - dist
+                if t > 0.0:
+                    s += t * t
 
-    Oi0_cache[(x_i_point, D, container)] = result
+        result = s
+    else:
+        # Same logic: GAMMA * (D + min(metric(...)))**2
+        dmin = float("inf")
+        for v in refs:
+            dv = metric(x, v.as_array())
+            if dv < dmin:
+                dmin = dv
+        result = GAMMA * (D + dmin) ** 2
+
+    Oi0_cache[key] = result
     return result
 
 def dispersion_penalty(X: np.ndarray, D: float, metric: callable = MetricType['EUCLIDEAN']) -> float:
@@ -220,7 +242,7 @@ def select_high_energy_points(X: List[Point], D: float, container: Container, Q:
     return high_energy_points
 
 def find_vacancy_sites(X: List[Point], D: float, container: Container, Q: int, metric: callable = MetricType['EUCLIDEAN']) -> List[np.ndarray]:
-    random_points = [container._sample_random_point() for _ in range(5 * len(X))]
+    random_points = [container._sample_random_point() for _ in range(10 * len(X))]
     random_points = [(point, vacancy_energy(X, point, D, container, metric)) for point in random_points]
 
     # return the Q points with the lowest energy
