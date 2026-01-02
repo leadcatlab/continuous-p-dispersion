@@ -51,7 +51,7 @@ def plot_result(
         ax: optional existing 3D axis to draw into.
         show_normals: whether to plot face normals as red arrows.
         metric_name: the name of the metric to use for sphere plotting.
-        grid: whether to show grid lines.
+        grid: whether to show grid lines, axes labels, and title.
 
     Returns:
         The matplotlib Axes3D instance used.
@@ -266,12 +266,24 @@ def plot_result(
         ax.set_zlim(centers[2] - radius, centers[2] + radius)
 
     # --- labels and aesthetics ---
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
-    ax.set_box_aspect([1, 1, 1])
-    ax.set_title(f'{len(points_xyz)} spheres (r={D:g}) in container' if title is None else title)
+    if grid:
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.set_title(f'{len(points_xyz)} spheres (r={D:g}) in container' if title is None else title)
+    else:
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        # turn off the axes panes and lines
+        ax.xaxis.pane.fill = False
+        ax.yaxis.pane.fill = False
+        ax.zaxis.pane.fill = False
+        ax.xaxis.line.set_color((0., 0., 0., 0.))
+        ax.yaxis.line.set_color((0., 0., 0., 0.))
+        ax.zaxis.line.set_color((0., 0., 0., 0.))
     
+    ax.set_box_aspect([1, 1, 1])
     ax.grid(grid)
     
     if show_normals:
@@ -279,7 +291,7 @@ def plot_result(
             if face.vertices:
                 v = np.mean([v.as_array() for v in face.vertices], axis=0)
                 n = face.normal
-                ax.quiver(*v, *n, length=0.1, color='r')
+                ax.quiver(*v, *n, length=0.3, color='r', linewidth=2)
 
     if show and created_fig:
         plt.tight_layout()
@@ -320,7 +332,7 @@ def plot_active_footpoints(point: Point, container: Container, title: str = None
 
     plot_result(points, D=0.05, container=container, colors=colors, show=True, title=title, grid=False)
 
-def plot_from_file(file_path: str, boundary_limits: tuple, colors: str = None) -> None:
+def plot_from_file(file_path: str, boundary_limits: tuple, colors: str = None, grid: bool = False, metric: str = 'EUCLIDEAN') -> None:
     """
     Plots the 3D configuration of points from a file.
 
@@ -338,19 +350,22 @@ def plot_from_file(file_path: str, boundary_limits: tuple, colors: str = None) -
     p = points.shape[0]
     D = data.get("D")
     container = data.get("container")
-    metric = data.get("metric", MetricType['EUCLIDEAN'])
+    metric = metric
     
     if isinstance(colors, str):
         colors = [colors for _ in range(p)]
 
     # Plot the points
-    plot_result(points, D, container=container, metric_name=metric, boundary_limits=boundary_limits, colors=colors, show=True, grid=True)
+    print("Plotting...", grid)
+    plot_result(points, D, container=container, metric_name=metric, boundary_limits=boundary_limits, colors=colors, show=True, grid=grid)
     
 def main():
     parser = argparse.ArgumentParser(description="Plot 3D configuration of points from a file.")
     parser.add_argument("--filepath", type=str, help="Path to the file containing point data.", required=True)
     parser.add_argument("--limits", type=float, nargs=6, help="Boundary limits for the plot as xmin xmax ymin ymax zmin zmax", required=False, default=None)
     parser.add_argument("--colors", type=str, default=None, help="Color map name or comma-separated list of colors for points.")
+    parser.add_argument("--grid", type=bool, default=False, help="Whether to show grid in the plot.")
+    parser.add_argument("--metric", type=str, default='EUCLIDEAN', help="Metric name for sphere plotting.")
     args = parser.parse_args()
     
     boundary_limits = tuple(args.limits) if args.limits is not None else None
@@ -358,7 +373,7 @@ def main():
         args.colors = args.colors.split(',')
     elif args.colors is not None:
         args.colors = args.colors.strip()
-    plot_from_file(args.filepath, boundary_limits=boundary_limits, colors=args.colors)
+    plot_from_file(args.filepath, boundary_limits=boundary_limits, colors=args.colors, grid=args.grid, metric=args.metric)
     
 if __name__ == "__main__":
     main()

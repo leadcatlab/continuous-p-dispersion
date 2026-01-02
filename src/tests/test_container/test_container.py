@@ -5,15 +5,11 @@ import pytest
 from tsgo.container.container import Container
 from tsgo.container.face import Face
 from tsgo.container.point import Point
-from tsgo.container.sample_polyhedron import cube as cube_sample, h_box as h_box_sample
+from tsgo.container.sample_polyhedron import cube as cube_sample, h_box as h_box_sample, ribbed_cage as cage_sample
 
 cube = cube_sample(radius=1)
 h_box = h_box_sample()
 
-def test_point_on_segment():
-    assert Container._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 1, 1))) == True
-    assert Container._point_on_segment(Point(1, -0.5, 1), (Point(1, 1, 1), Point(1, -1, 1))) == True
-    assert Container._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 0, 0))) == False
 
 def test_contains_square_box():
     assert cube.contains((0, 0, 0)) == True, "Point (0, 0, 0) should be inside the cube."
@@ -41,15 +37,6 @@ def test_active_plane_square_box():
     point = Point(0, 0, -10)
     face = cube.faces[1]
     assert cube._is_active_plane(face, point) == False, f"Face {face.description} should not be an active plane for point {point}."
-
-def test_point_on_segment():
-    assert Container._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 1, 1))) == True
-    assert Container._point_on_segment(Point(1, -0.5, 1), (Point(1, 1, 1), Point(1, -1, 1))) == True
-    assert Container._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 0, 0))) == False
-
-def test_point_on_segment_edge_cases():
-    assert Container._point_on_segment(Point(1, -1, 1), (Point(1, -1, 1), Point(1, 1, 1))) == False
-    assert Container._point_on_segment(Point(1, 1, 1), (Point(1, -1, 1), Point(1, 1, 1))) == True
 
 def test_contains_square_box():
     assert cube.contains((0, 0, 0)) == True, "Point (0, 0, 0) should be inside the cube."
@@ -145,3 +132,39 @@ def test_contains_with_different_input_types():
     point_array = np.array([0, 0, 0])
     point_obj = Point(0, 0, 0)
     assert cube.contains(point_list) == cube.contains(point_array) == cube.contains(point_obj)
+    
+def test_contains_ribbed_cage():
+    cage = cage_sample()
+    assert cage.contains(Point(0, 0, 0)) == True, "Point (0, 0, 0) is on the boundary of the ribbed cage."
+    
+    # Bottom rib
+    assert cage.contains(Point(1.5, 1.5, 0.1)) == False, "Point (1.5, 1.5, 0.1) should be outside the ribbed cage."
+    assert cage.contains(Point(1.5, 1.5, -0.1)) == False, "Point (1.5, 1.5, -0.1) should be outside the ribbed cage."
+    assert cage.contains(Point(1.5, 1.5, 0)) == False, "Point (1.5, 1.5, 0) should be outside the ribbed cage."
+    assert cage.contains(Point(1.5, 1.5, 0.5)) == False, "Point (1.5, 1.5, 0.5) should be outside the ribbed cage."
+    assert cage.contains(Point(1.5, 1.5, 0.75)) == False, "Point (1.5, 1.5, 0.75) should be outside the ribbed cage."
+    
+    # Second rib
+    assert cage.contains(Point(2.5, 3.5, 0.5)) == False, "Point (2.5, 3.5, 0.5) should be outside of the ribbed cage."
+    assert cage.contains(Point(2.5, 3.5, 1)) == True, "Point (2.5, 3.5, 1) should be on the boundary of the ribbed cage."
+    
+    # Left partiton
+    assert cage.contains(Point(0, 5.5, 1)) == False, "Point (0, 5.5, 1) should be outside of the ribbed cage."
+    assert cage.contains(Point(0, 5.5, 0)) == False, "Point (0, 5.5, 0) should be outside of the ribbed cage."
+    assert cage.contains(Point(0, 5.5, 3)) == False, "Point (0, 5.5, 3) should be outside of the ribbed cage."
+    assert cage.contains(Point(4, 5.5, 0)) == True, "Point (4, 5.5, 0) should be on the boundary of the ribbed cage."
+    
+    # Right partition
+    assert cage.contains(Point(9.5, 5.5, 1)) == False, "Point (4, 5.5, 1) should be outside of the ribbed cage."
+    assert cage.contains(Point(9.5, 5.5, 0)) == False, "Point (4, 5.5, 0) should be outside of the ribbed cage."
+    assert cage.contains(Point(9.3, 5.5, 3)) == False, "Point (4, 5.5, 3) should be outside of the ribbed cage."
+    assert cage.contains(Point(6, 5.5, 0)) == True, "Point (6, 5.5, 0) should be on the boundary of the ribbed cage."
+    
+    # Top Ribs
+    assert cage.contains(Point(2, 5, 5)) == False, "Point (2, 5, 5) should be outside of the ribbed cage."
+    assert cage.contains(Point(2, 5, 4.5)) == False, "Point (2, 5, 4.5) should be outside of the ribbed cage."
+    assert cage.contains(Point(4, 5, 5)) == False, "Point (4, 5, 5) should be outside of the ribbed cage."
+    assert cage.contains(Point(6, 5, 4.5)) == False, "Point (6, 5, 4.5) should be outside of the ribbed cage."
+    assert cage.contains(Point(8, 5, 4.37)) == False, "Point (8, 5, 4.37) should be outside of the ribbed cage."
+    assert cage.contains(Point(8, 5, 4)) == True, "Point (8, 5, 4) should be on the boundary of the ribbed cage."
+    

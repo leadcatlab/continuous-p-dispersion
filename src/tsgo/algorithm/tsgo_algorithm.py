@@ -27,7 +27,8 @@ def _tsgo_algorithm(
 ) -> Tuple[np.ndarray, float]:
     D = D_init
     X = container.generate_initial_solution(p)  # np.ndarray
-    X = tabu_search(X, D, container, beta_max=beta_max, Q=Q, method=optimization_method, metric=metric_name)
+    
+    X = tabu_search(X, D, container, beta_max=beta_max, Q=Q, method=optimization_method, metric=metric_name, eps=eps)
     
     if np.isclose(ef.E(X, D, container, metric=metric_name), 0.0, atol=eps):
         X, D = adjust_distance(X, D, container, method=optimization_method, metric=metric_name, tol=eps)
@@ -36,8 +37,6 @@ def _tsgo_algorithm(
     
     return X, D, ef.E(X, D, container, metric=metric_name)
 
-# ALGORITHM 1: Main Framework of the TSGO Algorithm
-# Output: The best configuration found (X_opt) and the maximal minimum distance between points
 # ALGORITHM 1: Main Framework of the TSGO Algorithm
 # Output: The best configuration found (X_opt) and the maximal minimum distance between points
 def tsgo_algorithm_parallel(
@@ -54,7 +53,7 @@ def tsgo_algorithm_parallel(
     # execution
     max_workers: Optional[int] = 6,
     # optimization
-    optimization_method: str = 'BFGS'
+    optimization_method: str = 'L-BFGS-B'
 ) -> Tuple[np.ndarray, float]:
     """
     Run `_tsgo_algorithm` in parallel `iterations` times and return the (X, D)
@@ -249,7 +248,7 @@ def adjust_distance(
     iter_max: int = 15, 
     method: str = 'BFGS', 
     metric: str = 'EUCLIDEAN',
-    tol: float=1e-16
+    tol: float=1e-12
 ) -> Tuple[np.ndarray, float]:
     start_time = time.time()
     

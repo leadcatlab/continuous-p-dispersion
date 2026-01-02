@@ -64,7 +64,7 @@ def save_to_file(
         }, f)
         f.close()
 
-    subfolder_name = os.path.join(output_dir, container.description, f"p{p}", metric_name.lower(), f"iterations{iterations}")
+    subfolder_name = os.path.join(output_dir, container.description, metric_name.lower(), f"iterations{iterations}")
     os.makedirs(subfolder_name, exist_ok=True)
     
     dest_txt = os.path.join(subfolder_name, os.path.basename(filename))
