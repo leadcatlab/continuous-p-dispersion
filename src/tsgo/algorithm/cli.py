@@ -1,4 +1,5 @@
 import os
+import shutil
 import time
 
 from tsgo.algorithm import energy_functions as ef
@@ -60,6 +61,7 @@ def run_tsgo(
     # Save to file
     if save:
         save_to_file(p, iterations, D_init, X_opt, D_opt, container, elapsed_time, metric_name=metric_name, output_dir=output_dir)
+        shutil.rmtree(f'{output_dir}/crashs', ignore_errors=True)
 
     # Plot results
     if plot:

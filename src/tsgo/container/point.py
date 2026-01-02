@@ -1,7 +1,5 @@
 import numpy as np
 
-from tsgo.utils.metric_enums import MetricType
-
 class Point:
     def __init__(self, x, y, z):
         """Initialize a 3D point.
@@ -19,9 +17,6 @@ class Point:
         if len(array) != 3:
             raise ValueError(f"Array ({array}) must be of shape (3,), current shape: {len(array)}")
         return cls(array[0], array[1], array[2])
-
-    def dist_to(self, point, metric: callable = MetricType['EUCLIDEAN']):
-        return metric(self.as_array(), point.as_array())
 
     def __eq__(self, other):
         if not isinstance(other, Point):
@@ -57,20 +52,21 @@ class Point:
         return Point(self.x + other.x, self.y + other.y, self.z + other.z)
 
     def __sub__(self, other):
-        if not isinstance(other, Point):
-            if isinstance(other, (np.ndarray)):
-                if len(other) != 3:
-                    raise ValueError(f"Array ({other}) must be of shape (3,), current shape: {len(other)}")
+        if isinstance(other, Point):
+            return Point(self.x - other.x, self.y - other.y, self.z - other.z)
+        if isinstance(other, np.ndarray):
+            if other.shape == (3,):
                 return Point(self.x - other[0], self.y - other[1], self.z - other[2])
-            return NotImplemented
-        return Point(self.x - other.x, self.y - other.y, self.z - other.z)
+            else:
+                raise ValueError(f"Numpy array must be of shape (3,), current shape: {other.shape}")
+        return NotImplemented
 
     def __mul__(self, other):
-        if not isinstance(other, Point):
-            if isinstance(other, (int, float)):
-                return Point(self.x * other, self.y * other, self.z * other)
-            return NotImplemented
-        return Point(self.x * other.x, self.y * other.y, self.z * other.z)
+        if isinstance(other, Point):
+            return Point(self.x * other.x, self.y * other.y, self.z * other.z)
+        elif isinstance(other, (int, float)):
+            return Point(self.x * other, self.y * other, self.z * other)
+        return NotImplemented
     
     def __rmul__(self, other):
         return self * other

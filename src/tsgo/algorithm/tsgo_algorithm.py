@@ -8,34 +8,66 @@ from typing import Dict, Tuple, Optional, Any, List
 
 from tsgo.algorithm.optimization import local_optimization, local_optimization_phi, monotonic_basin_hopping as mbh
 from tsgo.container.container import Container
-from tsgo.utils.metric_enums import get_metric_function
 import tsgo.algorithm.energy_functions as ef
-from tsgo.utils.io import get_datetime
+from tsgo.utils.io import get_datetime, save_to_file
 from tsgo.utils import tabu_list as tl
 
 def _tsgo_algorithm(
-    p: int, 
-    container: Container, 
-    D_init: float, 
-    metric_name: str = 'EUCLIDEAN', 
+    p: int,
+    container: Container,
+    D_init: float,
+    metric_name: str = "EUCLIDEAN",
     # algorithm control
-    beta_max: int = 3, 
-    Q: int = 3, 
-    eps: float = 1e-16, 
+    beta_max: int = 3,
+    Q: int = 3,
+    eps: float = 1e-16,
     # optimization
-    optimization_method: str = 'L-BFGS-B'
-) -> Tuple[np.ndarray, float]:
+    optimization_method: str = "L-BFGS-B",
+) -> Tuple[np.ndarray, float, float]:
     D = D_init
     X = container.generate_initial_solution(p)  # np.ndarray
     
-    X = tabu_search(X, D, container, beta_max=beta_max, Q=Q, method=optimization_method, metric=metric_name, eps=eps)
-    
+    start_time = time.time()
+
+    X = tabu_search(
+        X,
+        D,
+        container,
+        beta_max=beta_max,
+        Q=Q,
+        method=optimization_method,
+        metric=metric_name,
+        eps=eps,
+    )
+
     if np.isclose(ef.E(X, D, container, metric=metric_name), 0.0, atol=eps):
-        X, D = adjust_distance(X, D, container, method=optimization_method, metric=metric_name, tol=eps)
+        X, D = adjust_distance(
+            X,
+            D,
+            container,
+            method=optimization_method,
+            metric=metric_name,
+            tol=eps,
+        )
+        E = ef.E(X, D, container, metric=metric_name)
     else:
-        X, D = _tsgo_algorithm(p, container, D_init, metric_name, beta_max, Q, eps, optimization_method)
-    
-    return X, D, ef.E(X, D, container, metric=metric_name)
+        X, D, E = _tsgo_algorithm(
+            p,
+            container,
+            D_init,
+            metric_name,
+            beta_max=beta_max,
+            Q=Q,
+            eps=eps,
+            optimization_method=optimization_method,
+        )
+    elapsed_time = time.time() - start_time
+    # Save the X, D, E values to file in case of crash
+    unique_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    output_dir = f'output/{container.description}/p{p}/crashs/{unique_id}'
+    save_to_file(p, 1, D_init, X, D, container, elapsed_time, metric_name=metric_name, output_dir=output_dir)
+    return X, D, E
+
 
 # ALGORITHM 1: Main Framework of the TSGO Algorithm
 # Output: The best configuration found (X_opt) and the maximal minimum distance between points
@@ -131,7 +163,6 @@ def tabu_search(
     start_time = time.time()
 
     Q = min(Q, len(X0))
-    metric_fn = get_metric_function(metric)
 
     # Pick a quantization step if none given.
     # Rule of thumb: a fraction of D so "repeating" means "basically same relocation".
@@ -143,9 +174,9 @@ def tabu_search(
     tabu_list: Dict[Tuple[Any, ...], int] = {}
 
     # --- initialize ---
-    X = local_optimization(X0, D, container, method=method, metric=metric_fn)
+    X = local_optimization(X0, D, container, method=method, metric=metric)
     X_best = X.copy()
-    best_energy = ef.E(X_best, D, container, metric=metric_fn)
+    best_energy = ef.E(X_best, D, container, metric=metric)
 
     no_improve = 0
     it = 0
@@ -158,12 +189,12 @@ def tabu_search(
         iteration_start_time = time.time()
 
         # NOTE: use *current* X (not X_best) for selecting high/low energy points, as you already do
-        high_energy_points = ef.select_high_energy_points(X, D, container, Q, metric=metric_fn)
-        low_energy_points  = ef.find_vacancy_sites(X, D, container, Q, metric=metric_fn)
+        high_energy_points = ef.select_high_energy_points(X, D, container, Q, metric=metric)
+        low_energy_points  = ef.find_vacancy_sites(X, D, container, Q, metric=metric)
 
         # We'll choose the best admissible neighbor (admissible = not tabu OR aspiration)
         X_best_neighbor = X_best.copy()
-        best_neighbor_energy = ef.E(X_best_neighbor, D, container, metric=metric_fn)
+        best_neighbor_energy = ef.E(X_best_neighbor, D, container, metric=metric)
 
         # Track best move for tabu update
         chosen_move_key: Optional[Tuple[Any, ...]] = None
@@ -190,9 +221,9 @@ def tabu_search(
                 # Construct neighbor by relocating point i to vacancy v
                 X_neighbor = X.copy()
                 X_neighbor[i] = v_arr
-                X_neighbor = local_optimization(X_neighbor, D, container, method=method, metric=metric_fn)
+                X_neighbor = local_optimization(X_neighbor, D, container, method=method, metric=metric)
 
-                neigh_energy = ef.E(X_neighbor, D, container, metric=metric_fn)
+                neigh_energy = ef.E(X_neighbor, D, container, metric=metric)
 
                 # Aspiration: allow tabu if it improves global best
                 aspired = neigh_energy < best_energy
@@ -220,7 +251,7 @@ def tabu_search(
                 tl.tabu_add(tabu_list, chosen_reverse_key, it, tabu_tenure, tabu_max_size)
 
         # Your existing MBH step (kept)
-        X = mbh(X, D, container, iterations=10, metric=metric_fn)
+        X = mbh(X, D, container, iterations=10, metric=metric)
 
         # Update best tracking + no_improve
         if best_neighbor_energy >= best_energy:
@@ -235,7 +266,7 @@ def tabu_search(
         print(f"[TABU SEARCH @ {get_datetime()}] Iteration {it} completed in {iteration_elapsed_time:.4f} seconds -- Energy: {round(best_energy, 10)}\n")
 
     elapsed_time = time.time() - start_time
-    print(f"[TABU SEARCH @ {get_datetime()}] Total time: {elapsed_time:.4f} seconds")
+    print(f"[TABU SEARCH @ {get_datetime()}] Finished in {elapsed_time:.4f} seconds")
     return X_best
 
 # ALGORITHM 3: Adjust Distance (Adjustment Method for the Minimum Distance)
@@ -252,7 +283,6 @@ def adjust_distance(
 ) -> Tuple[np.ndarray, float]:
     start_time = time.time()
     
-    metric_fn = get_metric_function(metric)
     X, D, mu = X0.copy(), D0, 1
     
     no_change_counter = 0
@@ -264,9 +294,8 @@ def adjust_distance(
     while iterations < iter_max:
         mu *= 10
         
-        print(f"[ADJUST DISTANCE @ {get_datetime()}] Starting iteration with D: {D}, mu: {mu}")
         iteration_start_time = time.time()
-        X_new, D_new = local_optimization_phi(X, D, container, mu, method=method, metric=metric_fn)
+        X_new, D_new = local_optimization_phi(X, D, container, mu, method=method, metric=metric)
 
         x_same = np.allclose(prev_X, X_new, atol=1e-8)
         d_same = np.isclose(prev_D, D_new, atol=1e-12)
@@ -280,9 +309,9 @@ def adjust_distance(
 
         iteration_elapsed_time = time.time() - iteration_start_time
         decimal_places = max(0, -int(np.log10(tol)) + 1)
-        energy = round(ef.E(X, D, container, metric=metric_fn), decimal_places)
-        phi = round(ef.phi(X, D, mu, container, metric=metric_fn), decimal_places)
-        print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed in {iteration_elapsed_time:.4f} seconds. Current Energy: {energy:.{decimal_places}f}/{phi:.{decimal_places}f}, D: {D}.")
+        energy = round(ef.E(X, D, container, metric=metric), decimal_places)
+        phi = round(ef.phi(X, D, mu, container, metric=metric), decimal_places)
+        print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed iteration in {iteration_elapsed_time:.4f} seconds. Current Energy: {energy:.{decimal_places}f}/{phi:.{decimal_places}f}, D: {D}.")
 
         if no_change_counter >= 3:
             break
@@ -290,14 +319,12 @@ def adjust_distance(
         iterations += 1
 
     if ef.E(X, D, container, metric=metric) >= tol:
-        print(f"[ADJUST DISTANCE @ {get_datetime()}] Energy not sufficiently minimized, restarting adjustment.")
-        
         # Decrease D slightly and retry
         D *= 0.95
-        X = local_optimization(X, D, container, method=method, metric=metric_fn)
+        X = local_optimization(X, D, container, method=method, metric=metric)
         
         X, D = adjust_distance(X, D, container, mu, iter_max, method, metric)
 
     elapsed_time = time.time() - start_time
-    print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed in {elapsed_time:.4f} seconds -- D: {D}, Quality: {ef.E(X, D, container, metric=metric):.8f}")
+    print(f"[ADJUST DISTANCE @ {get_datetime()}] Finished in {elapsed_time:.4f} seconds -- D: {D}, Quality: {ef.E(X, D, container, metric=metric):.8f}")
     return X, D

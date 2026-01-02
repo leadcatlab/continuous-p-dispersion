@@ -7,14 +7,21 @@ from scipy.optimize import Bounds, basinhopping, minimize
 from tsgo.algorithm import energy_functions as ef
 from tsgo.container.container import Container
 from tsgo.utils.io import get_datetime
-from tsgo.utils.metric_enums import MetricType
+
+TIMES_CALLED = 100
+
+local_optimization_times_called = 0
+local_optimization_time_total = 0.0
+
+local_optimization_phi_times_called = 0
+local_optimization_phi_time_total = 0.0
 
 def local_optimization(
     X0: np.ndarray, 
     D0: float, 
     container: Container, 
     method: str = 'L-BFGS-B', 
-    metric: callable = MetricType['EUCLIDEAN']
+    metric: str = 'EUCLIDEAN'
 ) -> np.ndarray:
     """
     Perform local optimization on the given 3D points.
@@ -27,13 +34,20 @@ def local_optimization(
     Returns:
         List[Point]: Locally optimized 3D points.
     """
-    function = lambda X: ef.E(X, D0, container, metric)
+    global local_optimization_times_called, local_optimization_time_total
+    start_time = time.time()
+    local_optimization_times_called += 1
+    function = lambda X: ef.E(X, D0, container, metric=metric)
     X0 = X0.flatten()
-    if method == 'L-BFGS-B':
-        method = 'BFGS'  # Use L-BFGS-B when bounds are present
     result = minimize(fun=function, x0=X0, method=method, options={'maxiter': 100, 'disp': False})
     optimized_points = result.x.reshape(-1, 3)
 
+    local_optimization_time_total += time.time() - start_time
+    
+    if local_optimization_times_called % TIMES_CALLED == 0:
+        avg_time = local_optimization_time_total / local_optimization_times_called
+        print(f"\t[local_optimization] Average execution time after {local_optimization_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_times_called * avg_time:.2f} total seconds")
+    
     return optimized_points
 
 def local_optimization_phi(
@@ -42,7 +56,7 @@ def local_optimization_phi(
     container: Container, 
     mu: float, 
     method: str = 'L-BFGS-B', 
-    metric: callable = MetricType['EUCLIDEAN']
+    metric: str = 'EUCLIDEAN'
 ) -> Tuple[np.ndarray, float]:
     """
     Perform local optimization using the phi function.
@@ -56,6 +70,9 @@ def local_optimization_phi(
     Returns:
         Tuple[List[Point], float]: The optimized 3D points and the optimized distance.
     """
+    global local_optimization_phi_times_called, local_optimization_phi_time_total
+    start_time = time.time()
+    local_optimization_phi_times_called += 1
     def function(X: np.ndarray) -> float:
         D = X[-1]
         X = X[:-1].reshape(-1, 3)
@@ -72,10 +89,14 @@ def local_optimization_phi(
 
     optimized_points = result.x[:-1].reshape(-1, 3)
     optimized_d = result.x[-1]
+    local_optimization_phi_time_total += time.time() - start_time
+    if local_optimization_phi_times_called % TIMES_CALLED == 0:
+        avg_time = local_optimization_phi_time_total / local_optimization_phi_times_called
+        print(f"\t[local_optimization_phi] Average execution time after {local_optimization_phi_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_phi_times_called * avg_time:.2f} total seconds")
 
     return optimized_points, optimized_d
 
-def monotonic_basin_hopping(X: np.ndarray, D: float, container: Container, iterations: int = 10, metric: callable = MetricType['EUCLIDEAN']) -> np.ndarray:
+def monotonic_basin_hopping(X: np.ndarray, D: float, container: Container, iterations: int = 10, metric: str = 'EUCLIDEAN') -> np.ndarray:
     """
     Function that performs monotonic basin hopping on the energy function E.
 
@@ -84,7 +105,7 @@ def monotonic_basin_hopping(X: np.ndarray, D: float, container: Container, itera
         D (float): The minimum distance between points.
         container (Container): The container object defining the problem space.
         iterations (int, optional): Number of basin hopping iterations. Defaults to 10.
-        metric (callable, optional): Distance metric to use. Defaults to MetricType['EUCLIDEAN'].
+        metric (str, optional): Distance metric to use. Defaults to 'EUCLIDEAN'.
     Returns:
         np.ndarray: _description_
     """
