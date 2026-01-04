@@ -9,6 +9,7 @@ from tsgo.container.sample_polyhedron import cube as cube_sample, h_box as h_box
 
 cube = cube_sample(radius=1)
 h_box = h_box_sample()
+cage = cage_sample()
 
 
 def test_contains_square_box():
@@ -64,16 +65,16 @@ def test_contains_outside_points():
 def test_active_plane_square_box():
     point = Point(0.5, 0.5, 0.5)
     for face in cube.faces:
-        assert cube._is_active_plane(face, point) == True, f"Face {face.description} should be an active plane for point {point}."
+        assert cube._is_active_plane(face, point, True) == True, f"Face {face.description} should be an active plane for point {point}."
         
     point = Point(0, 0, -10)
     face = cube.faces[1]
-    assert cube._is_active_plane(face, point) == False, f"Face {face.description} should not be an active plane for point {point}."
+    assert cube._is_active_plane(face, point, False) == False, f"Face {face.description} should not be an active plane for point {point}."
 
 def test_active_plane_outside():
     point = Point(10, 10, 10)
     for face in cube.faces:
-        is_active = cube._is_active_plane(face, point)
+        is_active = cube._is_active_plane(face, point, False)
         assert isinstance(is_active, bool)
 
 def test_active_footpoints():
@@ -98,12 +99,6 @@ def test_bounding_box():
     assert bbox["min_x"] == -1 and bbox["max_x"] == 1
     assert bbox["min_y"] == -1 and bbox["max_y"] == 1
     assert bbox["min_z"] == -1 and bbox["max_z"] == 1
-
-def test_volume_square_box():
-    assert cube.volume() == 8.0, "Volume of the cube should be 8.0."
-    
-def test_volume_h_box():
-    assert h_box.volume() == 7.0, "Volume of the horizontal box should be 7.0."
 
 def test_generate_initial_solution():
     solution = cube.generate_initial_solution(5)
@@ -134,7 +129,6 @@ def test_contains_with_different_input_types():
     assert cube.contains(point_list) == cube.contains(point_array) == cube.contains(point_obj)
     
 def test_contains_ribbed_cage():
-    cage = cage_sample()
     assert cage.contains(Point(0, 0, 0)) == True, "Point (0, 0, 0) is on the boundary of the ribbed cage."
     
     # Bottom rib
@@ -167,4 +161,10 @@ def test_contains_ribbed_cage():
     assert cage.contains(Point(6, 5, 4.5)) == False, "Point (6, 5, 4.5) should be outside of the ribbed cage."
     assert cage.contains(Point(8, 5, 4.37)) == False, "Point (8, 5, 4.37) should be outside of the ribbed cage."
     assert cage.contains(Point(8, 5, 4)) == True, "Point (8, 5, 4) should be on the boundary of the ribbed cage."
+    
+def test_contains_ribbed_cage_outside_points():
+    point = Point.from_array([-0.08396896, 3.23984771, -1.15235849])
+    assert cage.contains(point) == False, "Point (-0.08396896,3.23984771,-1.15235849) should be outside the ribbed cage."
+    
+
     

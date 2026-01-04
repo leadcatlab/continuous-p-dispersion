@@ -8,6 +8,7 @@ import numpy as np
 
 from tsgo.container.container import Container
 from tsgo.container.point import Point
+from tsgo.algorithm import energy_functions as ef
 
 def get_datetime() -> str:
     """
@@ -33,8 +34,18 @@ def save_to_file(
     output_dir: str = "output"
 ) -> None:
     print("[TSGO] Saving results to file.")
+    
+    # Create output directory structure first
+    subfolder_name = os.path.join(output_dir, metric_name.lower(), f"iterations{iterations}")
+    os.makedirs(subfolder_name, exist_ok=True)
+    
+    # Define file paths directly in target location
+    txt_filename = os.path.join(subfolder_name, f"TSGO_{p}_data.txt")
+    pkl_filename = txt_filename.replace(".txt", ".pkl")
+    
+    # Write text file
     string = ""
-    string += f"Number of Points: {p}\nIterations: {iterations}\nD_initial: {D_init}\n"
+    string += f"Number of Points: {p}\nIterations: {iterations}\nD_initial: {D_init}\nContainer: {container.description}\nMetric: {metric_name}\n"
     string += "\nOptimal Arrangement of Points:\n"
     for point in X_opt:
         if isinstance(point, np.ndarray):
@@ -46,34 +57,61 @@ def save_to_file(
     
     string += f"\nOptimal Minimum Distance between Points: {D_opt}\n"
     string += f"Time taken: {elapsed_time:.2f} seconds\n"
-    filename = f"TSGO_{p}_data.txt"
-    with open(filename, "w") as f:
+    string += f"Saved on: {get_datetime()}\n"
+    string += f"Final Energy: {ef.E(X_opt, D_opt, container)}\n"
+    
+    with open(txt_filename, "w") as f:
         f.write(string)
 
-    # save p, iterations, D_init, X_opt, D_opt, container, elapsed_time, metric to a pickle file
-    with open(filename.replace(".txt", ".pkl"), "wb") as f:
+    # Write pickle file
+    with open(pkl_filename, "wb") as f:
         pickle.dump({
-            "optimized points": X_opt,
-            "D": D_opt,
-            "container": container,
-            "elapsed_time": elapsed_time,
-            "p": p,
-            "iterations": iterations,
-            "D_init": D_init,
-            "metric": metric_name
+            'optimized points': X_opt,
+            'D': D_opt,
+            'container': container,
+            'elapsed_time': elapsed_time,
+            'p': p,
+            'iterations': iterations,
+            'D_init': D_init,
+            'metric': metric_name
         }, f)
-        f.close()
-
-    subfolder_name = os.path.join(output_dir, container.description, metric_name.lower(), f"iterations{iterations}")
-    os.makedirs(subfolder_name, exist_ok=True)
     
-    dest_txt = os.path.join(subfolder_name, os.path.basename(filename))
-    dest_pkl = os.path.join(subfolder_name, os.path.basename(filename.replace(".txt", ".pkl")))
-    # Remove destination files if they exist
-    if os.path.exists(dest_txt):
-        os.remove(dest_txt)
-    if os.path.exists(dest_pkl):
-        os.remove(dest_pkl)
+def collect_best(output_dir: str) -> None:
+    """
+    Collects the best results from multiple runs stored in the output directory.
 
-    shutil.move(filename, subfolder_name)
-    shutil.move(filename.replace(".txt", ".pkl"), subfolder_name)
+    Args:
+        output_dir (str): The directory where output files are stored.
+    """
+    # Scan through the output directory recursively for any files that end in .pkl
+    # Load each pickle file and extract the D_opt value
+    # Get the file with the highest D_opt value
+    # copy this file to best_result.pkl in the output directory
+    best_D_opt = -np.inf
+    best_file = None
+    
+    for root, dirs, files in os.walk(output_dir):
+        for file in files:
+            if file.endswith(".pkl"):
+                file_path = os.path.join(root, file)
+                with open(file_path, "rb") as f:
+                    data = pickle.load(f)
+                    D_opt = data.get('D', -np.inf)
+                    if D_opt > best_D_opt:
+                        best_D_opt = D_opt
+                        best_file = file_path
+    if best_file is not None:
+        dest_file = os.path.join(output_dir, "best_result.pkl")
+        shutil.copy(best_file, dest_file)
+        print(f"[TSGO] Best result collected: {best_file} with D_opt = {best_D_opt}")
+        print(f"[TSGO] Best result saved to: {dest_file}")
+        
+def collect_best_entrypoint():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Collect Best Results from TSGO Output Directory")
+    parser.add_argument("--dir", type=str, required=True, help="Output directory containing TSGO results")
+    
+    args = parser.parse_args()
+    
+    collect_best(args.dir)

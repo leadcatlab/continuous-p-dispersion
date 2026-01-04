@@ -33,5 +33,6 @@ precision = 2
 
 [project.scripts]
 run-tsgo = "tsgo.algorithm.cli:main"
-collect-best = "tsgo.utils.collect_best:main"
+collect-best = "tsgo.utils.io:collect_best_entrypoint"
 plot-results = "tsgo.plotting.visualizer:main"
+

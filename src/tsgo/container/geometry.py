@@ -2,59 +2,66 @@ import numpy as np
 from typing import Tuple, Union
 
 from tsgo.container.point import Point
-from tsgo.utils.metric_enums import MetricType
 
 
-def point_to_line_dist(point, line, metric=MetricType["EUCLIDEAN"]) -> float:
-    p = point.as_array() if isinstance(point, Point) else np.asarray(point, dtype=float)
-    a = line[0].as_array() if isinstance(line[0], Point) else np.asarray(line[0], dtype=float)
-    b = line[1].as_array() if isinstance(line[1], Point) else np.asarray(line[1], dtype=float)
+def distance(point1: Union[Point, np.ndarray], point2: Union[Point, np.ndarray], metric: str = "EUCLIDEAN") -> float:
+    p1 = point1.as_array() if isinstance(point1, Point) else np.asarray(point1, dtype=float)
+    p2 = point2.as_array() if isinstance(point2, Point) else np.asarray(point2, dtype=float)
 
-    ab = b - a
-    ap = p - a
-    denom = float(np.dot(ab, ab))
+    metric = metric.upper()
+    dx, dy, dz = float(p1[0] - p2[0]), float(p1[1] - p2[1]), float(p1[2] - p2[2])
 
-    # Degenerate segment
-    if denom <= 1e-30:
-        if metric is MetricType["EUCLIDEAN"] or metric is np.linalg.norm:
-            return float(np.linalg.norm(p - a))
-        return float(metric(p, a))
+    if metric in ["TAXICAB", "L1"]:
+        return float(abs(dx) + abs(dy) + abs(dz))
+    if metric in ["SUP_NORM", "LINF"]:
+        return float(max(abs(dx), abs(dy), abs(dz)))
 
-    t = float(np.dot(ap, ab) / denom)
+    return float((dx * dx + dy * dy + dz * dz) ** 0.5)
 
-    # Clamp projection to segment [0, 1] (avoids two metric calls)
-    if t <= 0.0:
-        closest = a
-    elif t >= 1.0:
-        closest = b
+def point_to_line_dist(point: Union[Point, np.ndarray],
+                       line_segment: Tuple[Union[Point, np.ndarray], Union[Point, np.ndarray]],
+                       metric: str = "EUCLIDEAN") -> float:
+    # Extract coords without allocating big arrays
+    if isinstance(point, Point):
+        px, py, pz = point.x, point.y, point.z
     else:
-        closest = a + t * ab
+        point = np.asarray(point, dtype=float)
+        px, py, pz = float(point[0]), float(point[1]), float(point[2])
 
-    if metric is MetricType["EUCLIDEAN"] or metric is np.linalg.norm:
-        return float(np.linalg.norm(p - closest))
-    return float(metric(p, closest))
-
-def is_counter_clockwise(p1: Union[Point, np.ndarray], p2: Union[Point, np.ndarray], p3: Union[Point, np.ndarray]) -> bool:
-    """
-    Three points p1, p2, p3 are in counter-clockwise order if 
-    the triple product (p2 - p1) x (p3 - p1) has positive z-component
-    
-    :param p1, p2, p3: Three points in 3D space.
-    :return: True if the points are in counter-clockwise order.
-    """
-    p1 = p1.as_array() if isinstance(p1, Point) else np.array(p1)
-    p2 = p2.as_array() if isinstance(p2, Point) else np.array(p2)
-    p3 = p3.as_array() if isinstance(p3, Point) else np.array(p3)
-        
-    # 3D case: use the sign of the scalar triple product
-    if p1.shape[0] == 3:
-        v1 = p2 - p1
-        v2 = p3 - p1
-        cross = np.cross(v1, v2)
-        # You may want to specify a reference normal direction for the polygon's plane.
-        # Here, we just check if the cross product is not zero (i.e., not collinear).
-        return cross[2] > 0
-    
-    # Other dimensions not supported
+    a, b = line_segment
+    if isinstance(a, Point):
+        ax, ay, az = a.x, a.y, a.z
     else:
-        raise ValueError("Points must be 2D or 3D coordinates.")
+        a = np.asarray(a, dtype=float)
+        ax, ay, az = float(a[0]), float(a[1]), float(a[2])
+
+    if isinstance(b, Point):
+        bx, by, bz = b.x, b.y, b.z
+    else:
+        b = np.asarray(b, dtype=float)
+        bx, by, bz = float(b[0]), float(b[1]), float(b[2])
+
+    abx, aby, abz = (bx - ax), (by - ay), (bz - az)
+    apx, apy, apz = (px - ax), (py - ay), (pz - az)
+
+    denom = abx * abx + aby * aby + abz * abz
+    if denom == 0.0:
+        # a == b
+        cx, cy, cz = ax, ay, az
+    else:
+        t = (apx * abx + apy * aby + apz * abz) / denom
+        if t <= 0.0:
+            cx, cy, cz = ax, ay, az
+        elif t >= 1.0:
+            cx, cy, cz = bx, by, bz
+        else:
+            cx, cy, cz = (ax + t * abx), (ay + t * aby), (az + t * abz)
+
+    dx, dy, dz = (px - cx), (py - cy), (pz - cz)
+    metric = metric.upper()
+    if metric in ["TAXICAB", "L1"]:
+        return float(abs(dx) + abs(dy) + abs(dz))
+    if metric in ["SUP_NORM", "LINF"]:
+        return float(max(abs(dx), abs(dy), abs(dz)))
+
+    return float((dx * dx + dy * dy + dz * dz) ** 0.5)

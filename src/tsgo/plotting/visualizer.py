@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from tsgo.container.point import Point
 from tsgo.container.container import Container
-from tsgo.utils.metric_enums import MetricType
+from tsgo.algorithm import energy_functions as ef
 
 
 def plot_result(
@@ -345,6 +345,7 @@ def plot_from_file(file_path: str, boundary_limits: tuple, colors: str = None, g
     
     print(data["D"])
     print(data["optimized points"])
+    print(f'Final Energy: {ef.E(data["optimized points"], data["D"], data["container"])}')
 
     points = data.get("optimized points")
     p = points.shape[0]

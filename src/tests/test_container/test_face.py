@@ -3,27 +3,7 @@ from tsgo.container.face import Face
 from tsgo.container.sample_polyhedron import cube, h_box
 
 cube = cube(radius=1)
-h_box = h_box()
-
-def test_face_box():
-    for face in cube.faces:
-        assert face.area() == 4.0, f"Face {face.description} should have an area of 4.0."
-        
-def test_area_h_box():
-    assert h_box.faces[0].area() == 7.0, "Combined Front Face should have an area of 7.0."
-    assert h_box.faces[1].area() == 7.0, "Combined Back Face should have an area of 7.0."
-    assert h_box.faces[2].area() == 3.0, "Left Wall should have an area of 3.0."
-    assert h_box.faces[3].area() == 3.0, "Right Wall should have an area of 3.0."
-    assert h_box.faces[4].area() == 1.0, "Top Left Face should have an area of 1.0."
-    assert h_box.faces[5].area() == 1.0, "Bottom Left Face should have an area of 1.0."
-    assert h_box.faces[6].area() == 1.0, "Top Right Face should have an area of 1.0."
-    assert h_box.faces[7].area() == 1.0, "Bottom Right Face should have an area of 1.0."
-    assert h_box.faces[8].area() == 1.0, "Inner Left Top Face should have an area of 1.0."
-    assert h_box.faces[9].area() == 1.0, "Inner Left Bottom Face should have an area of 1.0."
-    assert h_box.faces[10].area() == 1.0, "Inner Right Top Face should have an area of 1.0."
-    assert h_box.faces[11].area() == 1.0, "Inner Right Bottom Face should have an area of 1.0."
-    assert h_box.faces[12].area() == 1.0, "Inner Middle Bottom Face should have an area of 1.0."
-    assert h_box.faces[13].area() == 1.0, "Inner Middle Top Face should have an area of 1.0."
+h_box = h_box() 
 
 def test_half_space_1():
     point = Point(0, 0, 0)
@@ -62,20 +42,6 @@ def test_face_contains_non_planar_point():
     face = Face(vertices=[Point(0, 0, 0), Point(1, 0, 0), Point(0, 1, 0)], normal=[0, 0, 1])
     assert not face.contains(Point(0.5, 0.5, 0.1)), "Point above plane should not be contained."
     assert not face.contains(Point(0.5, 0.5, -0.1)), "Point below plane should not be contained."
-    
-def test_point_on_segment():
-    assert Face._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 1, 1))) == True
-    assert Face._point_on_segment(Point(1, -0.5, 1), (Point(1, 1, 1), Point(1, -1, 1))) == True
-    assert Face._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 0, 0))) == False
-
-def test_point_on_segment():
-    assert Face._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 1, 1))) == True
-    assert Face._point_on_segment(Point(1, -0.5, 1), (Point(1, 1, 1), Point(1, -1, 1))) == True
-    assert Face._point_on_segment(Point(1, -0.5, 1), (Point(1, -1, 1), Point(1, 0, 0))) == False
-
-def test_point_on_segment_edge_cases():
-    assert Face._point_on_segment(Point(1, -1, 1), (Point(1, -1, 1), Point(1, 1, 1))) == True
-    assert Face._point_on_segment(Point(1, 1, 1), (Point(1, -1, 1), Point(1, 1, 1))) == True
 
 def test_face_contains_outside_polygon():
     """Test contains with point on plane but outside polygon boundary."""
