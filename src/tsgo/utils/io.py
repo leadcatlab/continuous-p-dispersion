@@ -24,56 +24,76 @@ def get_datetime() -> str:
 
 def save_to_file(
     p: int, 
-    iterations: int, 
+    parallel_iterations: int, # Number of global multi-starts
+    iterations: int,          # Number of inner search steps
     D_init: float, 
-    X_opt: Union[np.ndarray, List[Point]], 
+    X_opt: Union[np.ndarray, List], 
     D_opt: float, 
-    container: Container, 
+    container: any, 
     elapsed_time: float, 
     metric_name: str = 'EUCLIDEAN',
     output_dir: str = "output"
 ) -> None:
-    print("[TSGO] Saving results to file.")
+    """
+    Saves the global optimization results for the 3D p-dispersion problem.
+    Reflects the multi-start pipeline strategy used to navigate non-convex solution spaces.
+    """
     
-    # Create output directory structure first
-    subfolder_name = os.path.join(output_dir, metric_name.lower(), f"iterations{iterations}")
-    os.makedirs(subfolder_name, exist_ok=True)
+    # 1. Organize Directory Structure
+    # Using parallel_iterations to define the folder level for batch comparisons
+    subfolder_path = os.path.join(output_dir, metric_name.lower(), f"batch_{parallel_iterations}")
+    os.makedirs(subfolder_path, exist_ok=True)
     
-    # Define file paths directly in target location
-    txt_filename = os.path.join(subfolder_name, f"TSGO_{p}_data.txt")
-    pkl_filename = txt_filename.replace(".txt", ".pkl")
+    # 2. Define File Paths
+    base_filename = f"TSGO_p{p}_iter{iterations}_results"
+    txt_path = os.path.join(subfolder_path, f"{base_filename}.txt")
+    pkl_path = os.path.join(subfolder_path, f"{base_filename}.pkl")
     
-    # Write text file
-    string = ""
-    string += f"Number of Points: {p}\nIterations: {iterations}\nD_initial: {D_init}\nContainer: {container.description}\nMetric: {metric_name}\n"
-    string += "\nOptimal Arrangement of Points:\n"
+    # 3. Format Text Output
+    # Including both global (parallel) and local iteration counts for completeness
+    lines = [
+        f"--- TSGO 3D Dispersion Results ---",
+        f"Saved on: {get_datetime()}",
+        f"Container: {container.description}",
+        f"Metric: {metric_name}",
+        f"Number of Points (p): {p}",
+        f"Global Multi-start (Parallel Iterations): {parallel_iterations}",
+        f"Inner Search Steps (Iterations): {iterations}",
+        f"D_initial: {D_init}",
+        "-" * 30,
+        "Optimal Arrangement of Points (x, y, z):"
+    ]
+    
     for point in X_opt:
         if isinstance(point, np.ndarray):
-            string += f"{point[0]}, {point[1]}, {point[2]}\n"
-        elif isinstance(point, Point):
-            string += f"{point.x}, {point.y}, {point.z}\n"
+            lines.append(f"{point[0]:.8f}, {point[1]:.8f}, {point[2]:.8f}")
         else:
-            string += str(point) + "\n"
+            lines.append(f"{point.x:.8f}, {point.y:.8f}, {point.z:.8f}")
+            
+    lines.extend([
+        "-" * 30,
+        f"Optimal Radius (D): {D_opt:.8f}",
+        f"Final Energy: {ef.E(X_opt, D_opt, container)}",
+        f"Elapsed Time: {elapsed_time:.2f} seconds",
+        "-----------------------------------"
+    ])
     
-    string += f"\nOptimal Minimum Distance between Points: {D_opt}\n"
-    string += f"Time taken: {elapsed_time:.2f} seconds\n"
-    string += f"Saved on: {get_datetime()}\n"
-    string += f"Final Energy: {ef.E(X_opt, D_opt, container)}\n"
-    
-    with open(txt_filename, "w") as f:
-        f.write(string)
+    with open(txt_path, "w") as f:
+        f.write("\n".join(lines))
 
-    # Write pickle file
-    with open(pkl_filename, "wb") as f:
+    # 4. Pickle Data (Including both iteration parameters)
+    with open(pkl_path, "wb") as f:
         pickle.dump({
-            'optimized points': X_opt,
-            'D': D_opt,
-            'container': container,
-            'elapsed_time': elapsed_time,
             'p': p,
+            'parallel_iterations': parallel_iterations,
             'iterations': iterations,
             'D_init': D_init,
-            'metric': metric_name
+            'X_opt': X_opt,
+            'D_opt': D_opt,
+            'container': container,
+            'metric': metric_name,
+            'elapsed_time': elapsed_time,
+            'timestamp': get_datetime()
         }, f)
     
 def collect_best(output_dir: str) -> None:
@@ -96,15 +116,14 @@ def collect_best(output_dir: str) -> None:
                 file_path = os.path.join(root, file)
                 with open(file_path, "rb") as f:
                     data = pickle.load(f)
-                    D_opt = data.get('D', -np.inf)
+                    D_opt = data.get('D_opt', -np.inf)
                     if D_opt > best_D_opt:
                         best_D_opt = D_opt
                         best_file = file_path
     if best_file is not None:
         dest_file = os.path.join(output_dir, "best_result.pkl")
         shutil.copy(best_file, dest_file)
-        print(f"[TSGO] Best result collected: {best_file} with D_opt = {best_D_opt}")
-        print(f"[TSGO] Best result saved to: {dest_file}")
+        print(f"[TSGO] Best result collected: {best_file} with D_opt = {best_D_opt}. Saved to: {dest_file}")
         
 def collect_best_entrypoint():
     import argparse

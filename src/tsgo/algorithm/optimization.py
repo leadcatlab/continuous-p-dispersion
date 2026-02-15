@@ -46,7 +46,7 @@ def local_optimization(
     
     if local_optimization_times_called % TIMES_CALLED == 0:
         avg_time = local_optimization_time_total / local_optimization_times_called
-        print(f"\t[local_optimization] Average execution time after {local_optimization_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_times_called * avg_time:.2f} total seconds")
+        # print(f"\t[local_optimization] Average execution time after {local_optimization_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_times_called * avg_time:.2f} total seconds")
     
     return optimized_points
 
@@ -92,7 +92,7 @@ def local_optimization_phi(
     local_optimization_phi_time_total += time.time() - start_time
     if local_optimization_phi_times_called % TIMES_CALLED == 0:
         avg_time = local_optimization_phi_time_total / local_optimization_phi_times_called
-        print(f"\t[local_optimization_phi] Average execution time after {local_optimization_phi_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_phi_times_called * avg_time:.2f} total seconds")
+        # print(f"\t[local_optimization_phi] Average execution time after {local_optimization_phi_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_phi_times_called * avg_time:.2f} total seconds")
 
     return optimized_points, optimized_d
 

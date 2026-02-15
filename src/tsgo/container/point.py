@@ -1,5 +1,7 @@
 import numpy as np
 
+from typing import Union
+
 class Point:
     def __init__(self, x, y, z):
         """Initialize a 3D point.
@@ -79,3 +81,14 @@ class Point:
 
     def __repr__(self):
         return f"Point({self.x:.3f}, {self.y:.3f}, {self.z:.3f})"
+    
+def unwrap_point(point: Union[Point, np.ndarray]) -> np.ndarray:
+    """Convert a Point or numpy array to a numpy array.
+
+    :param point: Point or numpy array to convert.
+    :return: Numpy array representation of the point."""
+    if isinstance(point, Point):
+        return point.x, point.y, point.z
+    
+    point_arr = np.asarray(point, dtype=float)
+    return point_arr[0], point_arr[1], point_arr[2]

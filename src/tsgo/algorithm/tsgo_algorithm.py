@@ -17,6 +17,7 @@ def _tsgo_algorithm(
     container: Container,
     D_init: float,
     metric_name: str = "EUCLIDEAN",
+    iterations: int = 1,
     # algorithm control
     beta_max: int = 3,
     Q: int = 3,
@@ -28,54 +29,78 @@ def _tsgo_algorithm(
     X = container.generate_initial_solution(p)  # np.ndarray
     
     start_time = time.time()
-
     X = tabu_search(
         X,
-        D,
-        container,
+        D=D,
+        container=container,
         beta_max=beta_max,
         Q=Q,
         method=optimization_method,
         metric=metric_name,
         eps=eps,
     )
-
-    if np.isclose(ef.E(X, D, container, metric=metric_name), 0.0, atol=eps):
-        X, D = adjust_distance(
+    X, D = adjust_distance(
+        X,
+        D0=D,
+        container=container,
+        method=optimization_method,
+        metric=metric_name,
+    )
+    
+    X_opt, D_opt = X, D
+    
+    for _ in range(iterations - 1):
+        D = D_opt
+        X = container.generate_initial_solution(p)  # np.ndarray
+        X = tabu_search(
             X,
-            D,
-            container,
-            method=optimization_method,
-            metric=metric_name,
-            tol=eps,
-        )
-        E = ef.E(X, D, container, metric=metric_name)
-    else:
-        X, D, E = _tsgo_algorithm(
-            p,
-            container,
-            D_init,
-            metric_name,
+            D=D,
+            container=container,
             beta_max=beta_max,
             Q=Q,
+            method=optimization_method,
+            metric=metric_name,
             eps=eps,
-            optimization_method=optimization_method,
         )
+        if ef.E(X, D, container, metric=metric_name) < eps:
+            X, D = adjust_distance(
+                X,
+                D0=D,
+                container=container,
+                method=optimization_method,
+                metric=metric_name,
+            )
+            if D > D_opt and ef.E(X, D, container, metric=metric_name) < eps:
+                X_opt, D_opt = X, D
+        
     elapsed_time = time.time() - start_time
     # Save the X, D, E values to file in case of crash
     unique_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     output_dir = f'output/{container.description}/p{p}/crashs/{unique_id}'
-    save_to_file(p, 1, D_init, X, D, container, elapsed_time, metric_name=metric_name, output_dir=output_dir)
-    return X, D, E
+    save_to_file(
+        p=p,
+        parallel_iterations=1,
+        iterations=iterations,
+        D_init=D_init,
+        X_opt=X_opt,
+        D_opt=D_opt,
+        container=container,
+        elapsed_time=elapsed_time,
+        metric_name=metric_name,
+        output_dir=output_dir
+    )
+    E = ef.E(X_opt, D_opt, container, metric=metric_name)
+    return X_opt, D_opt, E
 
 
 # ALGORITHM 1: Main Framework of the TSGO Algorithm
 # Output: The best configuration found (X_opt) and the maximal minimum distance between points
 def tsgo_algorithm_parallel(
-    iterations: int,
+    parallel_iterations: int,
     p: int,
     container: Container,
     D_init: float,
+    iterations: int = 1,
     metric_name: str = 'EUCLIDEAN',
     *,
     # algorithm control
@@ -88,11 +113,11 @@ def tsgo_algorithm_parallel(
     optimization_method: str = 'L-BFGS-B'
 ) -> Tuple[np.ndarray, float]:
     """
-    Run `_tsgo_algorithm` in parallel `iterations` times and return the (X, D)
+    Run `_tsgo_algorithm` in parallel `parallel_iterations` times and return the (X, D)
     pair with the largest D.
 
     Positional args:
-        iterations: number of independent runs to perform.
+        parallel_iterations: number of independent runs to perform.
         p: number of points (passed to _tsgo_algorithm).
         container: Container instance for the problem.
         D_init: initial minimum distance.
@@ -116,12 +141,13 @@ def tsgo_algorithm_parallel(
                 container,
                 D_init,
                 metric_name,
+                iterations,
                 beta_max,
                 Q,
                 eps,
                 optimization_method
             )
-            for _ in range(iterations)
+            for _ in range(parallel_iterations)
         ]
 
         for fut in as_completed(futures):
@@ -143,7 +169,7 @@ def tabu_search(
     Q: int = 3,
     method: str = "BFGS",
     metric: str = "EUCLIDEAN",
-    eps: float = 1e-16,
+    eps: float = 1e-10,
     *,
     tabu_tenure: int = 10,
     tabu_max_size: int = 200,
@@ -182,10 +208,11 @@ def tabu_search(
     it = 0
 
     while (no_improve <= beta_max) and (best_energy > eps):
-        print(f"[TABU SEARCH @ {get_datetime()}] Beginning iteration {it}, Current Energy: {best_energy:.8f}")
-        print(f"[TABU SEARCH @ {get_datetime()}] No improvement count: {no_improve}/{beta_max}")
+        # print(f"[TABU SEARCH @ {get_datetime()}] Beginning iteration {it}, Current Energy: {best_energy:.8f}")
+        # print(f"[TABU SEARCH @ {get_datetime()}] No improvement count: {no_improve}/{beta_max}")
         if tabu_list:
-            print(f"[TABU SEARCH @ {get_datetime()}] Current tabu list {len(tabu_list)}: {tabu_list}")
+            # print(f"[TABU SEARCH @ {get_datetime()}] Current tabu list {len(tabu_list)}: {tabu_list}")
+            pass
         iteration_start_time = time.time()
 
         # NOTE: use *current* X (not X_best) for selecting high/low energy points, as you already do
@@ -263,7 +290,7 @@ def tabu_search(
 
         it += 1
         iteration_elapsed_time = time.time() - iteration_start_time
-        print(f"[TABU SEARCH @ {get_datetime()}] Iteration {it} completed in {iteration_elapsed_time:.4f} seconds -- Energy: {round(best_energy, 10)}\n")
+        # print(f"[TABU SEARCH @ {get_datetime()}] Iteration {it} completed in {iteration_elapsed_time:.4f} seconds -- Energy: {round(best_energy, 10)}\n")
 
     elapsed_time = time.time() - start_time
     print(f"[TABU SEARCH @ {get_datetime()}] Finished in {elapsed_time:.4f} seconds")
@@ -311,7 +338,7 @@ def adjust_distance(
         decimal_places = max(0, -int(np.log10(tol)) + 1)
         energy = round(ef.E(X, D, container, metric=metric), decimal_places)
         phi = round(ef.phi(X, D, mu, container, metric=metric), decimal_places)
-        print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed iteration in {iteration_elapsed_time:.4f} seconds. Current Energy: {energy:.{decimal_places}f}/{phi:.{decimal_places}f}, D: {D}.")
+        print(f"[ADJUST DISTANCE @ {get_datetime()}] Completed iter. {iterations} in {iteration_elapsed_time:.4f} seconds. Current Energy: {energy:.{decimal_places}f}/{phi:.{decimal_places}f}, D: {D}.")
 
         if no_change_counter >= 3:
             break
@@ -326,5 +353,5 @@ def adjust_distance(
         X, D = adjust_distance(X, D, container, mu, iter_max, method, metric)
 
     elapsed_time = time.time() - start_time
-    print(f"[ADJUST DISTANCE @ {get_datetime()}] Finished in {elapsed_time:.4f} seconds -- D: {D}, Quality: {ef.E(X, D, container, metric=metric):.8f}")
+    # print(f"[ADJUST DISTANCE @ {get_datetime()}] Finished in {elapsed_time:.4f} seconds -- D: {D}, Quality: {ef.E(X, D, container, metric=metric):.8f}")
     return X, D

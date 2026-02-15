@@ -185,3 +185,10 @@ class Face:
                 return False
 
         return True
+    
+    @property
+    def area(self) -> float:
+        # using shoelace formula for polygon area
+        x = self._outer2d[:, 0]
+        y = self._outer2d[:, 1]
+        return 0.5 * abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))

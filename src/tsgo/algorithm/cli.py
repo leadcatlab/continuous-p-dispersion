@@ -21,7 +21,8 @@ polyhedron_examples = {
 
 def run_tsgo(
     p: int = 3,
-    iterations: int = 10,
+    parallel_iterations: int = 10,
+    iterations: int = 3,
     D_init: float = 0.1,
     container: Container = cube(radius=0.5),
     metric_name: str = 'EUCLIDEAN',
@@ -35,10 +36,12 @@ def run_tsgo(
     num_workers: int = 6,
 ):
     start_time = time.time()
-    print(f"[TSGO] Initializing TSGO Algorithm with p={p} points in container {container} using metric {metric_name}.")
+    print(f"[TSGO] Initializing TSGO Algorithm with p={p} points in container {container.description} using metric {metric_name}.")
+    print(f"[TSGO] Arguments: p={p}, parallel_iterations={parallel_iterations}, iterations={iterations}, D_init={D_init}, container={container.description}, metric_name={metric_name}, optimization_method={optimization_method}, Q={Q}, beta_max={beta_max}, eps={eps}, save={save}, output_dir={output_dir}, plot={plot}, num_workers={num_workers}")
 
     X_opt, D_opt = tsgo_algorithm_parallel(
         p=p,
+        parallel_iterations=parallel_iterations,
         iterations=iterations,
         D_init=D_init,
         container=container,
@@ -51,16 +54,22 @@ def run_tsgo(
     )
     
     elapsed_time = time.time() - start_time
-    print(f"[TSGO] Completed Optimization in {elapsed_time:.2f} seconds")
-    
-    # Report final outputs
-    print(f"[TSGO] Optimization completed with p={p} points in container {container} with metric {metric_name}.")
-    print(f"[TSGO] Minimum distance between points: {D_opt}.")
-    print(f"[TSGO] Final Energy: {ef.E(X_opt, D_opt, container)}.")
+    print(f"[TSGO] Optimization completed in {elapsed_time:.8f}s | p={p} | D_opt={D_opt:.10f} | E={ef.E(X_opt, D_opt, container):.10f}")
 
     # Save to file
     if save:
-        save_to_file(p, iterations, D_init, X_opt, D_opt, container, elapsed_time, metric_name=metric_name, output_dir=output_dir)
+        save_to_file(
+            p=p,
+            parallel_iterations=parallel_iterations,
+            iterations=iterations,
+            D_init=D_init,
+            X_opt=X_opt,
+            D_opt=D_opt,
+            container=container,
+            elapsed_time=elapsed_time,
+            metric_name=metric_name,
+            output_dir=output_dir
+        )
         shutil.rmtree(f'{output_dir}/crashs', ignore_errors=True)
 
     # Plot results
@@ -75,7 +84,8 @@ def main():
     
     parser = argparse.ArgumentParser(description="Run TSGO Algorithm for Continuous p-Dispersion Problem")
     parser.add_argument("--p", type=int, default=3, help="Number of points to place")
-    parser.add_argument("--iterations", type=int, default=6, help="Number of iterations")
+    parser.add_argument("--iterations", type=int, default=1, help="Number of iterations")
+    parser.add_argument("--parallel_iterations", type=int, default=5, help="Number of parallel iterations")
     parser.add_argument("--D_init", type=float, default=0.1, help="Initial minimum distance")
     parser.add_argument("--container", type=str, default="cube", choices=polyhedron_examples.keys(), help="Container shape")
     parser.add_argument("--metric", type=str, default="EUCLIDEAN", help="Distance metric to use")
@@ -83,10 +93,10 @@ def main():
     parser.add_argument("--Q", type=int, default=3, help="Parameter Q for the algorithm")
     parser.add_argument("--beta_max", type=int, default=5, help="Maximum beta value for the algorithm")
     parser.add_argument("--save", type=bool, default=True, help="Whether to save results to file")
-    parser.add_argument("--num_workers", type=int, default=6, help="Number of parallel workers")
+    parser.add_argument("--num_workers", type=int, default=5, help="Number of parallel workers")
     parser.add_argument("--output_dir", type=str, default="", help="Output directory for saved files")
     parser.add_argument("--plot", type=bool, default=False, help="Whether to plot the final configuration")
-    parser.add_argument("--eps", type=float, default=1e-16, help="Epsilon tolerance for optimization")
+    parser.add_argument("--eps", type=float, default=1e-5, help="Epsilon tolerance for optimization")
     
     args = parser.parse_args()
     
@@ -110,18 +120,20 @@ def main():
     slurm_task_id = os.getenv("SLURM_ARRAY_TASK_ID")
     
     run_tsgo(
-        p=args.p, 
-        iterations=args.iterations, 
-        D_init=args.D_init, 
-        container=polyhedron_examples[args.container], 
-        save=args.save, 
-        output_dir=output_dir,
-        plot=args.plot, 
-        num_workers=num_workers, 
-        optimization_method=args.solver, 
-        Q=args.Q, 
+        p=args.p,
+        parallel_iterations=args.parallel_iterations,
+        iterations=args.iterations,
+        D_init=args.D_init,
+        container=polyhedron_examples[args.container],
         metric_name=args.metric,
-        eps=args.eps
+        optimization_method=args.solver,
+        Q=args.Q,
+        beta_max=args.beta_max,
+        eps=args.eps,
+        save=args.save,
+        output_dir=output_dir,
+        plot=args.plot,
+        num_workers=num_workers,
     )
     
     if slurm_task_id is not None:

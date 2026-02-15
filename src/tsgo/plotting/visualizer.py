@@ -1,6 +1,6 @@
 import argparse
 import pickle
-from typing import Optional
+from typing import List, Optional, Union
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -299,7 +299,7 @@ def plot_result(
 
     return ax
 
-def plot_active_faces(point: Point, container: Container, title: str = None) -> None:
+def plot_active_faces(point: Point, container: Container, inside: bool, title: str = None) -> None:
     """
     Plots the container with faces that are active for the given points highlighted.
 
@@ -309,7 +309,7 @@ def plot_active_faces(point: Point, container: Container, title: str = None) -> 
     """
     active_face_indices = set()
     for index, face in enumerate(container.faces):
-        if container._is_active_plane(face, point):
+        if container._is_active_plane(face, point, inside):
             active_face_indices.add(index)
     
     points = point.as_array().reshape(1, 3)
@@ -329,36 +329,72 @@ def plot_active_footpoints(point: Point, container: Container, title: str = None
     footpoint_coords = np.array([fp.as_array() for fp in footpoints])
     colors = ['red'] + ['blue'] * len(footpoints)
     points = np.vstack([points, footpoint_coords]) if footpoint_coords.size > 0 else points
+    
+    # color the active faces pink and the rest grey
+    active_face_indices = set()
+    inside = container.contains(point)
+    for index, face in enumerate(container.faces):
+        if container._is_active_plane(face, point, inside):
+            active_face_indices.add(index)
 
-    plot_result(points, D=0.05, container=container, colors=colors, show=True, title=title, grid=False)
 
-def plot_from_file(file_path: str, boundary_limits: tuple, colors: str = None, grid: bool = False, metric: str = 'EUCLIDEAN') -> None:
+    plot_result(points, D=0.05, container=container, colors=colors, face_colors=active_face_indices, show=True, title=title, grid=False)
+
+def plot_from_file(
+    file_path: str, 
+    boundary_limits: tuple, 
+    colors: Union[str, List[str]] = None, 
+    grid: bool = False, 
+    metric: str = 'EUCLIDEAN'
+) -> None:
     """
-    Plots the 3D configuration of points from a file.
-
-    Args:
-        file_path (str): The path to the file containing point data.
+    Plots the 3D configuration of points from a pickle file.
+    Compatible with both legacy (optimized points/D) and updated (X_opt/D_opt) keys.
     """
-    # load the pickle object
+    # 1. Load the pickle object
     with open(file_path, 'rb') as f:
         data = pickle.load(f)
     
-    print(data["D"])
-    print(data["optimized points"])
-    print(f'Final Energy: {ef.E(data["optimized points"], data["D"], data["container"])}')
-
-    points = data.get("optimized points")
-    p = points.shape[0]
-    D = data.get("D")
-    container = data.get("container")
-    metric = metric
+    # 2. Extract radius using fallback logic
+    # Checks for updated 'D_opt' first, then legacy 'D'
+    D = data.get("D_opt") if "D_opt" in data else data.get("D")
     
+    # 3. Extract points using fallback logic
+    # Checks for updated 'X_opt' first, then legacy 'optimized points'
+    points = data.get("X_opt") if "X_opt" in data else data.get("optimized points")
+    
+    # 4. Extract metadata and container info
+    container = data.get("container")
+    p = data.get("p")
+    p_iters = data.get("parallel_iterations", data.get("iterations", "N/A"))
+    
+    # 5. Diagnostic Output
+    # The energy function E identifies if the solution is feasible (E=0) [cite: 41, 119]
+    print(f"--- Configuration for p={p} ---")
+    print(f"Radius: {D}")
+    print(f"Global/Parallel Iterations: {p_iters}")
+    print(f"Final Energy: {ef.E(points, D, container)}")
+
+    # 6. Handle point coloring for p points [cite: 70]
     if isinstance(colors, str):
         colors = [colors for _ in range(p)]
+    elif colors is None:
+        colors = ['blue' for _ in range(p)]
 
-    # Plot the points
-    print("Plotting...", grid)
-    plot_result(points, D, container=container, metric_name=metric, boundary_limits=boundary_limits, colors=colors, show=True, grid=grid)
+    # 7. Execute 3D visualization
+    # This renders the dispersion points within the polyhedral container [cite: 7, 75]
+    print(f"Plotting... (Grid: {grid})")
+    
+    plot_result(
+        points, 
+        D, 
+        container=container, 
+        metric_name=metric, 
+        boundary_limits=boundary_limits, 
+        colors=colors, 
+        show=True, 
+        grid=grid
+    )
     
 def main():
     parser = argparse.ArgumentParser(description="Plot 3D configuration of points from a file.")

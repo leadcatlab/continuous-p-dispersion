@@ -220,4 +220,15 @@ class Container:
 
     def generate_initial_solution(self, p: int) -> np.ndarray:
         return np.array([self._sample_random_point() for _ in range(p)], dtype=float)
+    
+    @property
+    def volume(self) -> float:
+        # using divergence theorem: V = (1/3) * sum(face_area * face_normal . face_centroid)
+        volume = 0.0
+        for face in self.faces:
+            area = face.area
+            normal = np.asarray(face.normal, dtype=float)
+            centroid = np.mean([v.as_array() for v in face.vertices], axis=0)
+            volume += area * np.dot(normal, centroid)
+        return abs(volume) / 3.0
 

@@ -34,7 +34,7 @@ _PAIR_IDX_CACHE: Dict[int, Tuple[np.ndarray, np.ndarray]] = {}  # p -> (iu, ju)
 # ============================================================
 # Timing / profiling controls
 # ============================================================
-TIMES_CALLED = 50000
+TIMES_CALLED = 1_000_000
 
 _TIME_STATS = {
     "dispersion_penalty": {"calls": 0, "time": 0.0},
