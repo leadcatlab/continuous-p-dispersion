@@ -16,5 +16,5 @@ if __name__ == '__main__':
     container = triangular_pyramid()
     X = container.generate_initial_solution(p=9)
     D = 0.1025
-    X = tabu_search(X, D=D, container=container, beta_max=1, Q=2, method='L-BFGS-B', metric='EUCLIDEAN')
+    X = tabu_search(X, D=D, container=container, beta_max=1, Q=2, optimization_method='L-BFGS-B', metric='EUCLIDEAN')
     plot_result(X, D, container, title="9-Point Dispersion in Triangular Pyramid", grid=False, colors='Blues')

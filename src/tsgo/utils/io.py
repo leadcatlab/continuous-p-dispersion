@@ -31,8 +31,13 @@ def save_to_file(
     D_opt: float, 
     container: any, 
     elapsed_time: float, 
-    metric_name: str = 'EUCLIDEAN',
-    output_dir: str = "output"
+    Q,
+    beta_max,
+    eps,
+    optimization_method,
+    metric_name: str,
+    output_dir: str,
+
 ) -> None:
     """
     Saves the global optimization results for the 3D p-dispersion problem.
@@ -60,6 +65,10 @@ def save_to_file(
         f"Global Multi-start (Parallel Iterations): {parallel_iterations}",
         f"Inner Search Steps (Iterations): {iterations}",
         f"D_initial: {D_init}",
+        f'Q: {Q}',
+        f'beta_max: {beta_max}',
+        f'eps: {eps}',
+        f'Optimization Method: {optimization_method}',
         "-" * 30,
         "Optimal Arrangement of Points (x, y, z):"
     ]
