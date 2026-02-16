@@ -196,3 +196,11 @@ def ribbed_cage():
         Face([Point(8.5, 1, 4), Point(8.5, 1, 5), Point(8.5, 10, 5), Point(8.5, 10, 4)], [1, 0, 0], "Top Vertical Rib 4 Right Face"),
     
     ], description="ribbed-cage")
+
+CONTAINERS = {
+    "cube": cube,
+    "h-box": h_box,
+    "tetrahedron": triangular_pyramid,
+    "pointy-star": pointy_star,
+    "cage": ribbed_cage
+}

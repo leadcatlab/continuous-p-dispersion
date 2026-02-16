@@ -8,7 +8,7 @@ from tsgo.algorithm import energy_functions as ef
 from tsgo.container.container import Container
 from tsgo.utils.io import get_datetime
 
-TIMES_CALLED = 100
+TIMES_CALLED = 10
 
 local_optimization_times_called = 0
 local_optimization_time_total = 0.0
@@ -20,8 +20,9 @@ def local_optimization(
     X0: np.ndarray, 
     D0: float, 
     container: Container, 
+    verbose: bool,
     method: str = 'L-BFGS-B', 
-    metric: str = 'EUCLIDEAN'
+    metric: str = 'EUCLIDEAN',
 ) -> np.ndarray:
     """
     Perform local optimization on the given 3D points.
@@ -34,7 +35,9 @@ def local_optimization(
     Returns:
         List[Point]: Locally optimized 3D points.
     """
+    vprint = print if verbose else lambda *args, **kwargs: None
     global local_optimization_times_called, local_optimization_time_total
+    
     start_time = time.time()
     local_optimization_times_called += 1
     function = lambda X: ef.E(X, D0, container, metric=metric)
@@ -46,7 +49,7 @@ def local_optimization(
     
     if local_optimization_times_called % TIMES_CALLED == 0:
         avg_time = local_optimization_time_total / local_optimization_times_called
-        # print(f"\t[local_optimization] Average execution time after {local_optimization_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_times_called * avg_time:.2f} total seconds")
+        vprint(f"\t[local_optimization] Avg. time {local_optimization_times_called * avg_time:.2f}s")
     
     return optimized_points
 
@@ -54,7 +57,8 @@ def local_optimization_phi(
     X0: np.ndarray, 
     D0: float, 
     container: Container, 
-    mu: float, 
+    mu: float,
+    verbose: bool,
     method: str = 'L-BFGS-B', 
     metric: str = 'EUCLIDEAN'
 ) -> Tuple[np.ndarray, float]:
@@ -70,7 +74,9 @@ def local_optimization_phi(
     Returns:
         Tuple[List[Point], float]: The optimized 3D points and the optimized distance.
     """
+    vprint = print if verbose else lambda *args, **kwargs: None
     global local_optimization_phi_times_called, local_optimization_phi_time_total
+    
     start_time = time.time()
     local_optimization_phi_times_called += 1
     def function(X: np.ndarray) -> float:
@@ -92,7 +98,7 @@ def local_optimization_phi(
     local_optimization_phi_time_total += time.time() - start_time
     if local_optimization_phi_times_called % TIMES_CALLED == 0:
         avg_time = local_optimization_phi_time_total / local_optimization_phi_times_called
-        # print(f"\t[local_optimization_phi] Average execution time after {local_optimization_phi_times_called} calls: {avg_time:.6f} seconds -> {local_optimization_phi_times_called * avg_time:.2f} total seconds")
+        vprint(f"\t[local_optimization_phi] Avg. time {local_optimization_phi_times_called * avg_time:.2f}s")
 
     return optimized_points, optimized_d
 
@@ -107,7 +113,7 @@ def monotonic_basin_hopping(X: np.ndarray, D: float, container: Container, itera
         iterations (int, optional): Number of basin hopping iterations. Defaults to 10.
         metric (str, optional): Distance metric to use. Defaults to 'EUCLIDEAN'.
     Returns:
-        np.ndarray: _description_
+        np.ndarray: The optimized configuration of points.
     """
     x0 = X.flatten()
 

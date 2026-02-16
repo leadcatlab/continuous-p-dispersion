@@ -345,7 +345,6 @@ def plot_from_file(
     boundary_limits: tuple, 
     colors: Union[str, List[str]] = None, 
     grid: bool = False, 
-    metric: str = 'EUCLIDEAN'
 ) -> None:
     """
     Plots the 3D configuration of points from a pickle file.
@@ -389,7 +388,7 @@ def plot_from_file(
         points, 
         D, 
         container=container, 
-        metric_name=metric, 
+        metric_name=data['metric'], 
         boundary_limits=boundary_limits, 
         colors=colors, 
         show=True, 
@@ -402,7 +401,6 @@ def main():
     parser.add_argument("--limits", type=float, nargs=6, help="Boundary limits for the plot as xmin xmax ymin ymax zmin zmax", required=False, default=None)
     parser.add_argument("--colors", type=str, default=None, help="Color map name or comma-separated list of colors for points.")
     parser.add_argument("--grid", type=bool, default=False, help="Whether to show grid in the plot.")
-    parser.add_argument("--metric", type=str, default='EUCLIDEAN', help="Metric name for sphere plotting.")
     args = parser.parse_args()
     
     boundary_limits = tuple(args.limits) if args.limits is not None else None
@@ -410,7 +408,7 @@ def main():
         args.colors = args.colors.split(',')
     elif args.colors is not None:
         args.colors = args.colors.strip()
-    plot_from_file(args.filepath, boundary_limits=boundary_limits, colors=args.colors, grid=args.grid, metric=args.metric)
+    plot_from_file(args.filepath, boundary_limits=boundary_limits, colors=args.colors, grid=args.grid)
     
 if __name__ == "__main__":
     main()

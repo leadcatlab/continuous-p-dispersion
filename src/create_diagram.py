@@ -39,6 +39,6 @@ if __name__ == "__main__":
         ]
     )
     
-    X, D = adjust_distance(initial_config, D0=D, container=polyhedron, method='BFGS', metric='EUCLIDEAN', mu=10.0)
+    X, D = adjust_distance(initial_config, D0=D, container=polyhedron, optimization_method='BFGS', metric='EUCLIDEAN', mu=10.0)
     
     plot_result(X, D, polyhedron, title="Initial Configuration with Boundary Intersection", grid=False, colors=colors)

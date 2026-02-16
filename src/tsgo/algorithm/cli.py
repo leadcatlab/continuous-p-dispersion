@@ -2,13 +2,14 @@ import os
 import shutil
 import time
 
+from tsgo.configuration import Config
 from tsgo.algorithm import energy_functions as ef
 from tsgo.algorithm.tsgo_algorithm import tsgo_algorithm_parallel
 from tsgo.container.container import Container
 from tsgo.container.point import Point
-from tsgo.container.sample_polyhedron import cube, h_box, triangular_pyramid, pointy_star, ribbed_cage
+from tsgo.container.sample_polyhedron import cube, h_box, triangular_pyramid, pointy_star, ribbed_cage, CONTAINERS
 from tsgo.plotting.visualizer import plot_result
-from tsgo.utils.io import save_to_file
+from tsgo.utils.io import get_datetime, save_to_file
 
 # NOTE: This inverse of this map is the description of each container in sample_polyhedron.py
 polyhedron_examples = {
@@ -20,61 +21,56 @@ polyhedron_examples = {
 }
 
 def run_tsgo(
-    p: int = 3,
-    parallel_iterations: int = 10,
-    iterations: int = 3,
-    D_init: float = 0.1,
-    container: Container = cube(radius=0.5),
-    metric_name: str = 'EUCLIDEAN',
-    optimization_method: str = "BFGS",
-    Q: int = 3,
-    beta_max: int = 5,
-    eps: float = 1e-16,
-    save: bool = True,
-    output_dir: str = "",
-    plot: bool = False,
-    num_workers: int = 6,
+    config: Config
 ):
     start_time = time.time()
-    print(f"[TSGO] Initializing TSGO Algorithm with p={p} points in container {container.description} using metric {metric_name}.")
-    print(f"[TSGO] Arguments: p={p}, parallel_iterations={parallel_iterations}, iterations={iterations}, D_init={D_init}, container={container.description}, metric_name={metric_name}, optimization_method={optimization_method}, Q={Q}, beta_max={beta_max}, eps={eps}, save={save}, output_dir={output_dir}, plot={plot}, num_workers={num_workers}")
+    
+    vprint = print if config.verbose else lambda *args, **kwargs: None
+
+    vprint(f"[TSGO] Initializing TSGO Algorithm with configuration: {config}")
 
     X_opt, D_opt = tsgo_algorithm_parallel(
-        p=p,
-        parallel_iterations=parallel_iterations,
-        iterations=iterations,
-        D_init=D_init,
-        container=container,
-        metric_name=metric_name,
-        optimization_method=optimization_method,
-        Q=Q,
-        beta_max=beta_max,
-        eps=eps,
-        max_workers=num_workers,
+        p=config.p,
+        D_init=config.D_init,
+        container=config.container,
+        Q=config.Q,
+        beta_max=config.beta_max,
+        eps=config.eps,
+        metric=config.metric,
+        iterations=config.iterations,
+        processes=config.processes,
+        optimization_method=config.optimization_method,
+        output_dir=config.output_dir,
+        verbose=config.verbose,
     )
     
     elapsed_time = time.time() - start_time
-    print(f"[TSGO] Optimization completed in {elapsed_time:.8f}s | p={p} | D_opt={D_opt:.10f} | E={ef.E(X_opt, D_opt, container):.10f}")
+    print(f"[TSGO @ {get_datetime()}] Optimization completed in {elapsed_time:.8f}s | p={config.p} | D_opt={D_opt:.10f} | E={ef.E(X_opt, D_opt, config.container):.10f}")
 
     # Save to file
-    if save:
+    if config.save:
         save_to_file(
-            p=p,
-            parallel_iterations=parallel_iterations,
-            iterations=iterations,
-            D_init=D_init,
+            p=config.p,
+            parallel_iterations=config.processes,
+            iterations=config.iterations,
+            D_init=config.D_init,
             X_opt=X_opt,
             D_opt=D_opt,
-            container=container,
+            container=config.container,
             elapsed_time=elapsed_time,
-            metric_name=metric_name,
-            output_dir=output_dir
+            metric_name=config.metric,
+            output_dir=config.output_dir,
+            Q=config.Q,
+            beta_max=config.beta_max,
+            eps=config.eps,
+            optimization_method=config.optimization_method,
+
         )
-        shutil.rmtree(f'{output_dir}/crashs', ignore_errors=True)
+        shutil.rmtree(f'{config.output_dir}/crashs', ignore_errors=True)
 
     # Plot results
-    if plot:
-        plot_result(X_opt, D_opt, container=container, show_normals=False, metric_name=metric_name)
+    if config.plot is True:
+        plot_result(X_opt, D_opt, container=config.container, show_normals=False, metric_name=config.metric)
     
     return X_opt, D_opt
 
@@ -83,57 +79,56 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Run TSGO Algorithm for Continuous p-Dispersion Problem")
-    parser.add_argument("--p", type=int, default=3, help="Number of points to place")
-    parser.add_argument("--iterations", type=int, default=1, help="Number of iterations")
-    parser.add_argument("--parallel_iterations", type=int, default=5, help="Number of parallel iterations")
-    parser.add_argument("--D_init", type=float, default=0.1, help="Initial minimum distance")
-    parser.add_argument("--container", type=str, default="cube", choices=polyhedron_examples.keys(), help="Container shape")
-    parser.add_argument("--metric", type=str, default="EUCLIDEAN", help="Distance metric to use")
-    parser.add_argument("--solver", type=str, default="L-BFGS-B", help="Optimization method to use")
+    parser.add_argument("--p", type=int, help="Number of points to place")
+    parser.add_argument("--container", type=str, choices=polyhedron_examples.keys(), help="Container shape")
+    parser.add_argument("--D_init", type=float, help="Initial minimum distance")
+    parser.add_argument("--packing_density", type=float, default=None, help="Packing density for initial solution generation (if applicable)")
     parser.add_argument("--Q", type=int, default=3, help="Parameter Q for the algorithm")
-    parser.add_argument("--beta_max", type=int, default=5, help="Maximum beta value for the algorithm")
+    parser.add_argument("--beta_max", type=int, default=10, help="Maximum beta value for the algorithm")
+    parser.add_argument("--eps", type=float, default=1e-8, help="Epsilon tolerance for optimization")
+    parser.add_argument("--metric", type=str, default="EUCLIDEAN", help="Distance metric to use")
+    parser.add_argument("--iterations", type=int, default=1, help="Number of iterations")
+    parser.add_argument("--processes", type=int, default=1, help="Number of parallel iterations")
+    parser.add_argument("--optimization_method", type=str, default="L-BFGS-B", help="Optimization method to use")
     parser.add_argument("--save", type=bool, default=True, help="Whether to save results to file")
-    parser.add_argument("--num_workers", type=int, default=5, help="Number of parallel workers")
-    parser.add_argument("--output_dir", type=str, default="", help="Output directory for saved files")
     parser.add_argument("--plot", type=bool, default=False, help="Whether to plot the final configuration")
-    parser.add_argument("--eps", type=float, default=1e-5, help="Epsilon tolerance for optimization")
+    parser.add_argument("--output_dir", type=str, default='', help="Output directory for saved files")
+    parser.add_argument("--verbose", type=bool, default=False, help="Whether to print detailed logs during optimization")
     
     args = parser.parse_args()
     
-    # Setup the output directory
-    output_dir = args.output_dir
-    if not output_dir:
-        output_dir = f"output/{args.container}/p{args.p}"
-    print(f"[TSGO] Output directory set to: {output_dir}")
-    os.makedirs(output_dir, exist_ok=True)
+    configuration = Config(**{
+        "p": args.p,
+        "container": args.container,
+        "D_init": args.D_init,
+        "packing_density": args.packing_density,
+        "Q": args.Q,
+        "beta_max": args.beta_max,
+        "eps": args.eps,
+        "metric": args.metric,
+        "iterations": args.iterations,
+        "processes": args.processes,
+        "optimization_method": args.optimization_method,
+        "save": args.save,
+        "plot": args.plot,
+        "output_dir": args.output_dir,
+        "verbose": args.verbose
+    })
     
     # Assign workers from SLURM environment variable if available
     slurm_cpus_per_task = os.getenv("SLURM_CPUS_PER_TASK")
     if slurm_cpus_per_task is None:
-        num_workers = args.num_workers if args.num_workers > 0 else 6
+        configuration.processes = args.processes if args.processes > 0 else 6
     else:
         print(f"[TSGO] Using 'SLURM_CPUS_PER_TASK' environment variable to set number of workers: {slurm_cpus_per_task}.")
-        num_workers = int(slurm_cpus_per_task)
+        configuration.processes = int(slurm_cpus_per_task)
         
     
     # Get the task_id from SLURM environment variable if available
     slurm_task_id = os.getenv("SLURM_ARRAY_TASK_ID")
     
     run_tsgo(
-        p=args.p,
-        parallel_iterations=args.parallel_iterations,
-        iterations=args.iterations,
-        D_init=args.D_init,
-        container=polyhedron_examples[args.container],
-        metric_name=args.metric,
-        optimization_method=args.solver,
-        Q=args.Q,
-        beta_max=args.beta_max,
-        eps=args.eps,
-        save=args.save,
-        output_dir=output_dir,
-        plot=args.plot,
-        num_workers=num_workers,
+        config=configuration
     )
     
     if slurm_task_id is not None:
