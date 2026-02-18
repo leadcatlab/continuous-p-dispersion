@@ -87,6 +87,7 @@ class Config(BaseModel):
                 'output', 
                 values['container'],
                 f"p{values['p']}",
+                values['metric'].lower(),
             )
         os.makedirs(values['output_dir'], exist_ok=True)
         return values

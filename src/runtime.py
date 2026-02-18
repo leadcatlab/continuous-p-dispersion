@@ -1,27 +1,59 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Data definitions
-cube_runtimes = {
-    1: 4.72, 2: 8.65, 3: 15.21, 4: 18.71, 5: 34.55, 6: 45.30, 7: 43.40, 8: 34.28, 9: 68.67, 10: 89.31,
-}
+import glob
+import pickle
+import os
 
-tetrahedron_runtimes = {
-    1: 2.66922903, 2: 5.11073685, 3: 8.03986907, 4: 10.27118492, 5: 16.21308899, 
-    6: 19.78887391, 7: 23.43137407, 8: 27.57343102, 9: 38.35076404, 10: 32.95176697, 
-    11: 278.23813105, 20: 777.27, 30: 2307.85, 56: 16955.65,
-}
+import pandas as pd
 
-h_box_runtimes = {
-    1: 2.60671282, 2: 3.57589769, 3: 6.52290893, 4: 7.73551011, 5: 17.16410089,
-    6: 22.38812327, 7: 36.28490019, 8: 42.34856319, 9: 74.65780282, 10: 201.28235388,
-}
+def get_elapsed_times(root_dir="output/cube"):
+    """
+    Reads pkl files from output/cube/p<i>/euclidean/<subdir>/*.pkl
+    and returns a dict of {p_value: elapsed_time}.
+    """
+    results = {}
+    
+    # Pattern to match the nested structure: p<i>, then euclidean, then any subdir, then .pkl
+    # Adjust the pattern if your 'something_here' is multiple levels deep
+    pattern = os.path.join(root_dir, "p*", "euclidean", "*", "*.pkl")
+    
+    for filepath in glob.glob(pattern):
+        try:
+            # Extract the 'p' value from the path (e.g., from 'p56' extract 56)
+            # Path looks like: output/cube/p56/euclidean/...
+            parts = filepath.split(os.sep)
+            p_folder = [p for p in parts if p.startswith('p')][0 if root_dir != 'output/pointy-star' else 1]  # Handle case where 'p' folder is at different levels
+            p_value = int(p_folder[1:]) 
+            
+            with open(filepath, 'rb') as f:
+                data = pickle.load(f)
+                
+            # Store the elapsed time using p as the key
+            if 'elapsed_time' in data:
+                results[p_value] = data['elapsed_time']
+                
+        except (IndexError, ValueError, pickle.UnpicklingError, KeyError) as e:
+            print(f"Skipping {filepath}: {e}")
+            
+    return results
 
-pointy_star_runtimes = {
-    1: 4.51439476, 2: 8.42482805, 3: 14.38198614, 4: 19.30770612, 5: 26.45643210,
-    6: 38.64741278, 7: 50.72459102, 8: 60.88067007, 9: 134.33394694, 10: 180.30770111,
-    20: 852.00, 30: 2540.28, 40: 837.85, 50: 1140.64, 60: 1235.70,
-}
+cube_runtimes = {int(k): v for k, v in sorted(get_elapsed_times(root_dir="output/cube").items(), key=lambda x: int(x[0]))}
+tetrahedron_runtimes = {int(k): v for k, v in sorted(get_elapsed_times(root_dir="output/tetrahedron").items(), key=lambda x: int(x[0]))}
+h_box_runtimes = {int(k): v for k, v in sorted(get_elapsed_times(root_dir="output/h-box").items(), key=lambda x: int(x[0]))}
+pointy_star_runtimes = {int(k): v for k, v in sorted(get_elapsed_times(root_dir="output/pointy-star").items(), key=lambda x: int(x[0]))}
+
+# make a dataframe for the runtimes by p values (the p values for each set may differ) -- fill with NaN if a p value is missing for a set
+df = pd.DataFrame({
+    "p": sorted(set(cube_runtimes.keys()) | set(tetrahedron_runtimes.keys()) | set(h_box_runtimes.keys()) | set(pointy_star_runtimes.keys())),
+    "Cube": [cube_runtimes.get(p, np.nan) for p in sorted(set(cube_runtimes.keys()) | set(tetrahedron_runtimes.keys()) | set(h_box_runtimes.keys()) | set(pointy_star_runtimes.keys()))],
+    "Tetrahedron": [tetrahedron_runtimes.get(p, np.nan) for p in sorted(set(cube_runtimes.keys()) | set(tetrahedron_runtimes.keys()) | set(h_box_runtimes.keys()) | set(pointy_star_runtimes.keys()))],
+    "H-Box": [h_box_runtimes.get(p, np.nan) for p in sorted(set(cube_runtimes.keys()) | set(tetrahedron_runtimes.keys()) | set(h_box_runtimes.keys()) | set(pointy_star_runtimes.keys()))],
+    "Star-Shaped Polyhedron": [pointy_star_runtimes.get(p, np.nan) for p in sorted(set(cube_runtimes.keys()) | set(tetrahedron_runtimes.keys()) | set(h_box_runtimes.keys()) | set(pointy_star_runtimes.keys()))]
+})
+
+print(df)
+    
 
 if __name__ == "__main__":
     plt.figure(figsize=(12, 8)) # Increased width slightly to accommodate labels
@@ -58,7 +90,7 @@ if __name__ == "__main__":
     plt.title("Runtime Analysis Comparison")
     plt.xlabel("Number of Points (p)")
     plt.ylabel("Runtime (s)")
-    plt.xlim(0.5, 11) # Expand x-axis slightly so labels aren't cut off
+    # plt.xlim(0.5, 11) # Expand x-axis slightly so labels aren't cut off
     plt.legend(loc='upper left')
     plt.grid(True, linestyle=':', alpha=0.6)
     plt.tight_layout()

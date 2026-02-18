@@ -46,7 +46,7 @@ def save_to_file(
     
     # 1. Organize Directory Structure
     # Using parallel_iterations to define the folder level for batch comparisons
-    subfolder_path = os.path.join(output_dir, metric_name.lower(), f"batch_{parallel_iterations}")
+    subfolder_path = os.path.join(output_dir, f"batch_{parallel_iterations}")
     os.makedirs(subfolder_path, exist_ok=True)
     
     # 2. Define File Paths
