@@ -1,3 +1,4 @@
+import os
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,6 +7,10 @@ from scipy.optimize import differential_evolution
 from scipy.spatial.distance import pdist
 from tsgo.algorithm.cli import run_tsgo
 import multiprocessing
+
+# Where figures are written. Point CPDP_FIGURES_DIR at the paper source tree to
+# regenerate the manuscript figures in place.
+FIGURES_DIR = os.environ.get("CPDP_FIGURES_DIR", "figures")
 
 # --- CONFIG ---
 P_VALUES = list([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 21, 27, 30, 40, 50, 60])
@@ -125,5 +130,6 @@ if __name__ == "__main__":
     ax1.legend(fontsize=FONTSIZE-2)
     ax1.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('/Users/sunchips/Documents/p-dispersion/continuous-p-dispersion-in-three-dimensions/figures/comparison_cube.png', dpi=300)
+    os.makedirs(FIGURES_DIR, exist_ok=True)
+    plt.savefig(os.path.join(FIGURES_DIR, 'comparison_cube.png'), dpi=300)
     plt.show()

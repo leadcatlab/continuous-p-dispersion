@@ -165,3 +165,8 @@ cython_debug/
 
 *.slurm
 src/run-many.sh
+# macOS
+.DS_Store
+
+# Generated figures
+figures/

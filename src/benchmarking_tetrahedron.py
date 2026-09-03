@@ -1,5 +1,11 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Where figures are written. Point CPDP_FIGURES_DIR at the paper source tree to
+# regenerate the manuscript figures in place.
+FIGURES_DIR = os.environ.get("CPDP_FIGURES_DIR", "figures")
 
 # ==========================================
 # 1. DATA ENTRY
@@ -63,7 +69,8 @@ plt.legend(loc='upper right', fontsize=FONTSIZE-2)
 plt.axvspan(10, 60, color='gray', alpha=0.1, label='Extended p-range')
 
 plt.tight_layout()
-plt.savefig('/Users/sunchips/Documents/p-dispersion/continuous-p-dispersion-in-three-dimensions/figures/comparison_tetrahedron.png', dpi=300)
+os.makedirs(FIGURES_DIR, exist_ok=True)
+plt.savefig(os.path.join(FIGURES_DIR, 'comparison_tetrahedron.png'), dpi=300)
 plt.show()
 
 # Print copy-pasteable DE list for your records

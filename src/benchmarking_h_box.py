@@ -1,5 +1,11 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Where figures are written. Point CPDP_FIGURES_DIR at the paper source tree to
+# regenerate the manuscript figures in place.
+FIGURES_DIR = os.environ.get("CPDP_FIGURES_DIR", "figures")
 
 # ==========================================
 # 1. DATA ENTRY
@@ -53,5 +59,6 @@ plt.tick_params(axis='both', labelsize=FONTSIZE-2)
 plt.grid(True, alpha=0.3)
 plt.legend(fontsize=FONTSIZE-2)
 plt.tight_layout()
-plt.savefig('/Users/sunchips/Documents/p-dispersion/continuous-p-dispersion-in-three-dimensions/figures/comparison_h_box.png', dpi=300)
+os.makedirs(FIGURES_DIR, exist_ok=True)
+plt.savefig(os.path.join(FIGURES_DIR, 'comparison_h_box.png'), dpi=300)
 plt.show()
