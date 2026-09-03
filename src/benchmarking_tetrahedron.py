@@ -34,33 +34,36 @@ scipy_results = np.array([
 # ==========================================
 # 2. PLOTTING
 # ==========================================
+FONTSIZE = 24
+
 plt.figure(figsize=(10, 8))
 
 # Plot Kazakov Benchmark (Historical Best)
-plt.plot(p_values[:10], kazakov_results[:10], marker='s', markersize=6, 
-         linewidth=2, label='Kazakov et al. (2018)', color='blue', alpha=0.7)
+plt.plot(p_values[:10], kazakov_results[:10], '^-', markersize=6, 
+         linewidth=2, label='Kazakov et al. (2018)', alpha=0.7, color='blue')
 
 # Plot SciPy Baseline (DE Solver)
-plt.plot(p_values, scipy_results, marker='^', markersize=6, 
-         linewidth=2, linestyle='--', label='SciPy Baseline (DE)', color='green')
+plt.plot(p_values, scipy_results, 'r-x', markersize=6, 
+         linewidth=2, linestyle='--', label='SciPy Baseline (DE)')
 
 # Plot Our Algorithm (TSGO)
-plt.plot(p_values, our_results, marker='o', markersize=8, 
-         linewidth=2.5, label='Our Algorithm (TSGO)', color='red')
+plt.plot(p_values, our_results, 'g-o', markersize=8, 
+         linewidth=2.5, label='Our Algorithm (TSGO)')
 
 # Formatting
-plt.title('Performance Comparison: p-Dispersion in Unit Tetrahedron', fontsize=14)
-plt.xlabel('Number of Points (p)', fontsize=12)
-plt.ylabel('Minimum Distance (D)', fontsize=12)
+plt.title('Comparison of Solution Quality (Tetrahedron)', fontsize=FONTSIZE)
+plt.xlabel('Number of Points (p)', fontsize=FONTSIZE)
+plt.ylabel('Minimum Distance (D)', fontsize=FONTSIZE)
 plt.xticks(np.concatenate(([1, 5, 10], [20, 35, 56])))
+plt.tick_params(axis='both', labelsize=FONTSIZE-2)
 plt.grid(alpha=0.3, linestyle=':')
-plt.legend(loc='upper right', fontsize=11)
+plt.legend(loc='upper right', fontsize=FONTSIZE-2)
 
 # Highlight your new results beyond the benchmark
 plt.axvspan(10, 60, color='gray', alpha=0.1, label='Extended p-range')
 
 plt.tight_layout()
-plt.savefig('tetrahedron_comparison_updated.png', dpi=300)
+plt.savefig('/Users/sunchips/Documents/p-dispersion/continuous-p-dispersion-in-three-dimensions/figures/comparison_tetrahedron.png', dpi=300)
 plt.show()
 
 # Print copy-pasteable DE list for your records

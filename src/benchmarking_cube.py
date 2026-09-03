@@ -113,35 +113,17 @@ if __name__ == "__main__":
 
     print(f'D_scipy: {scipy_results}')
     # --- PLOTTING 1: Raw Distance ---
+    FONTSIZE = 24
     fig1, ax1 = plt.subplots(figsize=(10, 8))
     ax1.plot(P_VALUES, packomania_vals, 'k--', label='Optimal (Packomania)', linewidth=2)
     ax1.plot(P_VALUES, our_results, 'g-o', label='Our Algorithm', linewidth=2)
     ax1.plot(P_VALUES, scipy_results, 'r-x', label='Benchmark (Scipy DE)', linewidth=2)
-    ax1.set_xlabel('Number of Points ($p$)')
-    ax1.set_ylabel('Minimum Distance ($D$)')
-    ax1.set_title('Degradation of Solution Quality (Unit Cube)')
-    ax1.legend()
+    ax1.set_xlabel('Number of Points ($p$)', fontsize=FONTSIZE)
+    ax1.set_ylabel('Minimum Distance ($D$)', fontsize=FONTSIZE)
+    ax1.set_title('Comparison of Solution Quality (Cube)', fontsize=FONTSIZE)
+    ax1.tick_params(axis='both', labelsize=FONTSIZE-2)
+    ax1.legend(fontsize=FONTSIZE-2)
     ax1.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.show()
-
-    # --- PLOTTING 2: Optimality Gap ---
-    fig2, ax2 = plt.subplots(figsize=(10, 6))
-    gap_ours = [(opt - val)/opt * 100 for opt, val in zip(packomania_vals, our_results)]
-    gap_scipy = [(opt - val)/opt * 100 for opt, val in zip(packomania_vals, scipy_results)]
-
-    # Avoid log(0)
-    gap_ours = [max(g, 1e-8) for g in gap_ours]
-    gap_scipy = [max(g, 1e-8) for g in gap_scipy]
-
-    ax2.plot(P_VALUES, gap_ours, 'g-o', label='Our Algorithm')
-    ax2.plot(P_VALUES, gap_scipy, 'r-x', label='Benchmark (Scipy DE)')
-    ax2.set_yscale('log')
-    ax2.set_xlabel('Number of Points ($p$)')
-    ax2.set_ylabel('Optimality Gap (%)')
-    ax2.set_ylim(1e-8, 500)  # Set y-limits for log scale
-    ax2.set_title('Optimality Gap vs. Dimension (Log Scale)')
-    ax2.legend()
-    ax2.grid(True, which="both", ls="-", alpha=0.3)
-    plt.tight_layout()
+    plt.savefig('/Users/sunchips/Documents/p-dispersion/continuous-p-dispersion-in-three-dimensions/figures/comparison_cube.png', dpi=300)
     plt.show()

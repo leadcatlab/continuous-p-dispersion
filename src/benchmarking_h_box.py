@@ -37,22 +37,21 @@ r_err = (d_ours - d_baseline) / d_ours * 100
 # ==========================================
 # 2. PLOT 1: DISTANCE COMPARISON
 # ==========================================
+
+FONTSIZE = 24
+x_ticks = [1, 5] + p[9:].tolist()  # Show 1,5 and then 20,30,40,50,56,60
 plt.figure(figsize=(10, 8))
 plt.plot(p, d_ours, 'g-o', linewidth=2, label='Our Algorithm')
 plt.plot(p, d_baseline, 'r--x', linewidth=2, label='Baseline (Scipy DE)')
 
 # Neutral Title
-plt.title('Comparison of Solution Quality (H-Shaped Box)', fontsize=14)
-plt.xlabel('Number of Points ($p$)', fontsize=12)
-plt.ylabel('Minimum Distance ($D$)', fontsize=12)
-plt.xticks(p)
+plt.title('Comparison of Solution Quality (H-Shaped Box)', fontsize=FONTSIZE)
+plt.xlabel('Number of Points ($p$)', fontsize=FONTSIZE-2)
+plt.ylabel('Minimum Distance ($D$)', fontsize=FONTSIZE-2)
+plt.xticks(x_ticks)
+plt.tick_params(axis='both', labelsize=FONTSIZE-2)
 plt.grid(True, alpha=0.3)
-plt.legend(fontsize=11)
-
+plt.legend(fontsize=FONTSIZE-2)
 plt.tight_layout()
-plt.savefig('hbox_distance_comparison.png', dpi=300)
-plt.show()
-
-plt.tight_layout()
-plt.savefig('hbox_optimality_gap.png', dpi=300)
+plt.savefig('/Users/sunchips/Documents/p-dispersion/continuous-p-dispersion-in-three-dimensions/figures/comparison_h_box.png', dpi=300)
 plt.show()
