@@ -1,0 +1,9 @@
+# container: cage
+# geometry: ../../../containers/ribbed_cage.json
+# metric: EUCLIDEAN
+# p: 1
+# radius: 1.581138828503045
+# study: sweep
+# source: output/cage/p1/euclidean/seed11.npz (seed 11, commit e237b48)
+i,x,y,z
+0,3.0,2.499999999999997,2.500000000000006

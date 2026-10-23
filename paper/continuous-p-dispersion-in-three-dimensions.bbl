@@ -1,0 +1,194 @@
+\begin{thebibliography}{29}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Kuby(1987)]{kuby1987}
+Michael Kuby.
+\newblock Programming models for facility dispersion: The p‐dispersion and
+  maxisum dispersion problems.
+\newblock \emph{Geographical Analysis}, 19:\penalty0 315--329, 1987.
+
+\bibitem[Drezner and Erkut(1995)]{drezner1995}
+Zvi Drezner and Erhan Erkut.
+\newblock Solving the continuous p-dispersion problem using non-linear
+  programming.
+\newblock \emph{Journal of the Operational Research Society}, 46\penalty0
+  (4):\penalty0 516--520, 1995.
+
+\bibitem[Baur and Fekete(2001)]{baurfekete2001}
+Christoph Baur and Sándor~P. Fekete.
+\newblock Approximation of geometric dispersion problems.
+\newblock \emph{Algorithmica}, 30\penalty0 (3):\penalty0 451--470, 2001.
+
+\bibitem[Graham et~al.(1998)Graham, Lubachevsky, Nurmela, and
+  Östergård]{graham1998}
+Ronald~L. Graham, Boris~D. Lubachevsky, Kari~J. Nurmela, and Patric~R.J.
+  Östergård.
+\newblock Dense packings of congruent circles in a circle.
+\newblock \emph{Discrete Mathematics}, 181\penalty0 (1):\penalty0 139--154,
+  1998.
+
+\bibitem[Dai et~al.(2021)Dai, Xu, and Ornik]{dai2021}
+Zhengguan Dai, Kathleen Xu, and Melkior Ornik.
+\newblock Repulsion-based p-dispersion with distance constraints in non-convex
+  polygons.
+\newblock \emph{Annals of Operations Research}, 307\penalty0 (1):\penalty0
+  75--91, 2021.
+
+\bibitem[Lai et~al.(2024)Lai, Lin, Hao, and Wu]{lai2024}
+Xiangjing Lai, Zhenheng Lin, Jin-Kao Hao, and Qinghua Wu.
+\newblock An {E}fficient {O}ptimization {M}odel and {T}abu {S}earch-{B}ased
+  {G}lobal {O}ptimization {A}pproach for the {C}ontinuous p-{D}ispersion
+  {P}roblem.
+\newblock \emph{INFORMS Journal on Computing}, 37, 2024.
+
+\bibitem[Kazakov et~al.(2018)Kazakov, Lempert, and Ta]{kazakov2018}
+Alexander~L. Kazakov, Anna~A. Lempert, and Trungthanh~T. Ta.
+\newblock The sphere packing problem into bounded containers in three-dimension
+  non-euclidean space.
+\newblock \emph{IFAC-PapersOnLine}, 51\penalty0 (32):\penalty0 782--787, 2018.
+
+\bibitem[Stoyan and Yaskov(2013)]{stoyan2013}
+Yuri~G. Stoyan and Georgiy~N. Yaskov.
+\newblock Packing congruent spheres into a multi-connected polyhedral domain.
+\newblock \emph{International Transactions in Operational Research},
+  20\penalty0 (1):\penalty0 79--99, 2013.
+
+\bibitem[Abdulghafoor and Bakolas(2021)]{abdulghafoor2021}
+Alaa~Z. Abdulghafoor and Efstathios Bakolas.
+\newblock Distributed coverage control of multi-agent networks with guaranteed
+  collision avoidance in cluttered environments.
+\newblock \emph{IFAC-PapersOnLine}, 54\penalty0 (20):\penalty0 771--776, 2021.
+
+\bibitem[Loganathan et~al.(2024)Loganathan, Veerappan, Manoharan, and
+  Derebew]{loganathan2024}
+Vigneash Loganathan, Saminathan Veerappan, Premkumar Manoharan, and Bizuwork
+  Derebew.
+\newblock Optimizing drone-based iot base stations in 6g networks using the
+  quasi-opposition-based lemurs optimization algorithm.
+\newblock \emph{International Journal of Computational Intelligence Systems},
+  17:\penalty0 218, 2024.
+
+\bibitem[Glover and Laguna(1997)]{glover1997}
+Fred~W. Glover and Manuel Laguna.
+\newblock \emph{{T}abu {S}earch}.
+\newblock Springer, 1997.
+
+\bibitem[Schaer(1966)]{schaer1966}
+Jonathan Schaer.
+\newblock On the densest packing of spheres in a cube.
+\newblock \emph{Canadian Mathematical Bulletin}, 9\penalty0 (3):\penalty0
+  265--270, 1966.
+
+\bibitem[Specht(2026)]{packomania}
+Eckard Specht.
+\newblock Packomania: Spheres in a cube.
+\newblock \url{https://www.packomania.com/scu/scu.html}, 2026.
+\newblock Accessed 30 September 2026.
+
+\bibitem[Rosenlicht(2012)]{rosen2012}
+Maxwell Rosenlicht.
+\newblock \emph{{Introduction to Analysis}}.
+\newblock Dover Books on Mathematics. Dover Publications, 2012.
+
+\bibitem[de~Berg et~al.(2008)de~Berg, Cheong, van Kreveld, and
+  Overmars]{berg2008}
+Mark de~Berg, Otfried Cheong, Marc van Kreveld, and Mark Overmars.
+\newblock \emph{Computational Geometry: Algorithms and Applications}.
+\newblock Springer, 3rd edition, 2008.
+
+\bibitem[Munkres(1991)]{munkres1991}
+James~R. Munkres.
+\newblock \emph{Analysis on Manifolds}.
+\newblock Advanced Books Classics. Addison-Wesley, 1991.
+
+\bibitem[Fletcher(1987)]{fletcher1987}
+Roger Fletcher.
+\newblock \emph{Practical Methods of Optimization}.
+\newblock Wiley, 1987.
+
+\bibitem[Wang et~al.(2005)Wang, Li, and Wu]{wang2005}
+Wencheng Wang, Jing Li, and Enhua Wu.
+\newblock 2{D} point-in-polygon test by classifying edges into layers.
+\newblock \emph{Computers \& Graphics}, 29:\penalty0 427--439, 2005.
+
+\bibitem[Horvat(2012)]{horvat2012}
+Denis Horvat.
+\newblock Ray-casting point-in-polyhedron test.
+\newblock 2012.
+
+\bibitem[Evans and Gariepy(2015)]{evans2015}
+Lawrence~C. Evans and Ronald~F. Gariepy.
+\newblock \emph{{Measure Theory and Fine Properties of Functions}}.
+\newblock CRC Press, revised edition, 2015.
+
+\bibitem[Fiacco and McCormick(1964)]{fiacco1964}
+Anthony~V. Fiacco and Garth~P. McCormick.
+\newblock Computational algorithm for the sequential unconstrained minimization
+  technique for nonlinear programming.
+\newblock \emph{Management Science}, 10\penalty0 (4):\penalty0 601--617, 1964.
+
+\bibitem[Bäck et~al.(2013)Bäck, Foussette, and Krause]{back2013}
+Thomas Bäck, Christophe Foussette, and Peter Krause.
+\newblock \emph{Contemporary Evolution Strategies}.
+\newblock Springer, 2013.
+
+\bibitem[{Gurobi Optimization, LLC}(2026)]{gurobi2026}
+{Gurobi Optimization, LLC}.
+\newblock Gurobi optimizer reference manual.
+\newblock \url{https://www.gurobi.com}, 2026.
+\newblock Version 13.0.
+
+\bibitem[W{\"a}chter and Biegler(2006)]{wachter2006}
+Andreas W{\"a}chter and Lorenz~T. Biegler.
+\newblock On the implementation of an interior-point filter line-search
+  algorithm for large-scale nonlinear programming.
+\newblock \emph{Mathematical Programming}, 106\penalty0 (1):\penalty0 25--57,
+  2006.
+
+\bibitem[Kraft(1988)]{kraft1988}
+Dieter Kraft.
+\newblock A software package for sequential quadratic programming.
+\newblock Technical Report DFVLR-FB 88-28, DFVLR, Oberpfaffenhofen, Germany,
+  1988.
+
+\bibitem[Virtanen et~al.(2020)Virtanen, Gommers, Oliphant, Haberland, Reddy,
+  Cournapeau, Burovski, Peterson, Weckesser, Bright, {van der Walt}, Brett,
+  Wilson, Millman, Mayorov, Nelson, Jones, Kern, Larson, Carey, Polat, Feng,
+  Moore, {VanderPlas}, Laxalde, Perktold, Cimrman, Henriksen, Quintero, Harris,
+  Archibald, Ribeiro, Pedregosa, {van Mulbregt}, and {SciPy 1.0
+  Contributors}]{scipy2020}
+Pauli Virtanen, Ralf Gommers, Travis~E. Oliphant, Matt Haberland, Tyler Reddy,
+  David Cournapeau, Evgeni Burovski, Pearu Peterson, Warren Weckesser, Jonathan
+  Bright, St{\'e}fan~J. {van der Walt}, Matthew Brett, Joshua Wilson, K.~Jarrod
+  Millman, Nikolay Mayorov, Andrew R.~J. Nelson, Eric Jones, Robert Kern, Eric
+  Larson, C~J Carey, {\.I}lhan Polat, Yu~Feng, Eric~W. Moore, Jake
+  {VanderPlas}, Denis Laxalde, Josef Perktold, Robert Cimrman, Ian Henriksen,
+  E.~A. Quintero, Charles~R. Harris, Anne~M. Archibald, Ant{\^o}nio~H. Ribeiro,
+  Fabian Pedregosa, Paul {van Mulbregt}, and {SciPy 1.0 Contributors}.
+\newblock {{SciPy} 1.0: Fundamental Algorithms for Scientific Computing in
+  Python}.
+\newblock \emph{Nature Methods}, 17:\penalty0 261--272, 2020.
+
+\bibitem[Groemer(1986)]{groemer1986}
+H.~Groemer.
+\newblock Some basic properties of packing and covering constants.
+\newblock \emph{Discrete \& Computational Geometry}, 1\penalty0 (2):\penalty0
+  183--193, 1986.
+
+\bibitem[Coxeter(1989)]{coxeter1989}
+Harold S.~M. Coxeter.
+\newblock Star polytopes and the schläfli function $f(\alpha, \beta, \gamma)$.
+\newblock \emph{Elemente der Mathematik}, 44\penalty0 (2):\penalty0 25--36,
+  1989.
+
+\bibitem[Lu et~al.(2025)Lu, Wang, Wang, and Hu]{xin2025}
+Xin Lu, Lu~Wang, Liangbi Wang, and Yao Hu.
+\newblock Heat transfer enhancement of diamond rib mounted in periodic merging
+  chambers of micro channel heat sink.
+\newblock \emph{Micromachines}, 16, 2025.
+
+\end{thebibliography}

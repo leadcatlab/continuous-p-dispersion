@@ -12,6 +12,77 @@ from tsgo.container.container import Container
 from tsgo.algorithm import energy_functions as ef
 
 
+# Default light direction, in data coordinates: above, front-left. Shading is
+# computed from surface normals rather than left to matplotlib's own shading,
+# which is washed out by the transparency these plots need to show overlap.
+_LIGHT_DIR = np.array([-0.35, -0.55, 0.75])
+
+
+def _shaded_facecolors(xs, ys, zs, base_color, alpha,
+                       ambient=0.42, diffuse=0.58, light=None, normals=None):
+    """Per-facet Lambertian colours for a plot_surface grid.
+
+    Returns an (nv, nu, 4) RGBA array. Normals come from the grid itself, so
+    this works for any surface the metrics produce -- the round ball of l_2,
+    the octahedron of l_1, the cube of l_inf -- rather than assuming a sphere.
+
+    The diffuse term uses |n . L|: these surfaces are translucent and the far
+    side is visible through the near one, so a facet pointing away from the
+    light should still be lit rather than going flat black.
+    """
+    from matplotlib.colors import to_rgba
+
+    P = np.stack([np.asarray(xs), np.asarray(ys), np.asarray(zs)], axis=-1)
+    if normals is not None:
+        n = np.asarray(normals, dtype=float)[:-1, :-1, :]
+    else:
+        du = P[:-1, 1:, :] - P[:-1, :-1, :]
+        dv = P[1:, :-1, :] - P[:-1, :-1, :]
+        n = np.cross(du, dv)
+        ln = np.linalg.norm(n, axis=-1, keepdims=True)
+        n = np.divide(n, ln, out=np.zeros_like(n), where=ln > 0)
+        # A degenerate quad -- the poles of a sphere parameterisation, where
+        # the mesh collapses to a point -- has no normal, and leaving it at
+        # zero renders an ambient-only dark ring at each pole. Borrow the
+        # neighbouring row's normal there.
+        bad = np.linalg.norm(n, axis=-1) == 0.0
+        if bad.any():
+            for i in range(n.shape[0]):
+                if not bad[i].any():
+                    continue
+                src = i - 1 if i > 0 else min(i + 1, n.shape[0] - 1)
+                n[i][bad[i]] = n[src][bad[i]]
+
+    L = np.asarray(_LIGHT_DIR if light is None else light, dtype=float)
+    L = L / np.linalg.norm(L)
+    lam = np.abs(np.einsum("ijk,k->ij", n, L))
+    shade = ambient + diffuse * lam
+
+    base = np.asarray(to_rgba(base_color), dtype=float)
+    rgba = np.empty(shade.shape + (4,), dtype=float)
+    rgba[..., :3] = np.clip(base[:3] * shade[..., None], 0.0, 1.0)
+    rgba[..., 3] = alpha
+
+    # plot_surface wants facecolors shaped like the grid; pad the last row and
+    # column, which it discards.
+    out = np.empty(P.shape[:2] + (4,), dtype=float)
+    out[:-1, :-1] = rgba
+    out[-1, :] = out[-2, :]
+    out[:, -1] = out[:, -2]
+    return out
+
+
+def _surface(ax, xs, ys, zs, col, alpha, shading):
+    """plot_surface with per-facet shading when asked, flat colour otherwise."""
+    if shading:
+        ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
+                        facecolors=_shaded_facecolors(xs, ys, zs, col, alpha),
+                        shade=False)
+    else:
+        ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
+                        alpha=alpha, color=col)
+
+
 def plot_result(
     points_xyz: np.ndarray, 
     D: float, 
@@ -20,8 +91,8 @@ def plot_result(
     colors=None,
     title=None,
     face_colors: Optional[list] = None,
-    sphere_u: int = 24, 
-    sphere_v: int = 16,
+    sphere_u: int = 48,
+    sphere_v: int = 32,
     face_alpha: float = 0.08, 
     face_edge_alpha: float = 0.35,
     sphere_alpha: float = 0.35,
@@ -29,7 +100,9 @@ def plot_result(
     show_normals: bool = False, 
     metric_name: str = 'EUCLIDEAN', 
     grid: bool = True,
-    boundary_limits: Optional[tuple] = None
+    boundary_limits: Optional[tuple] = None,
+    seed: int = 0,
+    shading: bool = True,
 ) -> plt.Axes:
     """
     Plot a polyhedral container and p spheres (centers given by points_xyz) with radius D.
@@ -95,7 +168,16 @@ def plot_result(
             xs = r * np.cos(uu) * np.sin(vv) + c[0]
             ys = r * np.sin(uu) * np.sin(vv) + c[1]
             zs = r * np.cos(vv) + c[2]
-            ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True, alpha=sphere_alpha, color=col)
+            if shading:
+                # Exact outward normals for the ball: no pole degeneracy.
+                nrm = np.stack([(xs - c[0]) / r, (ys - c[1]) / r, (zs - c[2]) / r],
+                               axis=-1) if r > 0 else None
+                fc = _shaded_facecolors(xs, ys, zs, col, sphere_alpha, normals=nrm)
+                ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
+                                facecolors=fc, shade=False)
+            else:
+                ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
+                                alpha=sphere_alpha, color=col)
         elif metric == 'TAXICAB' or metric == 'N_NORM_1':
             # One triangular face in the first octant: x, y, z >= 0 and x + y + z = r
             u = np.linspace(0, 1, sphere_u)
@@ -129,12 +211,17 @@ def plot_result(
                 ys = c[1] + sy * y0
                 zs = c[2] + sz * z0
 
+                # trisurf has no (u, v) grid to take normals from, so use
+                # matplotlib's own light source here.
+                from matplotlib.colors import LightSource
                 ax.plot_trisurf(
                     xs, ys, zs,
                     linewidth=0,
                     antialiased=True,
                     alpha=sphere_alpha,
-                    color=col
+                    color=col,
+                    shade=shading,
+                    lightsource=LightSource(azdeg=315, altdeg=50) if shading else None,
                 )
 
             ax.set_box_aspect([1, 1, 1])
@@ -150,51 +237,46 @@ def plot_result(
             xs = np.full_like(uu, cx + r)
             ys = cy + uu
             zs = cz + vv
-            ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
-                            alpha=sphere_alpha, color=col)
+            _surface(ax, xs, ys, zs, col, sphere_alpha, shading)
 
             # x = cx - r (left face)
             xs = np.full_like(uu, cx - r)
             ys = cy + uu
             zs = cz + vv
-            ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
-                            alpha=sphere_alpha, color=col)
+            _surface(ax, xs, ys, zs, col, sphere_alpha, shading)
 
             # y = cy + r (front face)
             xs = cx + uu
             ys = np.full_like(uu, cy + r)
             zs = cz + vv
-            ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
-                            alpha=sphere_alpha, color=col)
+            _surface(ax, xs, ys, zs, col, sphere_alpha, shading)
 
             # y = cy - r (back face)
             xs = cx + uu
             ys = np.full_like(uu, cy - r)
             zs = cz + vv
-            ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
-                            alpha=sphere_alpha, color=col)
+            _surface(ax, xs, ys, zs, col, sphere_alpha, shading)
 
             # z = cz + r (top face)
             xs = cx + uu
             ys = cy + vv
             zs = np.full_like(uu, cz + r)
-            ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
-                            alpha=sphere_alpha, color=col)
+            _surface(ax, xs, ys, zs, col, sphere_alpha, shading)
 
             # z = cz - r (bottom face)
             xs = cx + uu
             ys = cy + vv
             zs = np.full_like(uu, cz - r)
-            ax.plot_surface(xs, ys, zs, linewidth=0, antialiased=True,
-                            alpha=sphere_alpha, color=col)
+            _surface(ax, xs, ys, zs, col, sphere_alpha, shading)
 
             ax.set_box_aspect([1, 1, 1])
         else:
             print(f"Warning: Metric '{metric}' not recognized for sphere plotting. Defaulting to sampling surface.")
             # sample points on the surface of the sphere
             num_samples = sphere_u * sphere_v
-            phi = np.arccos(1 - 2 * np.random.rand(num_samples))
-            theta = 2 * np.pi * np.random.rand(num_samples)
+            _rng = np.random.default_rng(seed)
+            phi = np.arccos(1 - 2 * _rng.random(num_samples))
+            theta = 2 * np.pi * _rng.random(num_samples)
             x = r * np.sin(phi) * np.cos(theta) + c[0]
             y = r * np.sin(phi) * np.sin(theta) + c[1]
             z = r * np.cos(phi) + c[2]

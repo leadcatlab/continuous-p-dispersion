@@ -1,0 +1,9 @@
+# container: h-box
+# geometry: ../../../containers/h_box.json
+# metric: EUCLIDEAN
+# p: 1
+# radius: 0.4999999995
+# study: sweep
+# source: output/h-box/p1/euclidean/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,2.5,0.5,0.6886827168969627

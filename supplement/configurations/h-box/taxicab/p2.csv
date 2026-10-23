@@ -1,0 +1,10 @@
+# container: h-box
+# geometry: ../../../containers/h_box.json
+# metric: TAXICAB
+# p: 2
+# radius: 0.4999999995
+# study: sweep
+# source: output/h-box/p2/taxicab/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,1.2264216256899738,0.5,1.5
+1,2.4791933496630905,0.5,1.7852212192982266

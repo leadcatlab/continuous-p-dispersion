@@ -37,7 +37,7 @@ def save_to_file(
     optimization_method,
     metric_name: str,
     output_dir: str,
-
+    seed: int = None,
 ) -> None:
     """
     Saves the global optimization results for the 3D p-dispersion problem.
@@ -60,6 +60,7 @@ def save_to_file(
         f"--- TSGO 3D Dispersion Results ---",
         f"Saved on: {get_datetime()}",
         f"Container: {container.description}",
+        f"Seed: {seed}",
         f"Metric: {metric_name}",
         f"Number of Points (p): {p}",
         f"Global Multi-start (Parallel Iterations): {parallel_iterations}",
@@ -99,6 +100,7 @@ def save_to_file(
             'D_init': D_init,
             'X_opt': X_opt,
             'D_opt': D_opt,
+            'seed': seed,
             'container': container,
             'metric': metric_name,
             'elapsed_time': elapsed_time,

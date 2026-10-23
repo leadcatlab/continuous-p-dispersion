@@ -168,3 +168,84 @@ def test_contains_ribbed_cage_outside_points():
     
 
     
+
+def test_contains_does_not_share_a_verdict_across_a_wall():
+    # Regression: the cache key rounded to 6 decimals, so a point 4e-7 outside
+    # the top face shared a key with one 2e-7 inside it and inherited "inside".
+    # The optimiser found that pocket; 201 of 250 infeasible sweep runs ended
+    # with one point parked in it.
+    from tsgo.container.sample_polyhedron import CONTAINERS
+    c = CONTAINERS["cube"]()
+    assert c.contains(np.array([-0.0476, -0.0269, 0.4999998]))
+    assert not c.contains(np.array([-0.0476, -0.0269, 0.5000004]))
+
+
+def test_energy_does_not_reuse_a_penalty_across_a_wall():
+    # Same pocket, seen through the energy: after a neighbour just inside the
+    # wall has been scored, a point just outside it must still be penalised,
+    # and score the same as it does on a cold cache.
+    import tsgo.algorithm.energy_functions as ef
+    from tsgo.container.sample_polyhedron import CONTAINERS
+    D = 0.1
+    inside = np.array([[-0.0476, -0.0269, 0.4999998]])
+    outside = np.array([[-0.0476, -0.0269, 0.5000004]])
+    ef.clear_caches()
+    cold = ef.E(outside, D, CONTAINERS["cube"](), metric="TAXICAB")
+    c = CONTAINERS["cube"]()
+    ef.E(inside, D, c, metric="TAXICAB")
+    warm = ef.E(outside, D, c, metric="TAXICAB")
+    assert cold > 1e-3
+    assert warm == cold
+
+
+def _oriented_rings(name):
+    """Every ring of a container file, oriented counter-clockwise about the
+    outward normal its face's inward-normal hint implies (holes clockwise)."""
+    import json, os
+    from tsgo.container import sample_polyhedron as sp
+
+    def vec_area(r):
+        return 0.5 * np.sum(np.cross(r, np.roll(r, -1, axis=0)), axis=0)
+
+    spec = json.load(open(os.path.join(sp.DATA_DIR, name)))
+    rings = []
+    for i, f in enumerate(spec["faces"]):
+        out = -np.asarray(f["normal"], dtype=float)
+        R = np.asarray(f["vertices"], dtype=float)
+        rings.append((i, R if vec_area(R) @ out > 0 else R[::-1]))
+        for h in f.get("holes", []):
+            H = np.asarray(h, dtype=float)
+            rings.append((i, H if vec_area(H) @ out < 0 else H[::-1]))
+    return rings, vec_area
+
+
+@pytest.mark.parametrize("name", ["cube.json", "h_box.json", "tetrahedron.json",
+                                  "pointy_star.json", "ribbed_cage.json"])
+def test_normal_hints_orient_a_closed_surface_consistently(name):
+    # Regression: two faces of the cage carried outward "inward" normals. The
+    # active-face rule then hid those walls from points inside, and clearance
+    # to them read as larger than it was -- three stored cage solutions put a
+    # ball through a partition top. With consistent hints every edge is
+    # walked once in each direction by the two faces that share it.
+    from collections import Counter
+    rings, _ = _oriented_rings(name)
+    walked = Counter()
+    for _, R in rings:
+        for a, b in zip(R, np.roll(R, -1, axis=0)):
+            walked[(tuple(np.round(a, 9)), tuple(np.round(b, 9)))] += 1
+    for (a, b), n in walked.items():
+        assert n == 1 and walked[(b, a)] == 1, f"edge {a}->{b} is not shared by oppositely walked faces"
+
+
+@pytest.mark.parametrize("key,name", [("cube", "cube.json"), ("h-box", "h_box.json"),
+                                      ("tetrahedron", "tetrahedron.json"),
+                                      ("pointy-star", "pointy_star.json"),
+                                      ("cage", "ribbed_cage.json")])
+def test_volume_matches_the_divergence_theorem_on_the_raw_rings(key, name):
+    # Independent of Face's 2-D projection and of its area property, which
+    # used to ignore holes.
+    from tsgo.container.sample_polyhedron import CONTAINERS
+    rings, vec_area = _oriented_rings(name)
+    exact = sum(vec_area(R) @ R[0] for _, R in rings) / 3.0
+    assert exact > 0
+    assert CONTAINERS[key]().volume == pytest.approx(exact, rel=1e-12)

@@ -48,17 +48,19 @@ def test_contains_cached_different_points():
     result2 = ef._contains_cached(container, point2)
     assert len(ef._CONTAINS_CACHE) == 2, "Should cache both points separately"
 
-def test_contains_cached_rounding():
+def test_contains_cached_keys_on_exact_coordinates():
+    # Nearby points must not share a verdict: a rounded key merged points on
+    # either side of a wall (see Container.contains).
     container = cube()
     point1 = Point(0.0000001, 0.0000001, 0.0000001)
     point2 = Point(0.0000002, 0.0000002, 0.0000002)
-    
+
     ef._CONTAINS_CACHE.clear()
-    
-    result1 = ef._contains_cached(container, point1)
-    result2 = ef._contains_cached(container, point2)
-    assert len(ef._CONTAINS_CACHE) == 1, "Points should be rounded to same cache key"
-    assert result1 == result2, "Rounded points should have same cached result"
+
+    ef._contains_cached(container, point1)
+    ef._contains_cached(container, point2)
+    ef._contains_cached(container, Point(0.0000001, 0.0000001, 0.0000001))
+    assert len(ef._CONTAINS_CACHE) == 2, "Distinct points get distinct keys; a repeat hits"
 
 def test_contains_cached_outside():
     container = cube()
@@ -69,22 +71,6 @@ def test_contains_cached_outside():
     result = ef._contains_cached(container, point)
     assert result == False, "Point outside container should return False"
     assert len(ef._CONTAINS_CACHE) == 1, "Should cache outside point"
-
-def test_contains_cached_decimals_parameter():
-    container = cube()
-    point1 = Point(0.123456789, 0.123456789, 0.123456789)
-    point2 = Point(0.123456999, 0.123456999, 0.123456999)
-    
-    ef._CONTAINS_CACHE.clear()
-    
-    _ = ef._contains_cached(container, point1, decimals=6)
-    _ = ef._contains_cached(container, point2, decimals=6)
-    assert len(ef._CONTAINS_CACHE) == 1, "Points should round to same key with decimals=6"
-    
-    ef._CONTAINS_CACHE.clear()
-    _ = ef._contains_cached(container, point1, decimals=8)
-    _ = ef._contains_cached(container, point2, decimals=8)
-    assert len(ef._CONTAINS_CACHE) == 2, "Points should differ with decimals=8"
 
 def test_get_verts():
     container = cube()

@@ -1,0 +1,11 @@
+# container: h-box
+# geometry: ../../../containers/h_box.json
+# metric: SUP_NORM
+# p: 3
+# radius: 0.4999999995
+# study: sweep
+# source: output/h-box/p3/sup_norm/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,0.5,0.5,0.7481205880551458
+1,2.5,0.5,2.123778885887385
+2,1.5,0.5,1.5

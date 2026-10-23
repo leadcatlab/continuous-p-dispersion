@@ -170,3 +170,21 @@ src/run-many.sh
 
 # Generated figures
 figures/
+# ...but the paper's figures are part of the manuscript: the hand-drawn ones
+# exist nowhere else, and the generated ones must match the committed PDF.
+!paper/figures/
+!paper/figures/**
+
+# Batch experiment outputs
+results/
+
+# Generated LaTeX tables
+tables/
+
+# Paper build products (sources and figures are tracked; the PDF is not)
+paper/generated/
+
+# archived and pilot solution trees; the gold ones live in output/
+output_archive_*/
+output_pilot/
+output_extra/

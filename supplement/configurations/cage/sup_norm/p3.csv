@@ -1,0 +1,11 @@
+# container: cage
+# geometry: ../../../containers/ribbed_cage.json
+# metric: SUP_NORM
+# p: 3
+# radius: 1.4999999985
+# study: sweep
+# source: output/cage/p3/sup_norm/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,2.43772109849612,3.2959553364564234,2.5
+1,8.024183288862247,2.737589273629207,2.5
+2,8.01857029302183,9.481909695299603,2.5

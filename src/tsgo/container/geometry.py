@@ -54,9 +54,9 @@ def point_to_line_dist_taxicab(point, start, end):
     Instead of generic optimization, this exploits the fact that the minimum
     must occur at t=0, t=1, or where one coordinate difference becomes zero (a 'kink').
     """
-    p = np.array(point)
-    s = np.array(start)
-    e = np.array(end)
+    p = np.array(unwrap_point(point), dtype=float)
+    s = np.array(unwrap_point(start), dtype=float)
+    e = np.array(unwrap_point(end), dtype=float)
     
     vec = e - s
     rel_p = p - s  # Vector from Start to Point
@@ -122,7 +122,7 @@ def point_to_line_dist_sup_norm(point, start, end):
                 if 0 < t_b < 1: candidates.append(t_b)
 
     # 2. Check simple zeros (where a term hits 0) just in case
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide='ignore', invalid='ignore'):   # 0/0 on axis-parallel edges; filtered below
          t_zeros = -diff / vec
          valid_zeros = t_zeros[np.isfinite(t_zeros) & (t_zeros > 0) & (t_zeros < 1)]
          candidates.extend(valid_zeros)
@@ -141,6 +141,14 @@ def point_to_line_dist_sup_norm(point, start, end):
 def point_to_line_dist(point: Union[Point, np.ndarray],
                        line_segment: Tuple[Union[Point, np.ndarray], Union[Point, np.ndarray]],
                        metric: str = "EUCLIDEAN") -> float:
+    """Distance from a point to a segment, for a single pair.
+
+    The general formulation lives in tsgo.container.norms.segment_distance and
+    is what the solver's hot loops use, batched over every (point, edge) pair
+    at once. For one pair at a time numpy's per-call overhead dominates and
+    these scalar routines win, so they stay -- and they double as independent
+    reference implementations that the tests check the general path against.
+    """
     metric = metric.upper()
     if metric == "EUCLIDEAN":
         return point_to_line_dist_euclidean(point, line_segment)
@@ -152,3 +160,60 @@ def point_to_line_dist(point: Union[Point, np.ndarray],
         raise ValueError(f"Unsupported metric: {metric}")
     
     
+# ============================================================
+# Closest-point variants
+# ============================================================
+# The analytic gradient of a point-to-segment distance needs the minimizing
+# point c on the segment, not just the distance: by Danskin's theorem the
+# gradient with respect to the query point is the metric's (sub)gradient
+# evaluated at (point - c). These mirror the distance functions above and
+# return (distance, closest_point).
+
+def _segment_candidates_taxicab(p, s, e):
+    vec = e - s
+    rel_p = p - s
+    candidates = [0.0, 1.0]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t_kinks = rel_p / vec
+        candidates.extend(t_kinks[np.isfinite(t_kinks) & (t_kinks > 0) & (t_kinks < 1)])
+    return candidates
+
+
+def _segment_candidates_sup(p, s, e):
+    vec = e - s
+    diff = s - p
+    candidates = [0.0, 1.0]
+    n = len(p)
+    for i in range(n):
+        for j in range(i + 1, n):
+            denom_a = vec[i] - vec[j]
+            if abs(denom_a) > 1e-9:
+                t_a = (diff[j] - diff[i]) / denom_a
+                if 0 < t_a < 1:
+                    candidates.append(t_a)
+            denom_b = vec[i] + vec[j]
+            if abs(denom_b) > 1e-9:
+                t_b = -(diff[j] + diff[i]) / denom_b
+                if 0 < t_b < 1:
+                    candidates.append(t_b)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t_zeros = -diff / vec
+        candidates.extend(t_zeros[np.isfinite(t_zeros) & (t_zeros > 0) & (t_zeros < 1)])
+    return candidates
+
+
+def point_to_line_closest(point: Union[Point, np.ndarray],
+                          line_segment: Tuple[Union[Point, np.ndarray], Union[Point, np.ndarray]],
+                          metric: str = "EUCLIDEAN") -> Tuple[float, np.ndarray]:
+    """Distance from a point to a segment together with the minimising point.
+
+    The analytic gradient needs the minimiser, not just the distance: by
+    Danskin's theorem the gradient with respect to the query point is the
+    norm's subgradient evaluated at (point - c).
+    """
+    from tsgo.container.norms import segment_distance
+    d, c = segment_distance(np.asarray(unwrap_point(point), dtype=float),
+                            np.asarray(unwrap_point(line_segment[0]), dtype=float),
+                            np.asarray(unwrap_point(line_segment[1]), dtype=float),
+                            metric)
+    return float(d[0]), c[0]

@@ -5,11 +5,43 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tsgo"
 version = "1.0.0"
-dependencies = []
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "numpy==2.3.5",
+    "scipy==1.15.3",
+    "matplotlib==3.9.4",
+    "pydantic==2.12.5",
+    "pandas==3.0.1",
+    "Jinja2==3.1.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.5",
+    "pytest-cov==7.0.0",
+]
+gurobi = [
+    "gurobipy>=12.0.0",
+]
+
+[project.scripts]
+run-tsgo = "tsgo.algorithm.cli:main"
+collect-best = "tsgo.utils.io:collect_best_entrypoint"
+plot-results = "tsgo.experiments.render:view"
+tsgo-batch = "tsgo.experiments.batch:main"
+tsgo-render = "tsgo.experiments.render:main"
+tsgo-compare = "tsgo.experiments.compare:main"
+tsgo-stats = "tsgo.experiments.stats:main"
+tsgo-tables = "tsgo.experiments.tables:main"
+tsgo-de = "tsgo.experiments.de_baseline:main"
+tsgo-figures = "tsgo.experiments.make_figures:main"
+tsgo-nlp = "tsgo.experiments.nlp_baseline:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"tsgo.container" = ["data/*.json"]
 
 [tool.pytest.ini_options]
 # Ensure src/ is on the import path so `import tsgo` works from tests
@@ -30,9 +62,3 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 precision = 2
-
-[project.scripts]
-run-tsgo = "tsgo.algorithm.cli:main"
-collect-best = "tsgo.utils.io:collect_best_entrypoint"
-plot-results = "tsgo.plotting.visualizer:main"
-

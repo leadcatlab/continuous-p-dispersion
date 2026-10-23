@@ -1,4 +1,5 @@
 import os
+import secrets
 import shutil
 import time
 
@@ -42,10 +43,11 @@ def run_tsgo(
         optimization_method=config.optimization_method,
         output_dir=config.output_dir,
         verbose=config.verbose,
+        seed=config.seed,
     )
     
     elapsed_time = time.time() - start_time
-    print(f"[TSGO @ {get_datetime()}] Optimization completed in {elapsed_time:.8f}s | p={config.p} | D_opt={D_opt:.10f} | E={ef.E(X_opt, D_opt, config.container):.10f}")
+    print(f"[TSGO @ {get_datetime()}] Optimization completed in {elapsed_time:.8f}s | p={config.p} | seed={config.seed} | D_opt={D_opt:.10f} | E={ef.E(X_opt, D_opt, config.container):.10f}")
 
     # Save to file
     if config.save:
@@ -64,7 +66,7 @@ def run_tsgo(
             beta_max=config.beta_max,
             eps=config.eps,
             optimization_method=config.optimization_method,
-
+            seed=config.seed,
         )
         shutil.rmtree(f'{config.output_dir}/crashs', ignore_errors=True)
 
@@ -83,7 +85,8 @@ def main():
     parser.add_argument("--container", type=str, choices=polyhedron_examples.keys(), help="Container shape")
     parser.add_argument("--D_init", type=float, help="Initial minimum distance")
     parser.add_argument("--packing_density", type=float, default=None, help="Packing density for initial solution generation (if applicable)")
-    parser.add_argument("--Q", type=int, default=3, help="Parameter Q for the algorithm")
+    parser.add_argument("--Q", type=int, default=None,
+                        help="Tabu neighbourhood size. Default max(3, round(ln p)).")
     parser.add_argument("--beta_max", type=int, default=10, help="Maximum beta value for the algorithm")
     parser.add_argument("--eps", type=float, default=1e-8, help="Epsilon tolerance for optimization")
     parser.add_argument("--metric", type=str, default="EUCLIDEAN", help="Distance metric to use")
@@ -94,6 +97,7 @@ def main():
     parser.add_argument("--plot", type=bool, default=False, help="Whether to plot the final configuration")
     parser.add_argument("--output_dir", type=str, default='', help="Output directory for saved files")
     parser.add_argument("--verbose", type=bool, default=False, help="Whether to print detailed logs during optimization")
+    parser.add_argument("--seed", type=int, default=None, help="Master RNG seed. Omit to draw one and log it, so ad hoc runs stay reproducible after the fact.")
     
     args = parser.parse_args()
     
@@ -112,8 +116,11 @@ def main():
         "save": args.save,
         "plot": args.plot,
         "output_dir": args.output_dir,
-        "verbose": args.verbose
+        "verbose": args.verbose,
+        "seed": args.seed if args.seed is not None else secrets.randbits(32),
     })
+
+    print(f"[TSGO] seed = {configuration.seed}  (pass --seed {configuration.seed} to reproduce this run)")
     
     # Assign workers from SLURM environment variable if available
     slurm_cpus_per_task = os.getenv("SLURM_CPUS_PER_TASK")

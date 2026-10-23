@@ -3,6 +3,18 @@ from typing import List, Union
 
 from tsgo.container.point import Point
 
+# How far off a face's plane a point may lie and still count as on it.
+#
+# This single constant governs two tests that must agree: whether a point lies
+# *on* a face (Face.contains, and through it Container.contains) and whether a
+# face is *active* with respect to a point. When they disagreed, a point a few
+# 1e-9 outside a wall was classified inside the container while that same wall
+# failed the strict `h >= 0` active test -- so the point's own floor dropped out
+# of its active set, its clearance fell back to a distant edge, and a ball
+# resting on the floor scored as perfectly feasible. Any change here must be
+# made here only.
+EPS_PLANE = 1e-8
+
 
 class Face:
     def __init__(self, vertices: List[Point], normal: np.ndarray, description: str = "", holes: List[List[Point]] = None):
@@ -47,9 +59,22 @@ class Face:
         point_vector = point.as_array()
         return float(np.dot(self.normal, point_vector - self._P0))
 
-    def project_point(self, point: Point) -> Point:
-        d = self.half_space(point)
-        return Point.from_array(point.as_array() - d * self.normal)
+    def project_point(self, point: Point, metric: str = "EUCLIDEAN") -> Point:
+        """Nearest point of this face's plane under `metric`.
+
+        For the Euclidean metric this is the orthogonal foot. Under a general
+        norm the nearest point of a plane is not the orthogonal foot, and using
+        it over-estimates the clearance to the boundary -- by up to 32% on
+        containers with slanted faces -- which lets a ball cross a wall while
+        the energy still reads zero.
+        """
+        from tsgo.container.norms import plane_nearest
+        if metric.upper() in ("EUCLIDEAN", "L2"):
+            d = self.half_space(point)
+            return Point.from_array(point.as_array() - d * self.normal)
+        _, foot = plane_nearest(point.as_array(), np.asarray(self.normal, dtype=float),
+                                self._P0, metric)
+        return Point.from_array(foot)
 
     # ----------------------------
     # Fast cached point-in-face
@@ -163,7 +188,7 @@ class Face:
 
         return inside
 
-    def contains(self, point: Union[Point, np.ndarray], eps_plane: float = 1e-8) -> bool:
+    def contains(self, point: Union[Point, np.ndarray], eps_plane: float = EPS_PLANE) -> bool:
         if isinstance(point, np.ndarray):
             Q3 = point.astype(float)
         else:
@@ -188,7 +213,11 @@ class Face:
     
     @property
     def area(self) -> float:
-        # using shoelace formula for polygon area
-        x = self._outer2d[:, 0]
-        y = self._outer2d[:, 1]
-        return 0.5 * abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+        # Shoelace formula, outer ring less its holes. Counting the holes as
+        # solid over-stated the cage's volume as 531.3 against a true 450 (with
+        # the partition normals it also had wrong), which fed straight into
+        # the initial-radius estimate.
+        def shoelace(ring):
+            x, y = ring[:, 0], ring[:, 1]
+            return 0.5 * abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+        return shoelace(self._outer2d) - sum(shoelace(h) for h in self._holes2d)

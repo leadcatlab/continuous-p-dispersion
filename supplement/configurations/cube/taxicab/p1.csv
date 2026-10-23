@@ -1,0 +1,9 @@
+# container: cube
+# geometry: ../../../containers/cube.json
+# metric: TAXICAB
+# p: 1
+# radius: 0.4999999995
+# study: sweep
+# source: output/cube/p1/taxicab/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,-1.89654022918728e-18,1.749731302333817e-18,1.6238134259323816e-18

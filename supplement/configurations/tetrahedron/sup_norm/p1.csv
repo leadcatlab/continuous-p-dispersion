@@ -1,0 +1,9 @@
+# container: tetrahedron
+# geometry: ../../../containers/tetrahedron.json
+# metric: SUP_NORM
+# p: 1
+# radius: 0.14795327009999099
+# study: sweep
+# source: output/tetrahedron/p1/sup_norm/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,0.5000000000000001,0.2525720309389915,0.14795327024794425

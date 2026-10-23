@@ -19,7 +19,7 @@ class Config(BaseModel):
     container: Container = Field(default=None, description="Name of the container to use.")
     D_init: Optional[float] = Field(default=None, description="Initial minimum distance value.")
     packing_density: Optional[float] = Field(default=None, description="Packing density for initial solution generation (if applicable).")
-    Q: int = Field(default=3, description="Tabu rearrangement parameter.")
+    Q: Optional[int] = Field(default=None, description="Tabu neighbourhood size; None = max(3, round(ln p)).")
     beta_max: int = Field(default=10, description="Tabu search depth parameter.")
     eps: float = Field(default=1e-8, description="Convergence threshold for optimization.")
     metric: METRICS = Field(default=None, description="Metric to use for distance calculations.")
@@ -30,6 +30,7 @@ class Config(BaseModel):
     plot: bool = Field(default=False, description="Whether to generate plots of the optimization results immediately after each run.")
     output_dir: str = Field(default='', description="Directory where optimization results will be saved.")
     verbose: bool = Field(default=False, description="Whether to print detailed logs during optimization.")
+    seed: Optional[int] = Field(default=None, description="Master RNG seed. Every stochastic step derives from it, so a run is reproducible from (seed, p, container, metric).")
     
     @field_validator('p', mode='before')
     @classmethod
@@ -74,7 +75,15 @@ class Config(BaseModel):
         if packing_density is not None: # convert packing density to D_init
             container_obj = CONTAINERS[values['container']]()
             volume = container_obj.volume
-            D_init = ((volume * packing_density) / values['p'] * np.pi * (4/3)) ** (1/3)
+            # p balls of radius D fill volume * density:
+            #   p * (4/3) * pi * D^3 = volume * density
+            # The previous form multiplied by (4/3)*pi instead of dividing,
+            # overshooting D_init by (4*pi/3)^(2/3) ~ 2.6x. An initial radius
+            # above the true optimum leaves Tabu Search chasing an infeasible
+            # target for beta_max iterations before AdjustDistance can back off.
+            import tsgo.algorithm.energy_functions as _ef
+            D_init = _ef.initial_radius(container_obj, values['p'], packing_density,
+                                        values.get('metric') or 'EUCLIDEAN')
             values['D_init'] = D_init
         return values
     
@@ -100,7 +109,7 @@ class Config(BaseModel):
             f"iterations={self.iterations}, processes={self.processes}, "
             f"optimization_method='{self.optimization_method}', save={self.save}, "
             f"plot={self.plot}, output_dir='{self.output_dir}', "
-            f"verbose={self.verbose})"
+            f"verbose={self.verbose}, seed={self.seed})"
         )
         
     def pretty(self, **kwargs):

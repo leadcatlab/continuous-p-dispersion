@@ -1,0 +1,250 @@
+{
+  "_comment": [
+    "Which paper figures are generated from results/sweep.csv and which are",
+    "hand-drawn assets. 'generated' entries are rebuilt by `make figures` from",
+    "the best seed of the named cell; 'static' entries are committed artwork",
+    "that no pipeline reproduces. An entry whose cell has no data fails the",
+    "build loudly rather than leaving a stale image in place.",
+    "Check the container/metric/p of each generated entry -- they were inferred",
+    "from the filenames and the ones marked NEEDS-CHECK are guesses.",
+    "'pending' figures are declared but not yet reproducible: the committed image is kept so the paper still builds, and it is listed on every run so it cannot be forgotten. Move an entry back to 'generated' once its cell has data.",
+    "'scale': 'container' pins the axes to the container bounding box so paired figures share a scale regardless of p or D. 'radius' draws a configuration at a different D, for comparison against a published value."
+  ],
+  "generated": {
+    "cube_10": {
+      "container": "cube",
+      "metric": "EUCLIDEAN",
+      "p": 10,
+      "elev": 22,
+      "azim": 135,
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6
+    },
+    "ps_100": {
+      "container": "pointy-star",
+      "metric": "EUCLIDEAN",
+      "p": 100,
+      "elev": 20,
+      "azim": 140,
+      "colors": "#a35cf0",
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.95,
+      "note": "lighter, near-opaque so the 100 balls in the core stay distinct (as cage_sup_100)"
+    },
+    "h-box_sup_50": {
+      "container": "h-box",
+      "metric": "SUP_NORM",
+      "p": 50,
+      "elev": 20,
+      "azim": 135
+    },
+    "tetra_10": {
+      "container": "tetrahedron",
+      "metric": "EUCLIDEAN",
+      "p": 10,
+      "elev": 20,
+      "azim": 30,
+      "scale": "container",
+      "note": "our best p=10; view chosen to maximise the on-screen gap between balls",
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6
+    },
+    "kazakov_same_radius_10": {
+      "container": "tetrahedron",
+      "metric": "EUCLIDEAN",
+      "p": 10,
+      "elev": 20,
+      "azim": 30,
+      "scale": "container",
+      "radius": 0.102,
+      "note": "same configuration drawn at Kazakov et al. (2018)'s reported radius for p=10; view chosen to maximise the on-screen gap between balls",
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6
+    },
+    "cage_100": {
+      "container": "cage",
+      "metric": "EUCLIDEAN",
+      "p": 100,
+      "elev": 20,
+      "azim": 140,
+      "colors": "#841ae8",
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6
+    },
+    "cage_sup_100": {
+      "container": "cage",
+      "metric": "SUP_NORM",
+      "p": 100,
+      "elev": 20,
+      "azim": 140,
+      "colors": "#a35cf0",
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.95
+    },
+    "cube_sup_64": {
+      "container": "cube",
+      "metric": "SUP_NORM",
+      "p": 64,
+      "elev": 22,
+      "azim": 135,
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6,
+      "note": "64 cubes of side 1/4 tile the unit cube: the optimum D = 1/8 (seeds 13 and 19 of 0-19)"
+    },
+    "tetra_l2_35": {
+      "container": "tetrahedron",
+      "metric": "EUCLIDEAN",
+      "p": 35,
+      "elev": 20,
+      "azim": 30,
+      "scale": "container",
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6
+    },
+    "tetra_l1_35": {
+      "container": "tetrahedron",
+      "metric": "TAXICAB",
+      "p": 35,
+      "elev": 20,
+      "azim": 30,
+      "scale": "container",
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6
+    },
+    "tetra_linf_35": {
+      "container": "tetrahedron",
+      "metric": "SUP_NORM",
+      "p": 35,
+      "elev": 20,
+      "azim": 30,
+      "scale": "container",
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6
+    },
+    "h-box_sup_56": {
+      "container": "h-box",
+      "metric": "SUP_NORM",
+      "p": 56,
+      "elev": 20,
+      "azim": 135,
+      "rows": "results/hbox_sup_56_escape.csv",
+      "output_root": "output/variants/escape",
+      "color_by": "height",
+      "cmap": [
+        "#9bb7f5",
+        "#4169e1",
+        "#841ae8"
+      ],
+      "cmap_range": [
+        0,
+        1
+      ],
+      "face_alpha": 0.025,
+      "sphere_alpha": 0.6,
+      "note": "the 1/4 tiling, found by the opt-in escape phase (20 of 20 continuations); the default reaches it in 0 of 60 runs"
+    }
+  },
+  "plots": {
+    "runtime_euclidean": {
+      "kind": "runtime",
+      "metric": "EUCLIDEAN"
+    },
+    "comparison_cube": {
+      "kind": "comparison",
+      "container": "cube",
+      "metric": "EUCLIDEAN"
+    },
+    "comparison_tetrahedron": {
+      "kind": "comparison",
+      "container": "tetrahedron",
+      "metric": "EUCLIDEAN"
+    },
+    "runtime_taxicab": {
+      "kind": "runtime",
+      "metric": "TAXICAB"
+    },
+    "runtime_sup_norm": {
+      "kind": "runtime",
+      "metric": "SUP_NORM"
+    }
+  },
+  "static": [
+    "active_footpoints_in_hbox",
+    "active_footpoints_in_hbox2",
+    "active_planes_for_hbox",
+    "active_planes_for_hbox2",
+    "global_optimization_algorithm_visualization",
+    "tabu_search"
+  ],
+  "pending": {}
+}

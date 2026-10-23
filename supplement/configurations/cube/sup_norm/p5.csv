@@ -1,0 +1,13 @@
+# container: cube
+# geometry: ../../../containers/cube.json
+# metric: SUP_NORM
+# p: 5
+# radius: 0.24999999974999995
+# study: sweep
+# source: output/cube/p5/sup_norm/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,-0.25,0.25000000000000006,-0.25
+1,0.25,0.14021001273440065,0.25
+2,-0.25,-0.05521725990226143,0.25
+3,0.25,0.19614897351054283,-0.25
+4,-0.25,-0.25,-0.25

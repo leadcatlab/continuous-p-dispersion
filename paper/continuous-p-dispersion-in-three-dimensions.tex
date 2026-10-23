@@ -1,0 +1,2270 @@
+\documentclass[twocolumn,showpacs,%
+  nofootinbib,aps,superscriptaddress,%
+eqsecnum,prd,notitlepage,10pt]{revtex4-1}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{dcolumn}
+\usepackage{hyperref}
+\usepackage{enumerate}
+\usepackage{algpseudocode}
+\usepackage{url}
+\usepackage{amsthm}                    % preamble
+
+\newtheorem{lemma}{Lemma}
+\theoremstyle{remark}
+
+\def \N {\mathbb{N}}
+\def \Z {\mathbb{Z}}
+\def \R {\mathbb{R}}
+\def \an {\left\{ a_n \right\}}
+\def \bn {\left\{ b_n \right\}}
+\def \inv {^{-1}}
+\def \C {\mathbb{C}}
+\def \H {\mathbb{H}}
+\newcommand{\ang}[1]{\langle #1 \rangle}
+\newcommand{\set}[1]{\left\{ #1 \right\}}
+\def \abs#1{\left| #1 \right|}
+\def \norm#1{\left\|#1 \right\|}
+\def \tors {^{\text{tors}}}
+\newcommand{\paren}[1]{\left( #1 \right)}
+\def \P {\mathbb{P}}
+\def \Int {\operatorname{Int}\text{ }}
+\def \Ext {\operatorname{Ext}\text{ }}
+
+\usepackage{algorithm}
+\usepackage{xcolor}
+
+% ---- Review markup (remove after review) -----------------------------------
+% \reviewtrue + LuaLaTeX: colour-coded review copy. \reviewfalse, or pdfLaTeX
+% (make paper), prints the paper without any markup. To strip it for good,
+% delete this block, the legend after \maketitle, and every \rv... wrapper.
+\usepackage{iftex}
+\newif\ifreview \reviewtrue
+\newenvironment{rvdraft}{}{}
+\newcommand{\rvclaim}[1]{#1}
+\newcommand{\rvdecide}[1]{#1}
+\newcommand{\rvcor}[1]{#1}
+\newcommand{\rvnote}[1]{}
+\newcommand{\rvinline}[1]{#1}
+\ifreview\ifluatex
+  \usepackage{luacolor}
+  \usepackage{lua-ul}
+  \renewenvironment{rvdraft}{\color{blue!60!black}}{}
+  \renewcommand{\rvinline}[1]{{\color{blue!60!black}#1}}
+  \renewcommand{\rvclaim}[1]{\highLight[yellow!70]{#1}}
+  \renewcommand{\rvdecide}[1]{\highLight[orange!45]{#1}}
+  \renewcommand{\rvcor}[1]{\highLight[magenta!22]{#1}}
+  \renewcommand{\rvnote}[1]{\highLight[magenta!22]{\textsf{\scriptsize[#1]}}}
+\fi\fi
+% -----------------------------------------------------------------------------
+
+% Optional (for better alignment)
+\usepackage{setspace}
+\usepackage{microtype}
+\raggedbottom
+
+\begin{document}
+
+\title{The Continuous p-Dispersion Problem in Three Dimensions}
+\author{Sanjay Manoj}
+\affiliation{University of Illinois Urbana-Champaign}
+\author{Melkior Ornik}
+\affiliation{University of Illinois Urbana-Champaign}
+
+\begin{abstract}
+  \textbf{Abstract:}~\rvcor{\textsf{\scriptsize[!]}}\rvnote{315 words; C\&OR wants about 250} The Continuous p-Dispersion Problem (CpDP) with
+  boundary constraints asks for the placement of a fixed number of
+  points in a compact subset of Euclidean space such that the minimum
+  distance between any two points, as well as the points and the
+  boundary of this compact set is maximized. This problem finds
+  applications in facility placement, communication network design,
+  sampling theory, and particle simulation; however, finding optimal
+  solutions is NP-hard and existing algorithms focus on providing
+  approximate solutions in two-dimensional space. In this paper, we
+  introduce an almost-everywhere differentiable optimization model
+  and global optimization algorithm for approximating solutions to
+  the CpDP with boundary constraints in convex and non-convex
+  polyhedra with respect to any norm-induced metric in a three-dimensional
+  Euclidean space. Our algorithm generalizes two-dimensional
+  dispersion techniques to three dimensions by leveraging
+  orientation, exact metric distances from a point to the faces, edges
+  and vertices of the boundary, and a ray-casting procedure for
+  point-in-polyhedron testing, enabling optimization in arbitrary convex
+  and non-convex three dimensional polyhedra. For any polyhedral norm
+  these distances, the points realising them, and their gradients follow
+  in closed form from the vertices of the dual unit ball, so a metric
+  enters the algorithm as a finite set of vectors rather than as a new
+  derivation. We validate the proposed algorithm by
+  comparing with analytical optima where available and empirical
+  benchmarks, observing close agreement with optimal solutions and
+  improvements over empirical benchmarks. \rvinline{\rvclaim{Given the same wall time as
+  the general-purpose solvers IPOPT and SLSQP, it finds a larger radius in
+  32 and 25 of 45 test cases respectively, by up to a factor of $2.6$, and
+  a smaller one in none; where the optimum can be certified, our solutions
+  attain it. In the eight multi-connected polyhedral domains of Stoyan and
+  Yaskov, it packs more spheres of radius one than published in seven, by up
+  to seven, and as many in the eighth.}}
+\end{abstract}
+
+\maketitle
+
+\ifreview\ifluatex
+\noindent\fbox{\parbox{0.95\columnwidth}{\small\textbf{Review copy: colour key.}\\
+{\color{blue!60!black}Blue text}: new or rewritten since the last commit,
+mostly drafted by Claude; read for voice.\\
+\highLight[yellow!70]{Yellow}: a claim or number to verify.\\
+\highLight[orange!45]{Orange}: a framing or reporting decision that is yours
+to make.\\
+\highLight[magenta!22]{Pink}: to fix before the C\&OR conversion; bracketed
+pink notes say why.}}
+\fi\fi
+
+\section{Introduction}\label{sec:Intro}
+
+In 1987, \citet{kuby1987} proposed the $p$-Dispersion Problem, asking
+to locate $p$ facilities on a network so that the minimum separation
+distance between any pair of open facilities is maximized. Later in
+1995, \citet{drezner1995} formalized the $p$-Dispersion Problem,
+asking for the placement of $p$ points from a subset of $\R^n$ such
+that the minimum distance between pairs of points is maximized.
+Subsequently, the Continuous $p$-Dispersion Problem (CpDP) with
+boundary constraints adds the requirement that a dispersion point
+must be sufficiently far away from the boundary of the subset of
+$\R^n$, also often referred to as a container. The $p$-Dispersion
+Problem is interesting because it formalizes the inherent trade-off
+between coverage and separation, to find how a limited number of
+points can be optimally distributed over a domain. The $p$-Dispersion
+problem is provably NP-complete for the general container
+\citep{baurfekete2001} in the number of dispersion points $p$.
+
+\begin{rvdraft}
+Existing work solving the p-Dispersion problem primarily focuses on
+low-dimensional containers with special geometric properties. For
+instance, repulsion-based heuristics have been applied to circular
+containers \citep{graham1998} and non-convex two-dimensional polygons
+\citep{dai2021}. Other approaches include a 2/3-approximation
+algorithm for rectilinear polygons \citep{baurfekete2001} and a Tabu
+Search Global Optimization (TSGO) algorithm for general planar
+containers \citep{lai2024}. In higher dimensions, work is severely
+limited: the nonlinear model of \citet{drezner1995} is formulated in a way
+that extends to $\R^n$ but is demonstrated only in the unit square, while
+\citet{kazakov2018} developed a grid-based
+sphere-packing algorithm that struggles with complex, non-convex
+three-dimensional boundaries. \citet{stoyan2013} pack congruent spheres into
+polyhedral domains with holes, the decision version of the Euclidean problem:
+how many spheres of a given radius fit.
+\end{rvdraft}
+
+Compared to previous work, the goal of this paper is to approximate
+elements of the solution set for the CpDP within general polyhedral
+containers with respect to any norm-induced metric in $\mathbb{R}^3$
+\cite{lai2024}. The TSGO algorithm proposed by \citet{lai2024} is
+difficult to adapt to higher dimensions because it is built around
+two-dimensional logic. Their model relies on measuring distances to
+the edges of a polygon and uses repeated point-in-polygon tests to
+check for constraint violations. We extend this approach to solve the
+CpDP for general polyhedral containers in three dimensions. Our
+method uses a ray-casting procedure for point-in-container testing
+and replaces their edge-based distance checks with a formulation that
+calculates the distance to the faces, edges, and vertices of the
+three-dimensional boundary. Those distances are exact in any
+norm-induced metric, not only the Euclidean one: as developed in
+Section~\ref{sec:polyhedral}, point-to-segment distance is a
+one-dimensional convex problem for every norm, and for a polyhedral norm
+both it and the point-to-plane distance reduce to finite evaluations over
+the vertices of the dual unit ball, which also supply the gradients the
+solver needs.
+
+Solving the CpDP in three dimensions reflects how spatial dispersion
+is performed in real-world situations where objects have volume and
+operate in bounded physical space, such as collision avoidance for
+autonomous agents \cite{abdulghafoor2021} or transmitter placement in
+complex indoor environments \cite{loganathan2024}. Importantly, the
+mathematical abstractions based on \citep{lai2024} established in
+this work are designed to be extensible to general $n$-dimensional
+containers. While the primary challenge in such a transition lies in
+the geometric modeling of arbitrary high-dimensional polyhedra,
+containers with uniform constraints, such as an $n$-dimensional
+hypercube with limits restricted between 0 and 1, remain
+straightforward to model within this framework. We build on the work
+from \citet{lai2024} by defining a feasibility-residual function to
+approximately solve the CpDP with boundary constraints for convex and
+non-convex polyhedral containers in $\R^3$. A feasibility-residual
+function $E(x) = 0$ if and only if $x$ is feasible solution, and
+$E(x) > 0$ otherwise. To minimize this function, we utilize the Tabu
+Search heuristic \cite{glover1997} which improves upon standard local
+searches by marking previously visited configurations as ``tabu'' to
+prevent cycling and encourage the exploration of more optimal regions
+of the solution space \cite{lai2024}.
+
+\begin{rvdraft}
+We also generalize the Continuous $p$-Dispersion Problem by allowing
+the distance between points and the boundary to be measured using a
+metric. This allows the algorithm to handle separation constraints
+defined by general shapes—like cubes or octahedra—rather than being
+limited to standard spherical constraints. This change broadens the
+types of dispersion problems the algorithm can solve and provides a
+single framework for optimizing point layouts under different
+geometric requirements. We validate our algorithm's accuracy by
+comparing its results against optimal results in the unit cube proven
+by \citet{schaer1966} and the best-known values of Packomania
+\citep{packomania}, measuring the relative deterioration to show
+how closely our algorithm approaches global maxima. For
+non-rectangular containers, we benchmark our results against the
+best-known packings for the unit tetrahedron provided by
+\citet{kazakov2018}, against optima certified with Gurobi, and against the
+sphere counts \citet{stoyan2013} report for their eight domains with holes,
+\rvclaim{seven of which we exceed}. We compare with the general-purpose solvers IPOPT
+and SLSQP at equal wall time, \rvdecide{report results for three non-convex polyhedra
+of our own design}, and provide visualizations for our best-achieved
+configurations in several containers. The centres of every configuration we
+report are published with a standalone script that checks them.
+\end{rvdraft}
+
+\textbf{Basic Notation:} We use the following standard notation
+throughout this paper. Let $d(\cdot, \cdot)$ denote a metric on
+$\R^n$ following the usual definition \citep{rosen2012}. The distance
+between an element $x \in \R^3$ and a nonempty subset $X \subseteq
+\R^3$ is given by $d(x, X) = \inf \set{d(x, y) : y \in X}$. The
+\textit{open ball} and \textit{closed ball} of radius $r$ centered at
+$x$ are defined as $B_r^o(x) = \set{y \in \R^3 : d(x, y) < r}$ and
+$B_r^c(x) = \set{y \in \R^3 : d(x, y) \le r}$, respectively. For any
+positive integer $n$, let $[n] = \set{1, \dots, n}$. Finally, for a
+subset $X \subseteq \R^3$, $\partial X$ denotes the boundary of $X$,
+$X^c = \R^3 \setminus X$ is the complement of $X$, and $X^o = X
+\setminus \partial X$ is the interior of $X$.
+
+\section{Problem Formulation}
+
+The Continuous $p$-Dispersion Problem (CpDP) asks to place $p$
+points, i.e., \textit{sites}, within a compact subset, i.e., a
+\textit{container}, in $\R^n$ so that the minimum pairwise distance
+between the sites is maximized \citep{drezner1995}. A variation on
+the CpDP includes ``boundary constraints'' which asks that the
+minimum distance between any two points, as well as the points and
+the boundary of this compact set be maximized \citep{baurfekete2001}.
+Most existing algorithms that solve the CpDP do so in the setting of
+bounded, polygonal containers in two dimensions, possibly with holes.
+In the three dimensions, the natural extension is to consider bounded
+containers which are polyhedra with polyhedral holes. A
+\textit{polyhedron} is a closed and bounded solid $C$ whose boundary
+$\partial C$ can be covered by finitely many planes \cite{berg2008}.
+A \textit{polyhedral container} is a polyhedron $C$ with holes $U_1,
+\dots, U_k \subseteq C$ which are also polyhedra.
+
+We denote $C = (V, \mathcal{E}, \mathcal{F})$ where $V$ is the set of vertices
+of $C$, $\mathcal{E}$ is the set of edges of $C$ and $\mathcal{F}$ is the set of
+faces of $C$; the script letters distinguish these sets from the energy $E$ of
+Equation~\ref{eq:E} and from an individual face $F$. We
+require that the interior of a polyhedral container be non-empty,
+therefore providing the polyhedral container with a consistent
+orientation with inward normals \citep{munkres1991}. We write $x \in
+C$ for an element $x \in \R^3$ inside the polyhedron but outside its
+holes. An element $x \notin C$ is located outside the polyhedron or
+inside the polyhedral container's holes.
+
+We now state the Continuous $p$-Dispersion Problem (CpDP)
+\citep{drezner1995} with boundary constraints for polyhedral containers with
+respect to a metric $d$ on $\R^3$ induced by a norm (i.e., $d(x, y) =
+\norm{x - y}$). The metrics of interest ($\ell_1$, $\ell_2$ and
+$\ell_\infty$) are all of this form, so this costs no generality in practice.
+Expressing $d$ through a norm supplies two useful properties:
+\emph{translation invariance}, $d(x + z, y + z) = d(x, y)$, and
+\emph{absolute homogeneity}, $\norm{\lambda v} = \abs{\lambda} \norm{v}$ for
+all $\lambda \in \R$. Homogeneity is what renders the norm comparable to the
+Euclidean metric, and allows for the almost-everywhere differentiability
+argument; the metric $d(x, y) = \sqrt{\norm{x - y}_2}$ induces the
+usual topology
+on $\R^3$ but is not homogeneous. \\
+
+\textbf{Problem:} Let $p \in \N$ and $C \subseteq \R^3$ be a
+polyhedral container. We solve the nonlinear optimization problem:
+\begin{align*}
+  \max_{c_1, \dots, c_p} \quad & D \\
+  \text{subject to} \quad & c_1, \dots, c_p \in C, & (i) \\
+  & d(c_i, c_j) \ge 2D \text{ for all distinct } i, j \in [p], & (ii) \\
+  & d(c_i, \partial C) \ge D \text{ for all } i \in [p]. & (iii)
+\end{align*}
+Note that we will interpret the value of $D$ to be the radius of the
+ball centered at each dispersion point $c_i$. For a feasible solution
+$(c_1, \dots, c_p, D) \in (\R^3)^p \times \R$ to the nonlinear
+optimization problem, we refer to the elements $c_i \in \R^3$ as
+\textit{dispersion points} and $D \in \R_{> 0}$ as the
+\textit{radius} of the solution. A \textit{configuration} (of
+dispersion points) $X$ refers to the tuple $X = (c_1, \dots, c_p) \in
+(\R^3)^p$ for a given feasible solution; the ordering is immaterial to the
+problem but fixes the indexing used by the sums below.
+
+These constraints enforce three geometric requirements: ($i$) the
+\textit{containment constraint} ensures each point $c_i$ lies within
+the container; ($ii$) the \textit{dispersion constraint} requires
+mutual separation, meaning $B_D^o(c_i) \cap B_D^o(c_j) = \emptyset$
+for all distinct $i, j \in [p]$; and ($iii$) the \textit{boundary
+constraint} keeps points clear of the boundary, ensuring $B_D^o(c_i)
+\cap \partial C = \emptyset$ for all $i \in [p]$.
+
+From the assumption that the interior of the container $C$ is
+nontrivial, a feasible solution $(c_1, \dots, c_p, D)$ always exists
+\citep{dai2021}.
+
+The CpDP is hard to attack naively because the feasible set of the
+nonlinear program is non-convex and admits many local optima. As a
+result, standard nonlinear optimizers often get caught in local minima.
+Additionally, the number of distance constraints to compute is
+$\binom{p}2 = \mathcal{O}(p^2)$, and with minimum distance bounds, it
+is highly likely that a random initial configuration will violate the
+dispersion constraint (\textit{ii}).
+
+\section{Optimization Model}
+
+In this section we introduce a unified feasibility-residual function
+used to solve the CpDP with boundary constraints by modeling
+constraint violation in two parts: \textit{dispersion violation} and
+\textit{container violation}. Dispersion violation stems from
+dispersion points being located too close together; namely, when
+$d(c_i, c_j) < 2D$ for some fixed $D > 0$, constraint (\textit{ii})
+is violated. Container violation is a result of dispersion points
+being located too close to the boundary of the container; namely,
+when $d(c_i, \partial C) < D$ for some fixed $D > 0$, constraint
+(\textit{iii}) is violated.
+
+By combining these two components into a single feasibility-residual
+function, we can address inherent geometric complexities associated
+with any container. In general, the feasible region for the solution
+set to the CpDP is non-convex. Moreover, as the number of dispersion
+points $p$ increases, the feasible region will contain many local
+optima \citep{lai2024}.
+
+\citet{lai2024} proposed a novel framework for the two-dimensional
+CpDP by unifying dispersion and boundary constraints into a single,
+non-negative feasibility-residual function, $E_D$. They
+conceptualized constraint violations as \textit{energy}, where the
+total energy of a configuration corresponds to its distance from
+feasibility. For a configuration of points $X \in (\R^2)^p$ and fixed
+$D \ge 0$, this function is defined as $\displaystyle{E_D(X) =
+  \sum_{1 \le i < j \le p} \ell^2_{ij} + \sum_{i = 1}^p O_i}$ where $\ell_{ij}$ is the dispersion penalty between points
+$c_i$ and $c_j$, and $O_i$ is the boundary penalty for point $c_i$. A
+crucial property of this formulation is that $E_D(X) = 0$ if and only
+if $(X, D)$ is a feasible solution. Because $E_D$ is
+almost-everywhere differentiable, it allows for the application of
+efficient gradient-based optimization methods, such as the
+Limited-memory Broyden-Fletcher-Goldfarb-Shanno (L-BFGS) algorithm
+\citep{fletcher1987}. This approach proved exceptionally powerful,
+enabling the rapid convergence to local optima from random initial
+configurations.
+
+Extending the optimization model from \citet{lai2024} to three
+dimensions introduces several significant challenges. While the
+dispersion penalty term is easy enough to compute in any finite
+number of dimensions, computing the boundary penalty term in three
+dimensions becomes computationally complex. First, \citet{lai2024}
+defines their boundary constraint term in a manner which heavily
+relies on planar geometry where counter-clockwise traversal of closed
+polygonal loops provides a canonical way to distinguish the interior
+from the exterior. We generalize boundary orientation of polygonal
+containers from two-dimensional vertex traversal to three dimensions
+by orienting the faces of the polyhedron using inward normals. By
+assigning an inward-pointing normal to each face, we explicitly
+define the interior half-space of the polyhedron. In our algorithm,
+these normals serve as the directional basis for calculating
+distance-to-boundary terms for dispersion points and performing
+feasibility checks.
+
+Additionally, point-in-container testing is fundamental to the
+boundary constraint term, as it dictates whether to apply a repulsive
+force to maintain interiority or an attractive force to recover
+feasibility from the exterior. While point-in-polygon testing admits
+efficient deterministic routines \citep{wang2005}, no such efficient
+subroutines are devised for three-dimensional containers that scale
+well with the number of vertices. Consequently, we utilize a
+ray-casting-based point-in-polyhedron procedure \citep{horvat2012}
+together with the polyhedron's orientation to obtain distances to the
+boundary of complex or non-convex polyhedral containers. The
+ray-casting procedure draws several rays in random
+directions from a
+given dispersion point and counts the number of faces each intersects. The
+directions are drawn once per run and held fixed for its duration, which is
+what keeps the model well posed: re-drawing them at every evaluation would
+make $E$ a random function of $X$, so the solver would be minimizing a
+stochastic objective and gradient-based descent would be unjustified. Fixing
+them per run keeps $E$ deterministic in $X$ while preventing any single
+alignment from biasing every run. If a given ray intersects an even number of
+faces, the dispersion point is categorized as exterior; an odd number
+of intersections identifies the point as interior. Because rays may
+occasionally strike a vertex or edge leading to numerical ambiguity,
+we cast $k$ rays and take a majority vote. A small $k$ suffices, and does
+not need to grow with the container. For a query point at distance $r$ from
+the nearest edge, the directions that resolve a crossing ambiguously occupy
+an angular band of width $O(\epsilon / r)$ about a measure-zero arc, so a
+single ray misclassifies with probability $\pi \sim c \abs{\mathcal{E}}
+\epsilon / r$ and a $k$-ray majority fails with probability
+$O((4\pi)^{k/2})$. The edge count enters only inside a logarithm, giving
+$k = O(\log \abs{\mathcal{E}})$; at $\epsilon \sim 10^{-10}$ and
+$\abs{\mathcal{E}} \sim 200$ we use $k = 8$.
+
+That bound degrades as $r \to 0$, which is precisely the regime the
+dispersion points occupy at convergence, when they are pressed against the
+walls. Rays are the wrong instrument there, so we do not use them: a point
+within a tolerance $\epsilon_{\text{plane}}$ of some face is classified as
+interior before any ray is cast. The classification is then exact rather
+than probabilistic in the only regime where it is delicate. The Active Face
+rule of the next section is made inclusive to the same
+$\epsilon_{\text{plane}}$, so that a point admitted as interior by this
+test cannot simultaneously fail to see the very wall that admitted it ---
+were the two tolerances to disagree, a point resting on a wall would lose
+that wall from its active set and report a clearance measured to some
+distant feature. These geometric tools provide the foundation
+needed to extend the underlying optimization model to three dimensions.
+
+With this geometric framework in place, we now adapt the optimization
+model presented in \citet{lai2024} to three dimensions. The
+\textit{energy of a solution} $(c_1, \dots, c_p, D)$ will be measured
+by its quantification of constraint violation. Recall that high
+energy solutions have a high degree of constraint violation and low
+energy solutions have a low degree of constraint violation.
+
+We first record the regularity facts used to establish that the
+feasibility-residual function is almost-everywhere differentiable. Both penalty
+terms below are built from metric distances composed with the same
+one-dimensional map, so it is convenient to isolate their common structure.
+
+\begin{lemma}\label{lem:lipschitz}
+  Let $d$ be induced by a norm on $\R^3$. Then
+  \begin{enumerate}
+    \item[(a)] $(x, y) \mapsto d(x, y)$ is Lipschitz on $\R^3 \times \R^3$ with
+      respect to the Euclidean structure;
+    \item[(b)] for any nonempty $S \subseteq \R^3$, $x \mapsto d(x, S)$ is
+      $1$-Lipschitz;
+    \item[(c)] for nonempty $S_1, \dots, S_m \subseteq \R^3$, the pointwise
+      minimum $x \mapsto \min_{k \in [m]} d(x, S_k)$ is $1$-Lipschitz;
+    \item[(d)] $g(t) = \paren{\max \set{0, t}}^2$ belongs to $C^1(\R)$.
+  \end{enumerate}
+  Consequently, if $f$ is locally Lipschitz then $g \circ f$ is differentiable
+  almost everywhere.
+\end{lemma}
+
+\begin{proof}
+  (a) The triangle inequality gives $\abs{d(x, y) - d(x', y')} \le d(x, x') +
+  d(y, y')$. Since all norms on $\R^3$ are equivalent, there is $C > 0$ with
+  $d(u, v) \le C \norm{u - v}_2$, so $d$ is Lipschitz with respect to the
+  Euclidean structure. (b) For every $s \in S$, $d(x, S) \le d(x, y) + d(y, s)$;
+  taking the infimum over $s$ and exchanging $x$ and $y$ yields $\abs{d(x, S) -
+  d(y, S)} \le d(x, y)$. (c) A minimum of finitely many $1$-Lipschitz functions
+  is $1$-Lipschitz. (d) $g'(t) = 2 \max \set{0, t}$ is continuous, so squaring
+  removes the kink that $\max \set{0, t}$ has at the origin. For the final
+  claim, $f$ is differentiable almost everywhere by Rademacher's Theorem
+  \citep{evans2015}, and the chain rule applies wherever it is, since $g$ is
+  continuously differentiable.
+\end{proof}
+
+First, we define the penalty term for dispersion violation. Let
+\begin{equation}
+  \ell_{i, j} = \max \set{0, 2D - d(c_i, c_j)},
+  \label{eq:lij}
+\end{equation}
+hence we get $\ell_{i, j} = 0$ if and only if $d(c_i, c_j) \ge 2D$.
+Therefore the total pairwise dispersion penalty
+$\displaystyle{\sum_{1 \le i < j \le p} \ell_{i, j}^2}$ equals $0$ if and only if all the dispersion points are
+sufficiently far from each other. Moreover $\ell_{i, j}^2 = g \paren{2D -
+d(c_i, c_j)}$ with $g$ as in Lemma~\ref{lem:lipschitz}(d), and $(c_i, c_j)
+\mapsto 2D - d(c_i, c_j)$ is Lipschitz by Lemma~\ref{lem:lipschitz}(a). Hence
+$\ell_{i, j}^2$ is differentiable almost everywhere for all $i, j$.
+
+\subsection{Distances under a polyhedral norm}
+\label{sec:polyhedral}
+
+The boundary penalty measures the distance from a dispersion point to three
+kinds of feature: the container's vertices, its edges, and its faces. Only the
+first is immediate. We record here the construction used for the other two,
+because it is what makes the model metric-agnostic: a norm enters the algorithm
+only through a finite set of vectors, and one argument then settles the
+distance, the point realising it, and the gradient, for segments and planes
+alike.
+
+Throughout, $\norm{\cdot}$ is a norm on $\R^3$, $d(x, y) = \norm{x - y}$, and
+$\norm{z}_* = \max \set{\ang{z, u} : \norm{u} \le 1}$ is the dual norm. Call
+$\norm{\cdot}$ \emph{polyhedral} when its unit ball is a polytope; equivalently,
+when the dual unit ball is a polytope with vertices $g_1, \dots, g_K$, so that
+\begin{equation}
+  \norm{z} = \max_{k \in [K]} \ang{g_k, z}.
+  \label{eq:gen}
+\end{equation}
+Both non-Euclidean metrics used in this paper are of this kind. For
+$\ell_\infty$ the dual ball is the $\ell_1$ ball, whose vertices are the six
+vectors $\pm e_i$; for $\ell_1$ the dual ball is the $\ell_\infty$ ball, whose
+vertices are the eight sign vectors $(\pm 1, \pm 1, \pm 1)$. A further
+polyhedral norm --- weighted, anisotropic, hexagonal --- is supplied to the
+algorithm by giving its generators, not by deriving new geometry.
+
+\textbf{Segments.} For a segment $[s, e]$ and a point $x$,
+\begin{equation}
+  d(x, [s, e]) = \min_{t \in [0, 1]} \norm{(x - s) - t (e - s)}.
+  \label{eq:segdist}
+\end{equation}
+The function being minimised is a norm composed with an affine map of $t$,
+hence convex on $[0, 1]$ \emph{for every norm}. Point-to-segment distance is
+therefore always a one-dimensional convex problem, never a per-metric
+derivation; what a metric changes is only how the minimum is located.
+Substituting Equation~\ref{eq:gen} into Equation~\ref{eq:segdist} gives
+\begin{equation*}
+  d(t) = \max_{k \in [K]} \paren{\alpha_k + t \beta_k}, \quad
+  \alpha_k = \ang{g_k, x - s}, \ \ \beta_k = -\ang{g_k, e - s},
+\end{equation*}
+the upper envelope of $K$ affine functions: convex and piecewise linear. The
+minimum of such an envelope over $[0, 1]$ is attained at an endpoint or at a
+kink, and every kink is a crossing of two of the lines, so the exact minimiser
+lies in the finite set
+\begin{equation*}
+  \set{0, 1} \cup \set{\tfrac{\alpha_j - \alpha_i}{\beta_i - \beta_j}
+  : i < j} \cap [0, 1],
+\end{equation*}
+and is obtained by evaluation rather than by search.
+
+\textbf{Gradients.} Only $\alpha_k$ depends on $x$, with $\partial \alpha_k /
+\partial x = g_k$. If the minimum is attained at an endpoint, $t^*$ is pinned
+there under small perturbations of $x$, and Danskin's Theorem gives $\partial d
+/ \partial x = g_{k^*}$ for any $k^*$ attaining the maximum. If instead it is
+attained at a crossing of lines $i$ and $j$, then $t^* = (\alpha_j -
+\alpha_i)/(\beta_i - \beta_j)$ moves with $x$, and differentiating $d =
+\alpha_i + t^* \beta_i$ through that dependence yields
+\begin{equation*}
+  \frac{\partial d}{\partial x}
+  = g_i + \beta_i \, \frac{g_j - g_i}{\beta_i - \beta_j}.
+\end{equation*}
+The two cases are the endpoint and interior branches of one expression; neither
+is specific to $\ell_1$ or $\ell_\infty$.
+
+\textbf{Planes.} Let $P = \set{y : \ang{N, y - q} = 0}$ and write $h = \ang{N,
+x - q}$. Then
+\begin{equation}
+  d(x, P) = \frac{\abs{h}}{\norm{N}_*},
+  \label{eq:plane}
+\end{equation}
+and the minimum is attained at $x - s u$, where $s = h / \norm{N}_*$ and $u$ is
+any vector with $\norm{u} \le 1$ and $\ang{N, u} = \norm{N}_*$. Indeed, for
+every $y \in P$ we have $\ang{N, x - y} = h$, so $\abs{h} \le \norm{N}_*
+\norm{x - y}$ by definition of the dual norm, giving $d(x, P) \ge \abs{h} /
+\norm{N}_*$; and the stated point lies in $P$ and realises the bound. For a
+polyhedral norm the maximum defining $\norm{N}_*$ is attained at a vertex of
+the unit ball, so $u$ is found among finitely many candidates. For $\ell_2$,
+$\norm{N}_* = \norm{N}_2$ and $u = N / \norm{N}_2$ is unique, and
+Equation~\ref{eq:plane} reduces to orthogonal projection.
+
+Two features of Equation~\ref{eq:plane} deserve emphasis, because the
+Euclidean intuition fails on both. First, the orthogonal projection of $x$ onto
+$P$ is \emph{not} a nearest point of $P$ unless $N$ happens to be parallel to a
+vertex of the unit ball, so using it in place of Equation~\ref{eq:plane}
+over-estimates the distance from a dispersion point to a slanted wall. Second,
+the nearest point need not be unique: the set of optimal directions
+\begin{equation*}
+  U^* = \set{u : \norm{u} \le 1, \ \ang{N, u} = \norm{N}_*}
+\end{equation*}
+is a face of the unit ball, and reduces to a single direction only when that
+face is a vertex. For $\ell_\infty$ with $N = e_1$, every $u$ with $u_1 = 1$
+and $\norm{u}_\infty \le 1$ is optimal, so the nearest points of $P$ fill a
+square rather than forming a single foot. All of them lie at the same distance
+from $x$, so Equation~\ref{eq:plane} is unambiguous; but they lie at different
+places on $P$, and the next definition turns on \emph{where} they lie.
+
+Second, before we define the boundary constraint term, we need two
+auxiliary definitions which are three-dimensional analogues of the
+definitions presented by \citet{lai2024}:
+
+\textbf{Active Face:} Consider a polyhedral container $C$ with a face
+$F$ and a point $c$. Orient the normal vector $N_F$ of face $F$
+inwards and denote $q_F \in F$ as the point in which $N_F$ originates
+from. \textit{A face $F$ is active with respect to $c$} if either $c
+\in C$ and $N_F \cdot (c - q_F) \ge 0$ or if $c \notin C$ and $N_F
+\cdot (c - q_F) < 0$.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figures/active_planes_for_hbox.png}
+  \caption{All active faces (magenta) of the H-box container for
+  point $c = (1.5, 0.5, 1.5)$ inside the container.}
+  \label{fig:active_planes_inside}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figures/active_planes_for_hbox2.png}
+  \caption{All active faces (magenta) of the H-box container for
+  point $c = (1.5, 0.5, 2.5)$ outside the container.}
+  \label{fig:active_planes_outside}
+\end{figure}
+
+Fig.~\ref{fig:active_planes_inside} depicts the active faces for a
+point inside the H-shaped container, and
+Fig.~\ref{fig:active_planes_outside} depicts the active faces for a
+point outside the H-shaped container. An active face can be thought
+of as an oriented plane that is geometrically relevant to the point
+$c$. If $c$ lies inside the polyhedron, then only the faces whose
+inward-normals minimally constrain how close $c$ is to the boundary
+of the container constitute the set of active faces. Alternatively,
+if $c$ lies outside the boundary of the polyhedron, an active face is
+blocking $c$ from entering the polyhedron. Active faces will
+contribute to the boundary constraint in the feasibility-residual function.
+
+\textbf{Active Footpoint:} Consider a dispersion point $c$ and an
+active face $F$ of the container $C$, and let $P$ be the plane through
+$q_F$ with normal $N_F$. A \textit{foot} of $c$ on $P$ is a nearest point
+of $P$ to $c$ in the metric $d$; by Equation~\ref{eq:plane} every foot
+lies at distance $\abs{\ang{N_F, c - q_F}} / \norm{N_F}_*$ from $c$. We
+say $c$ has an \textit{active footpoint} $h$ with respect to $F$ if some
+foot of $c$ on $P$ lies on $F$, and we take $h$ to be such a foot. We
+denote $H^i$ to be the set of all active footpoints with respect to the
+dispersion point $c_i$.
+
+Under the Euclidean metric the foot is unique and equals the orthogonal
+projection of $c$ onto $P$, which recovers the construction of
+\citet{lai2024}. Under a general norm it is neither unique nor orthogonal,
+and the existential quantifier in the definition is load-bearing. Since all
+feet of $c$ on $P$ are equidistant from $c$, the \emph{distance} an active
+footpoint contributes does not depend on which foot is named; what does
+depend on it is whether the named point lies on $F$, and hence whether $F$
+contributes to the penalty at all. Requiring only that \emph{some} foot lie
+on $F$ makes this a question about the geometry of $P \cap F$ rather than
+about an arbitrary selection, and it is exactly the property
+Lemma~\ref{lem:zero} needs.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figures/active_footpoints_in_hbox.png}
+  \caption{All active footpoints (blue) inside the H-box container
+    with respect to (red) point $(1.5, 0.5, 1.5)$ inside container with
+  active faces highlighted in pink.}
+  \label{fig:footpoints_inside}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figures/active_footpoints_in_hbox2.png}
+  \caption{All active footpoints (blue) inside the H-box container
+    with respect to (red) point $(1.5, 0.5, 2.5)$ outside container
+  with active faces highlighted in purple.}
+  \label{fig:footpoints_outside}
+\end{figure}
+
+Fig.~\ref{fig:footpoints_inside} depicts a case where the footpoints
+of a dispersion point are all active.
+Fig.~\ref{fig:footpoints_outside} depicts a case where not all
+footpoints of a dispersion point are active. The active footpoint $h$
+of a dispersion point $c$ allows us to measure distances between
+dispersion points and the minimally relevant planes of the container,
+thereby providing a reference for the distance between a dispersion
+point and the container's boundary. When a nearest point of $P$ falls
+directly on the face $F$, $F$ is the boundary face that governs how
+close $c$ may move toward the container’s boundary, and the
+point-to-face distance is determined by the separation between $c$ and
+this footpoint. When no nearest point of $P$ lies on $F$, the nearest
+point of $F$ itself lies on the relative boundary of $F$, which is a
+union of edges; the penalty then reaches that part of the boundary
+through $\mathcal{E}$ rather than through $H^i$, and nothing is lost.
+
+Orientation equips the polyhedron with coherent inward normals,
+making the active face selection rule an orientation-consistent
+generalization of the counterclockwise active-edge mechanism used in
+the planar formulation \citep{lai2024}. Unlike the two-dimensional
+case, where the boundary is a closed, non-self-intersecting loop of
+segments with an inherent cyclic ordering, the boundary of a
+three-dimensional container forms a polyhedral complex with no
+analogous ordering. The extension from active edges \citep{lai2024}
+to active faces and their associated footpoints provides the
+geometric machinery needed to generalize boundary interactions from
+vertices and edges in two dimensions to vertices, edges, and faces in
+three dimensions. Thus, active faces constitute the minimal and
+geometrically natural extension of the active-edge concept from two
+to three dimensions, enabling a unified treatment of boundary
+constraints in arbitrary polyhedral domains.
+
+Now, we define the boundary penalty for a dispersion point $c_i$ as
+\begin{equation}
+  O_i =
+  \begin{cases}
+    \paren{D + 2 \min \set{d(c_i, v) : v \in V \cup H^i}}^2 & c_i
+    \notin C, \\[4pt]
+    \displaystyle\sum_{v \, \in \, V \, \cup \, \mathcal{E} \, \cup \, H^i}
+    \paren{\max \set{0,\ D - d(c_i, v)}}^2 & c_i \in C.
+  \end{cases}
+  \label{eq:O_i}
+\end{equation}
+When $c_i \in C$, the penalty accumulates the squared \emph{shortfall} of each
+boundary feature's distance below $D$: it vanishes exactly when the open ball
+$B^o_D(c_i)$ meets no vertex, edge or active footpoint of the container, and
+otherwise grows with the depth of the violation. If the distance from $c_i$ to a
+vertex, edge or footpoint exceeds $D$, that feature contributes nothing.
+
+The exterior branch minimises over $V \cup H^i$ only. Omitting $\mathcal{E}$
+costs nothing there: outside the container the penalty has no zero to reach, so
+its role is not to measure the distance to the boundary exactly but to be
+positive and to point back inside, and $V \cup H^i$ already determines a
+direction of return. Inside, by contrast, the edges are indispensable --- they
+are what covers the case in which no foot of $c_i$ lands on its face, as the
+proof of Lemma~\ref{lem:zero} shows.
+
+When $c_i \notin C$, a penalty is imposed regardless of $D$, since the point
+violates the containment constraint (\textit{i}). The squared form is bounded
+below by $D^2 > 0$ and has non-vanishing derivative in the distance from $c_i$
+to the container, so an exterior point is not merely penalised but actively
+driven back toward it; a penalty differing from the interior branch by an
+additive constant would leave the gradient unchanged and exert no such force.
+
+We now define the energy function $E: (\R^3)^p \times \R \to \R$
+where $D > 0$ is fixed and $X = (c_1, \dots, c_p) \in (\R^3)^p$ by
+\begin{equation}
+  E(X, D) = \sum_{1 \le i < j \le p} \ell_{i, j}^2 + \sum_{i = 1}^p O_i.
+  \label{eq:E}
+\end{equation}
+
+\begin{lemma}\label{lem:zero}
+  \textit{For fixed $D > 0$, $O_i = 0$ if and
+    only if $c_i \in C$ and $d(c_i, \partial C) \ge D$. Consequently
+    $E(X, D) = 0$
+  if and only if $(X, D)$ is feasible.}
+
+  \textit{Proof.} If $c_i \notin C$ then $O_i \ge D^2 > 0$. Suppose $c_i \in
+  C$. Every term of the interior branch vanishes exactly when $d(c_i, v) \ge D$
+  for all $v \in V \cup \mathcal{E} \cup H^i$, so it suffices to prove the
+  covering identity
+  \begin{equation}
+    \min_{v \, \in \, V \, \cup \, \mathcal{E} \, \cup \, H^i} d(c_i, v)
+    = d(c_i, \partial C).
+    \label{eq:covering}
+  \end{equation}
+  Each feature on the left is a subset of $\partial C$, so the left side is at
+  least the right. For the reverse inequality, $\partial C$ is compact, so the
+  infimum defining $d(c_i, \partial C)$ is attained at some $y^*$, lying on some
+  face $F$. We claim $F$ is active. If not, then $\ang{N_F, c_i - q_F} < 0$, so
+  $c_i$ lies strictly on the outward side of the plane of $F$. Points of the
+  open segment $(y^*, c_i)$ near $y^*$ then lie outside $C$, while $c_i \in C$,
+  so that segment meets $\partial C$ at some $z$ strictly between $y^*$ and
+  $c_i$. As $z$ lies on the segment, $d(c_i, z) < d(c_i, y^*)$, contradicting
+  the minimality of $y^*$.
+
+  Now either some foot of $c_i$ on the plane of $F$ lies on $F$, in which case
+  that foot belongs to $H^i$ and, by Equation~\ref{eq:plane}, realises $d(c_i,
+  F) = d(c_i, \partial C)$; or no foot does, in which case the minimiser $y^*$
+  of $d(c_i, \cdot)$ over $F$ lies on the relative boundary of $F$, a union of
+  edges of $F$, all of which belong to $\mathcal{E}$. Either way the left side
+  of Equation~\ref{eq:covering} attains $d(c_i, \partial C)$, proving the
+  identity. Hence $O_i = 0$ exactly when $d(c_i, \partial C) \ge D$, which is
+  constraint (\textit{iii}).
+
+  The first term of Equation~\ref{eq:E} vanishes precisely when $d(c_i, c_j)
+  \ge 2D$ for all $i \ne j$, which is constraint (\textit{ii}). Both terms are
+  non-negative, so their sum vanishes only when each does.
+  \hfill $\square$
+\end{lemma}
+
+The first term of Equation~\ref{eq:E} deals with the dispersion
+constraint (\textit{ii}) of the CpDP, and the second term with the containment
+and boundary constraints (\textit{i}) and (\textit{iii}). When $D$ is fixed, we
+write $E_D(X) := E(X, D)$.
+
+Throughout, the quantity we report is the \emph{radius} $D$, not the minimum
+separation. Constraints (\textit{ii}) and (\textit{iii}) are deliberately
+asymmetric in it --- two points must be $2D$ apart, while a point must clear
+the boundary by $D$ --- because $D$ is the radius of the largest ball that can
+be centred at every dispersion point without overlapping another or leaving
+the container. A configuration reported at $D$ therefore has minimum pairwise
+distance $2D$. Comparisons against sphere-packing tables
+\citep{packomania, schaer1966} are radius to radius.
+
+Equation~\ref{eq:E} gives a feasibility-residual function which lifts
+the optimization model proposed by \citet{lai2024} from two
+dimensions into three dimensions. It is also differentiable almost everywhere.
+Fix a configuration at which no active footpoint lies on the boundary of its
+face. On a neighbourhood of such a configuration the active sets $H^1, \dots,
+H^p$ are constant, so $E$ is a finite sum of terms $g \paren{D - d(\cdot, v)}$
+with $v$ ranging over a fixed set; each is locally Lipschitz by
+Lemma~\ref{lem:lipschitz}, hence so is $E$, and Rademacher's Theorem applies.
+Two families of configurations are excluded: those at which some footpoint
+meets the boundary of its face, and those at which some $c_i$ lies on $\partial
+C$, where $O_i$ switches branches. Each is cut out by finitely many equations,
+so both are finite unions of sets of codimension one and therefore have
+Lebesgue measure zero. Hence $E$ is differentiable almost everywhere on
+$(\R^3)^p \times \R_{>0}$, which is what permits the use of gradient-based
+solvers such as L-BFGS \citep{fletcher1987}.
+
+We note that $E$ is not continuous everywhere, and that both of its
+discontinuities come from the same source: under a sum, a single geometric
+constraint is witnessed by a face, its edges and its vertices at once, and the
+sum weights it by a multiplicity that changes as $c_i$ moves. In the interior,
+a footpoint leaving its face has its contribution dropped while the
+corresponding edge term remains; on the unit cube at $D = 0.15$ we measure a
+step of $2.1 \times 10^{-2}$ across such an event along a path that stays
+strictly inside the H-box. At the wall, the interior branch tends to the sum of
+$(D - d_f)^2$ over every feature within $D$, which exceeds the $D^2$ the
+exterior branch takes there whenever more than one feature is in range --- near
+an edge or a corner, always. Crossing the cube's floor $0.04$ from an edge, $E$
+steps from $0.0467$ to $0.0225$. This
+does not affect almost-everywhere differentiability --- the argument above is
+local, and applies on the open set where the active sets are constant --- but
+it does mean a line search may encounter a discontinuity.
+
+Aggregating the interior branch as $\paren{\max \set{0, D - \min_v d(c_i,
+v)}}^2$ removes both jumps at once --- one constraint is then counted once,
+and the interior branch tends to $D^2$ at the wall, matching the exterior one
+--- and makes $E$ globally Lipschitz, at which point
+Lemma~\ref{lem:lipschitz}(c) gives almost-everywhere differentiability
+directly, with no excluded set. On the two measurements above the minimum
+reads $0.0225$ on both sides of the wall. We retain the sum because it performed
+marginally better at the top of the distribution: across four
+container--$p$ cells the best radius found under the minimum was between
+$0.975$ and $1.000$ times that found under the sum. The minimum was, however,
+the more reliable of the two per seed, raising the mean radius from $0.359$ to
+$0.388$ on the H-box at $p = 10$ and from $0.106$ to $0.112$ on the
+tetrahedron at $p = 10$, so the two aggregations trade reliability against
+best-case quality rather than dominating one another.
+
+Both $E$ and $\Phi_\mu$ are differentiated in closed form rather than by
+finite differences. The dispersion term contributes $-4 \max \set{0, 2D -
+d(c_i,c_j)} \, \partial d / \partial c_i$ to each point; the vertex and
+footpoint terms differentiate through the metric directly, using the
+subgradient of the norm at the displacement; the edge terms use the segment
+gradient of Section~\ref{sec:polyhedral}; and the face terms use $\partial
+\paren{\abs{h} / \norm{N}_*} / \partial c_i = \mathrm{sgn}(h) N /
+\norm{N}_*$, which is independent of which foot the face contributes. The
+derivative with respect to $D$ accumulates alongside, so one pass returns
+$\Phi_\mu$, $\nabla_X \Phi_\mu$ and $\partial \Phi_\mu / \partial D$
+together.
+
+This is not merely an optimization. A finite-difference gradient over the
+$3p + 1$ variables costs that many extra evaluations of $E$, or twice that
+for central differences, against the single pass the closed form needs. On
+the unit cube we measure the analytic gradient at $20\times$ the speed of
+central differences at $p = 10$ and $185\times$ at $p = 60$, the gap widening
+with $p$ exactly as the count of perturbations predicts. Just as importantly,
+a differencing step interacts badly with a function that is only
+almost-everywhere differentiable: a step that straddles a kink returns a
+slope belonging to neither side, injecting noise that the closed form does
+not have.
+
+\section{Global Optimization Algorithm}
+
+In this section we propose our global optimization algorithm which
+builds upon the framework introduced by \citet{lai2024}. The global
+optimization process is structured as a multi-start pipeline to
+navigate the complex, non-convex solution space. In each global
+iteration, the algorithm restarts by generating an initial random
+configuration of $p$ points uniformly distributed within the
+polyhedral container. This multi-start approach is necessary because
+the problem’s non-smooth objective function and numerous distance
+constraints frequently trap standard optimization tools in poor local
+optima \citep{dai2021}. As shown in
+Fig.~\ref{fig:tabu_search_overview}, within each iteration, the Tabu
+Search procedure acts as a feasibility solver by minimizing the
+feasibility-residual function~\ref{eq:E} to find a valid
+configuration given a fixed minimum distance $D$. Once a feasible
+configuration is found, a distance adjustment procedure applies the
+Sequential Unconstrained Minimization Technique (SUMT)
+\citep{fiacco1964} to iteratively maximize $D$ while preserving the
+feasibility of the configuration.
+
+\begin{figure}[h!] % or [htbp] for flexible placement
+  \centering
+  \includegraphics[scale=0.25]{figures/global_optimization_algorithm_visualization.png}
+  \caption{Overview of the global optimization algorithm. The process
+    demonstrates a two-stage approach: first, Tabu Search is employed
+    to relocate a candidate sphere (red) from an initial, infeasible
+    position to a feasible position (yellow). Second, an Adjust
+    Distance phase maximizes the uniform radius of all spheres to
+  achieve an optimal packing configuration.}
+  \label{fig:tabu_search_overview}
+\end{figure}
+
+\subsection{Tabu Search}
+
+We employ a Tabu Search procedure \citep{glover1997}, following the
+framework used by \citet{lai2024}. Tabu Search is a combinatorial
+heuristic designed to escape poor local configurations (high-energy)
+and move the system toward a better (lower-energy) arrangement of
+dispersion points inside the container. The core principle behind the
+Tabu Search is the \textit{tabu list} which maintains a short term
+list of recent moves that are temporarily forbidden in subsequent
+iterations \citep{glover1997}. The tabu list ensures the algorithm
+does not fall into cycles of re-evaluating configurations.
+
+A move in our setting relocates a point to a position in $\R^3$, and a
+continuous position never recurs exactly, so a list keyed on positions would
+forbid nothing. We therefore key an entry on the pair (index of the moved
+point, cell of a grid of side $\delta = D/20$ containing its destination),
+which makes ``the same move'' a statement about arriving in the same small
+region rather than at the same coordinates. Tying $\delta$ to $D$ rather than
+to the container keeps the granularity of the memory proportional to the
+scale of the configuration being built.
+
+Entries expire two ways. Each is forbidden for a tenure of $7$ iterations,
+after which it lapses whether or not the list is full; and the list holds at
+most $20$ entries, the least recent being evicted when it overflows. We also
+add the \emph{reverse} of each accepted move, which is what prevents the
+search from immediately returning a point to the cell it just left. Finally,
+the prohibition is subject to an \textit{aspiration criterion}: a forbidden
+move is taken anyway if it yields a configuration strictly better than the
+best seen so far. Tabu status is a heuristic about where the search has
+already been, and it should never be allowed to veto an outright improvement.
+
+The Tabu Search heuristic incentivizes long-term exploration of the
+solution space. The maximum number of successive moves the algorithm
+is allowed to explore without improving from the initial
+configuration is specified by a parameter $\beta$. If Tabu Search
+makes $\beta$ iterations without improving on the last-improved
+configuration, then the procedure terminates. A small $\beta$ enables
+a quicker Tabu Search, but only scans for solutions which are a few
+moves different from the initial configurations. A large $\beta$
+enables a deeper scan of neighboring solutions, but forces a longer
+runtime for Tabu Search. Tabu Search proves to be a powerful tool for
+efficiently scanning families of solutions using combinatorial
+optimization methods on a continuous region and transforming
+high-energy configurations to low-energy configurations.
+
+For a given configuration $X = \set{c_1, \dots, c_p}$, we quantify
+the \textit{energy of a point} by the degree to which it violates the
+dispersion and boundary constraints. We define the energy of a
+dispersion point $c_i$ as
+\begin{equation}
+  E_D(c_i) = \sum_{j \ne i} \ell_{i, j}^2 + O_i
+  \label{eq:dispersion_point_energy}
+\end{equation}
+where $\ell_{i, j}$ is the dispersion penalty term and $O_i$ captures
+the boundary violation term as in Equation~\ref{eq:O_i}. To propose
+new candidate positions for dispersion points, we consider
+\textit{vacancy sites}, which are random locations inside the
+container not currently occupied by a dispersion point. A vacancy
+site $c$ has energy
+\begin{equation}
+  E_D(c) = \sum_{j = 1}^p \ell_{c, j}^2 + O_{c}
+  \label{eq:vacancy_energy}
+\end{equation}
+where $\ell_{c, j}$ replaces $c_i$ with $c$ in Equation~\ref{eq:lij}
+and $O_c$ replaces $c_i$ with $c$ in Equation~\ref{eq:O_i}. Vacancy
+sites with low energy represent positions that are more compatible
+with the current configuration, i.e., points where it would be the
+``easiest'' to insert another ball.
+
+A \textit{neighbor} $X_{nb}$ of a solution $X$ can be found by
+\textit{moving} a single dispersion point of $X$ to a new location.
+The \textit{neighborhood} $N(X)$ is the set of neighbors of $X$. To
+select the most promising neighbor of a given configuration $X$, we
+sample $N(X)$ by identifying the $Q$ highest-energy dispersion points
+and the $Q$ lowest-energy vacancy sites selected from a pool of $10p$
+randomly generated candidates, where $p$ is the total number of
+dispersion points. While \citet{lai2024} suggest generating only $5p$
+vacancy sites, we increased this sample size to $10p$ to maintain
+sufficient search breadth, compensating for the lower sampling
+density inherent in three-dimensional space compared to two. We
+analyze the possible moves between these sets to identify the pairing
+that offers the best potential reduction in energy.
+
+For a specific dispersion-vacancy move, the resulting configuration
+is merely a rough approximation of a feasible solution. Since vacancy
+sites are generated randomly, simply placing a point at one of these
+coordinates rarely resolves the feasibility-residual value, defined
+in Equation~\ref{eq:E}, to zero. Therefore, we do not evaluate the
+quality of this raw move directly. Instead, we pass this intermediate
+configuration to our local optimization subroutine,
+\textsc{LocalOpt}. \textsc{LocalOpt} serves as the mandatory bridge
+between the discrete combinatorial search and the continuous solution
+space. It utilizes a gradient-based solver, specifically the
+Limited-memory Broyden-Fletcher-Goldfarb-Shanno (L-BFGS) algorithm
+\citep{fletcher1987}, to drive the rough candidate configuration
+toward the nearest smooth minimum of the energy function.
+Consequently, the Tabu Search algorithm never compares unrefined
+moves; it strictly compares the \textit{locally optimized} outcomes
+of those moves to decide if a step is an improvement.
+
+\begin{rvdraft}
+However, even with this precise local refinement, the global solution
+space of Equation~\ref{eq:E} remains non-convex and populated with
+numerous local minima \citep{lai2024}. To prevent the algorithm from
+becoming trapped in the first deep valley it encounters, we integrate
+Monotonic Basin Hopping (\textsc{MBH}) as a heuristic for global
+exploration, as suggested by \citet{lai2024}. Unlike Tabu Search,
+which evolves a solution along a specific path, \textsc{MBH} samples
+the global landscape by ``hopping'' between independent basins (i.e.,
+regions converging to a single minimum) \citep{back2013}. It operates
+by taking a solution $(X,D)$, performing random perturbations to jump
+into a neighboring basin, and then applying \textsc{LocalOpt}. We run ten
+such hops per call. Each hop displaces every coordinate by up to $D$, so the
+step scales with the problem rather than with the container, and its result
+is kept only if the residual does not rise: the walk is monotone, and the step
+never worsens the configuration it is given. A walk that also accepts uphill
+minima can cross barriers this one cannot; \rvclaim{in our tests it reached the best
+basin no more often on the cube and less often on the star}\rvnote{p = 100, 4 seeds, l2}, but
+\rvdecide{Section~\ref{sec:hbox} shows one cell where crossing barriers matters.}
+\end{rvdraft}
+
+\textsc{MBH} is applied inside the Tabu Search loop rather than as a
+separate outer layer, on the configuration that results from taking the
+chosen move (line~\ref{line:mbh} of Algorithm~\ref{alg:tabu_search}). The two
+heuristics address different failure modes and compose naturally there:
+the tabu memory prevents the search from re-taking a move it has just
+undone, while \textsc{MBH} perturbs whatever configuration that move
+produced. Placing it outside the loop would leave each tabu iteration to
+terminate in its own basin with no means of leaving it.
+
+\begin{algorithm}[H]
+  %\SingleSpacedXI % <--- INFORMS-specific single spacing command
+  \caption{Tabu Search}
+  \begin{algorithmic}[1]
+    \Require $C$ (Container), $X$ (configuration), $D \in \R_{> 0}$,
+    $\beta \in \Z_{> 0}$, $Q \in \Z_{> 0}$, $\epsilon \in \R_{> 0}$
+    \State $Q \gets \min \set{Q, p}$
+    \State $X \gets \textsc{LocalOpt}(X, D)$
+    \State $X^{\text{best}} \gets X$, $\emph{NoImprove} \gets 0$,
+    $\emph{TabuList} \gets \set{}$
+    \While{$\emph{NoImprove} \le \beta$ and $E_D(X^{\text{best}}) > \epsilon$}
+    \State $p_1, \dots, p_Q \gets \textsc{HighEnergyPoints}(X, D, Q)$
+    \State $q_1, \dots, q_Q \gets \textsc{VacancySites}(X, D, Q)$
+
+    \State $X^{\text{best}}_{\text{nb}} \gets X$,
+    $e^{\text{best}}_{\text{nb}} \gets \infty$,
+    $\emph{BestMove} \gets \textsc{Nil}$
+    \For{$(i, j) \in [Q] \times [Q]$}
+    \State $X_{\text{nb}} \gets
+    \textsc{LocalOpt}(\textsc{MovePoint}(X, p_i, q_j), D)$
+    \State $a \gets \left(\textsc{Move}(p_i, q_j) \text{ not forbidden}\right)$
+    \textbf{or} $\left(E_D(X_{\text{nb}}) < E_D(X^{\text{best}})\right)$
+    \If {$a$ \textbf{and} $E_D(X_{\text{nb}}) < e^{\text{best}}_{\text{nb}}$}
+    \State $X^{\text{best}}_{\text{nb}} \gets X_{\text{nb}}$,
+    $e^{\text{best}}_{\text{nb}} \gets E_D(X_{\text{nb}})$
+    \State $\emph{BestMove} \gets \textsc{Move}(p_i, q_j)$
+    \EndIf
+    \EndFor
+    \If{$\emph{BestMove} \ne \textsc{Nil}$}
+    \State $X \gets X^{\text{best}}_{\text{nb}}$
+    \State Add $\emph{BestMove}$ and its reverse to \emph{TabuList}
+    \EndIf
+    \State $X \gets \textsc{MBH}(X, D)$ \label{line:mbh}
+    \If{$E_D(X) < E_D(X^{\text{best}})$}
+    \State $X^{\text{best}} \gets X$
+
+    \State $\emph{NoImprove} \gets 0$
+    \Else
+    \State $\emph{NoImprove} \gets \emph{NoImprove} + 1$
+    \EndIf
+    \EndWhile
+    \State \Return $X^{\text{best}}$
+  \end{algorithmic}
+  \label{alg:tabu_search}
+\end{algorithm}
+
+Algorithm~\ref{alg:tabu_search} outlines the Tabu Search procedure.
+To visualize the effect of Tabu Search, Fig.~\ref{fig:tabu_search}
+illustrates a candidate move for a fixed radius $D$ within a cubic container.
+
+The dispersion point shown in red is in a high-energy state due to a
+boundary constraint violation (protrusion from the container). The
+yellow sphere represents a randomly generated vacancy site located in
+a feasible region. The red arrow indicates the proposed movement:
+displacing the violating particle to this vacancy site. In this
+specific example, because the target site satisfies all constraints
+(it is inside the boundary and non-overlapping), the
+feasibility-residual value is zero. Consequently, the subsequent
+\textsc{LocalOpt} routine will confirm this new configuration as
+stable with minimal energy. To prevent cycling, the algorithm explicitly
+forbids the reverse move in future iterations; the yellow dispersion
+point is temporarily restricted from returning to the high-energy
+neighborhood of the red sphere. This demonstrates the primary
+function of Tabu Search: executing coarse, global jumps to locate
+feasible regions, which are then refined by local optimization.
+
+\begin{figure}[h!] % or [htbp] for flexible placement
+  \centering
+  \includegraphics[scale=0.2]{figures/tabu_search.png}
+  \caption{\textbf{Visualization of a candidate neighbor generation.}
+    The red sphere represents the point selected for movement (e.g., a
+    high-energy point). The red arrow indicates the proposed
+    displacement vector, targeting the location currently occupied by
+  the yellow sphere.}
+  \label{fig:tabu_search}
+\end{figure}
+
+\subsection{Adjust Distance}
+
+After the Tabu Search procedure is completed, the resulting
+configuration $X$ is a feasible solution, but typically not optimal.
+To find the nearest optimal solution $X^\star$ for the given
+configuration $X$, we employ the Sequential Unconstrained
+Minimization Technique (SUMT) \citep{fiacco1964} as proposed by
+\citet{lai2024} to convert the original CpDP (as a constrained
+optimization problem) into a sequence of unconstrained optimization
+problems and solve each until a feasible local minimum solution is
+found. Each unconstrained subproblem can be expressed as
+\begin{equation}
+  \textit{Minimize} \quad \Phi_\mu(X, D) = -D^2 + \mu \times E(X, D)
+  \label{eq:phi_mu}
+\end{equation}
+where $X$ is a candidate solution, $D$ is the radius of the solution
+$X$, $\mu$ is the penalty factor to define the unconstrained
+optimization problem.
+
+Algorithm~\ref{alg:adjust_distance} is the method to adjust a
+feasible configuration from Algorithm~\ref{alg:tabu_search} into a
+local optimum. The distance adjustment method will iteratively
+minimize Equation~\ref{eq:phi_mu} for strictly increasing values of
+$\mu$. The $-D^2$ term in Equation~\ref{eq:phi_mu} is to ensure that
+when we minimize this function, we promote maximizing $D$.
+Equation~\ref{eq:O_i} contains $(\max\set{0, D - d(c_i, v)})^2$ which
+grows quadratically with $D$. The $-D^2$ term thus ensures
+Equation~\ref{eq:phi_mu} is not dominated by $E(X, D)$
+\citep{lai2024}. The distance adjustment procedure slightly adjusts
+the configuration $X$ and the allowed minimum distance $D$ through
+local optimization to find a local optimum of the original CpDP.
+
+\begin{algorithm}[H]
+  %\SingleSpacedXI % <--- INFORMS-specific single spacing command
+  \caption{Adjust Distance}
+  \begin{algorithmic}[1]
+    \Require $X_0$ (configuration), $D_0 \in \R_{> 0}$, $K \in \Z_{> 0}$,
+    $\epsilon \in \R_{>0}$, $\mu_{\mathrm{s}} \in \R_{>0}$ (default $1$)
+    \State $X \gets X_0$, $D \gets D_0$, $\mu \gets \mu_{\mathrm{s}}$
+    \For{$i \gets 1$ to $K$}
+    \State $\mu \gets 10 \cdot \mu$
+    \State $(X, D) \gets \textsc{LocalOptPhi}(X, D, \mu)$
+    \If{$(X, D)$ unchanged for three consecutive iterations}
+    \State \textbf{break}
+    \EndIf
+    \EndFor
+    \If{$E_D(X) \ge \epsilon$}
+    \Comment{infeasible: snap to the exact bound}
+    \State $D \gets \min \set{0.95 D,\ B(X)}$
+    \State $X \gets \textsc{LocalOpt}(X, D)$
+    \State $(X, D) \gets \textsc{AdjustDistance}(X, D, 5, \epsilon, 10^3)$
+    \EndIf
+    \If{$B(X) > 0$}
+    \State $D \gets B(X)$
+    \Comment{exactly what $X$ supports}
+    \EndIf
+    \State \Return $(X, D)$
+  \end{algorithmic}
+  \label{alg:adjust_distance}
+\end{algorithm}
+
+The \textsc{LocalOptPhi} function is a run of L-BFGS on the function
+$\Phi_\mu$ from an initial solution $(X, D)$ and penalty factor $\mu$. We take
+$\mu_0 = 10$ and $\mu \gets 10 \mu$ with $K = 15$, so the schedule spans
+$10$ to $10^{15}$. A larger $\mu_0$ makes the first gradient ill-conditioned:
+the penalty term then dominates $-D^2$ from the outset, and the first iterate
+is driven to satisfy the constraints at whatever radius it starts from rather
+than trading radius against violation. Starting small and multiplying is what
+lets each iteration begin near the previous minimiser.
+
+Two quantities make the procedure self-correcting. Write
+\begin{equation}
+  B(X) = \min \set{\min_{i < j} \tfrac{1}{2} d(c_i, c_j),\ \min_i d(c_i,
+  \partial C)},
+  \label{eq:bound}
+\end{equation}
+the largest radius the configuration $X$ admits. Both constraints tighten
+monotonically in $D$ --- constraint (\textit{ii}) needs $d(c_i, c_j) \ge 2D$
+and constraint (\textit{iii}) needs $d(c_i, \partial C) \ge D$ --- so the
+feasible radii for a fixed $X$ are exactly the interval $[0, B(X)]$, and
+$B(X)$ is attained. Every $D$ we report is therefore certified feasible by
+construction rather than by tolerance.
+
+This matters at both ends of the loop. If SUMT terminates infeasible, $D$ is
+snapped to $B(X)$ in one step instead of being walked down in fixed
+proportional decrements, which may exhaust its retries while still infeasible;
+the retry resumes the penalty schedule at $\mu = 10^4$ rather than restarting
+it, since the configuration it continues from is already close to feasible.
+And whichever side of $B(X)$ SUMT stops on, the radius returned is $B(X)$
+itself. Above it, the tolerance $E < \epsilon$ alone would admit a violation
+of up to $\sqrt{\epsilon}$; below it, the radius would be conservative. In
+practice $B(X) = 0$ only when a point has left the container, and that case is
+reported as infeasible. (We return $B(X) (1 - 10^{-9})$, a margin against
+rounding in the final evaluation.) The lower guard is not cosmetic: $D = 0$ is a stationary point of $\Phi_\mu$ at
+the lower bound whenever the points are well separated, since $E = 0$ and
+$\partial \Phi_\mu / \partial D = -2D$ both vanish there, so an over-estimated
+$D_{\text{init}}$ can drive the procedure onto a trivially ``feasible''
+answer --- as it did for the H-box at $p = 1$, which returned $D = 0$ for
+every seed before the bound was imposed.
+
+Note that \textsc{LocalOpt} is called in
+Algorithm~\ref{alg:adjust_distance} only on the infeasible branch, where $D$
+has just changed and minimizing $E_D(X)$ can therefore still help. It is not
+called in the main loop, where $D$ is free and \textsc{LocalOptPhi} already
+varies it. Conversely it would not help to call \textsc{LocalOptPhi} in
+Algorithm~\ref{alg:tabu_search}, since Tabu Search is only designed for
+finding feasible configurations at a fixed $D$. It is important not to
+``rush'' finding a maximal value of $D$, as finding a stable and feasible
+configuration $X$ first often leads to a smoother maximization of $D$.
+
+\subsection{Global Optimization}
+
+The global optimization procedure is summarized in
+Algorithm~\ref{alg:global_opt}. This algorithm represents a
+three-dimensional analogue to the TSGO framework established by
+\citet{lai2024}. While \citet{lai2024} utilized a time-bounded loop
+with continuous dependency on the global best state, our approach
+adopts an iterative multi-start strategy. This modification decouples
+the search trajectories, allowing each iteration to explore a
+distinct portion of the solution space independently before comparing
+against the current global optimum.
+
+By shifting to an iteration-based structure, we ensure that the
+algorithm extensively samples the configuration space. Each iteration
+begins with a fresh randomization, preventing the solver from
+becoming trapped in a previously found local optimum. This is
+particularly crucial for non-convex containers where the feasible
+region may be disconnected.
+
+\begin{algorithm}[H]
+  %\SingleSpacedXI % <--- INFORMS-specific single spacing command
+  \caption{Global Optimization}
+  \begin{algorithmic}[1]
+    \Require $p \in \mathbb{N}$, $C$, $D_{\text{init}} \in \R_{>0}$, $N$ (most
+    restarts), $R$ (patience), $T$ (time limit), $\epsilon \in \R_{> 0}$
+    \Ensure Best configuration $(X^*, D^*)$
+
+    \State $D \gets D_{\text{init}}$
+    \State $X \gets \textsc{RandomSolution}(p)$
+    \State $X \gets \textsc{TabuSearch}(X, D)$
+    \State $X, D \gets \textsc{AdjustDistance}(X, D, 15)$
+    \State $X^*, D^* \gets X, D$
+    \State $s \gets 0$
+
+    \For {$i = 1$ \textbf{to} $N$}
+    \If{$s \ge R$ \textbf{or} more than $T$ has elapsed}
+    \State \textbf{break}
+    \EndIf
+    \State $D_i \gets D^*$, \quad $s \gets s + 1$
+    \State $X_i \gets \textsc{RandomSolution}(p)$
+    \State $X_i \gets \textsc{TabuSearch}(X_i, D_i)$
+    \If{$E_{D_i}(X_i) < \epsilon$}
+    \State $(X_i, D_i) \gets \textsc{AdjustDistance}(X_i, D_i, 15)$
+    \If{$D_i > D^*$ and $E_{D_i}(X_i) < \epsilon$}
+    \If{$D_i > (1 + 10^{-7}) D^*$}
+    \State $s \gets 0$
+    \EndIf
+    \State $X^*, D^* \gets X_i, D_i$
+    \EndIf
+    \EndIf
+    \EndFor
+    \State $(X^*, D^*) \gets \textsc{Polish}(X^*)$
+    \State \Return $(X^*, D^*)$
+  \end{algorithmic}
+  \label{alg:global_opt}
+\end{algorithm}
+
+Within each iteration, the algorithm retains the rigorous local
+search operators utilized by \citet{lai2024}. An initial
+configuration is generated via \textsc{RandomSolution}, followed by
+\textsc{TabuSearch} to locate the nearest local minimum. We then
+employ a strict feasibility check: only if the feasibility-residual
+value $E_D(X)$ for the configuration X falls below the tolerance
+threshold $\epsilon$ does the algorithm proceed to
+\textsc{AdjustDistance}. This ensures that computational resources in
+the expensive refinement phase are reserved solely for valid,
+high-quality candidate solutions that have a genuine potential to
+improve upon the current global maximum $D^*$. At the local level,
+the optimization subroutines rely on a gradient-based solver
+governing Equation~\ref{eq:E}. This method exploits the specific
+geometry of the polyhedral container to achieve efficient
+convergence. Using gradient-based solvers over an almost-everywhere
+differentiable feasibility-residual function provides a smooth
+convergence path, offering greater stability than repulsion-based
+heuristics that rely on physical dynamical system simulations.
+
+\section{Results and Evaluation}
+
+\begin{rvdraft}
+Experimentation is carried out on a personal computer with an Apple
+M2 Pro 3.5 GHz processor and 32GB RAM running on a 64-bit ARM-based
+\rvcor{MacOS 26.2}\rvnote{check hardware and OS line}. CPU times are given in seconds. The algorithm is
+implemented in Python 3.11, and the source code is publicly available
+(\href{https://github.com/leadcatlab/continuous-p-dispersion}{Source
+Code}). The repository's \texttt{supplement} folder lists the centres of every
+configuration we report, at full double precision, with each container's
+faces and a standalone script, \texttt{verify\_packing.py}, that needs only
+NumPy and none of our solver. From the centres alone it recomputes the
+largest feasible radius exactly, in any of the three norms: half the smallest
+pairwise distance, or the smallest distance from a centre to a face, whichever
+is less, with every centre inside the container. \rvclaim{For all 377 configurations it
+agrees with the radius we report}, which sits a relative $10^{-9}$ below it by
+design. Our specialized hybrid solver pairs Tabu Search with an
+L-BFGS optimizer to efficiently handle the problem's $3p+1$ variables
+and highly non-convex solution space, avoiding the local minima traps
+that stall standard generic solvers. We enforce a constraint
+violation tolerance of $\epsilon=10^{-8}$ and truncate reported
+results to eight decimal places, ensuring the reported configurations
+are strictly feasible within the container geometry.
+\end{rvdraft}
+
+We evaluate our algorithm on five polyhedral containers of increasing
+geometric complexity: the unit cube, unit-length tetrahedron,
+H-shaped box, star-shaped polyhedron, and a ribbed ventilation cage.
+The boundaries for each are defined using a vectorized representation
+of inward-pointing normals for efficient distance calculations. To
+evaluate robustness, we benchmarked our algorithm against Packomania
+records \citep{packomania}, the results of \citet{kazakov2018}, optimality
+certificates from Gurobi \citep{gurobi2026}, and two general-purpose nonlinear
+programming solvers, IPOPT \citep{wachter2006} and SLSQP \citep{kraft1988,
+scipy2020}, run under an equal time budget. The protocol for that comparison
+(solvers, formulations, cells, budgets and statistics) was fixed in writing
+before any run, and is given in Section~\ref{sec:baselines}.
+
+\begin{rvdraft}
+Every run is Algorithm~\ref{alg:global_opt}: a first start from
+$D_{\text{init}}$, then restarts from fresh random configurations at the best
+radius found so far, until $R = \lceil 3 \ln p \rceil$ restarts in a row fail
+to raise it by more than a relative $10^{-7}$, and at most $N = 40$ restarts
+and $T = 30$ minutes per run; a restart under way when the time runs out is
+finished. Tabu Search depth is $\beta = 10$ and the tabu-rearrangement
+parameter is $Q = \max(3, \operatorname{round}(\ln p))$, which is the value
+$Q = 3$ of \citet{lai2024} for $p \le 33$. Each cell (container, metric, $p$)
+is run from $20$ independent seeds. The restarts
+are what put Tabu Search to work. From a start at or below $\hat D$, the first
+\textsc{LocalOpt} usually reaches $E_D < \epsilon$ on its own, and Tabu Search
+then performs no iterations at all; a restart at the best radius so far rarely
+does, so there the search has to relocate points to find a feasible
+configuration. In a pilot on twelve cells spanning all five containers and
+three metrics, with $25$ starts per cell either way, four restarts per run
+\rvclaim{found a larger radius than one start per run in six cells, by $1.0\%$ to
+$6.7\%$}\rvnote{pilot from the old N = 4 design}, was behind in none by more than $1.2 \times 10^{-5}$ (relative), and
+used a third of the CPU time. How many restarts to make we settled by
+replaying 160 long runs (cube, tetrahedron, H-box and star; $\ell_2$ and
+$\ell_1$; $p = 10$ to $100$; capped at 41 starts or 30 minutes) against
+stopping rules constant in $p$ and growing as $\ln p$, $\sqrt p$ and $p$:
+\rvclaim{$\lceil 3 \ln p \rceil$ used $81\%$ of the capped CPU time, lost $0.003\%$ of
+the radius on average, and lost more than $0.01\%$ in one cell of 40.} At large
+$p$ the time limit binds first (Section~\ref{sec:runtime}). $Q$ grows with $p$
+because, at a fixed budget, \rvclaim{$Q = 5$ beat $3$ and $6$ on the cube at $p = 100$,
+and $Q = 4$ beat $3$ in 12 of 24 paired runs, and lost in 5, on the
+tetrahedron and H-box at $p = 60$.}
+\end{rvdraft}
+
+\begin{rvdraft}
+\textsc{Polish} tightens the run's best configuration by sequential linear
+programming. Every distance in the constraints is a convex function of the
+points, so its linearisation at the current configuration is a lower bound
+on it, and a configuration that satisfies the linearised constraints
+satisfies the original ones. Each step solves that linear program, for the
+points and the radius, inside a trust region; its result is certified
+exactly and kept only if the radius rises, so the polish never lowers it.
+\rvclaim{It closes the gap of a few parts in $10^5$ by which the penalty method stops
+short of a configuration's local maximum, and with it the cube at $p = 100$
+reaches the Packomania record.} These values are recorded in every row of our
+results table.
+\end{rvdraft}
+
+\begin{rvdraft}
+\paragraph{Escape phase.}\label{sec:escape} A restart runs Tabu Search at the
+best radius found so far, and Tabu Search moves points only while the
+residual is positive. A random start that is already feasible at that radius
+is therefore returned unmoved, however poor its layout, and a run whose best
+configuration is held in place by a narrow feature of the container can
+repeat it on every restart. To test whether this explains failures we had
+observed, we wrote an \emph{escape phase}: once the restarts stop, further
+restarts run Tabu Search at a target $2\%$ above the best radius, where such a
+start is infeasible and has to move. Each grows its radius from wherever Tabu
+Search leaves it and replaces the best only if it beats it, so the phase can
+only raise a run's result. It stops after as many restarts without a gain as
+the main loop allows, or after 15 minutes; these are the only settings we
+tried. A saved run can be continued with it, drawing the random streams the
+run itself would have drawn, so a continuation is the run the option would
+have produced.
+\end{rvdraft}
+
+\begin{rvdraft}
+\rvdecide{The escape phase is a diagnosis, not part of the method.} We wrote it after
+seeing runs stall, and applied it afterwards only to the three cells in which
+we had seen runs held in place this way: example 6 of \citet{stoyan2013}, the
+H-box under $\ell_\infty$ at $p = 56$, and the ribbed cage under $\ell_2$ at
+$p = 100$. Every table, and every figure other than those of these three cells,
+reports the defaults. \rvdecide{We have not evaluated the phase across the benchmark,
+and do not claim it would help elsewhere.}
+\end{rvdraft}
+
+The initial radius is estimated by filling a fraction $\rho_{\text{init}} =
+0.25$ of the container with $p$ balls \citep{groemer1986, lai2024}, then
+capping at the container's inradius:
+\begin{equation}
+  \hat D = \min \set{\sqrt[3]{\frac{\rho_{\text{init}} \,
+  V_{\text{container}}}{\kappa_d \, p}},\ r_{\text{in}}(C)}.
+  \label{eq:dinit_of_rho}
+\end{equation}
+Here $\kappa_d$ is the volume of the unit ball of the metric $d$, so that a
+ball of radius $D$ occupies $\kappa_d D^3$: it is $\tfrac43\pi$ for $\ell_2$,
+$8$ for $\ell_\infty$, whose ball is a cube of side $2D$, and $\tfrac43$ for
+$\ell_1$, whose ball is a cross-polytope. The metric belongs in the estimate
+because the heuristic is a statement about volume, and the three balls differ
+in volume by a factor of six at the same radius. Using the Euclidean constant
+throughout, as is tempting, over-estimates $\hat D$ by $1.24\times$ under the
+sup norm --- with consequences described below.
+The cap is not a refinement but a necessity. A volume-based estimate knows
+nothing about shape, and on containers whose volume is distributed into thin
+or branching regions it over-estimates badly --- by $1.5\times$ on the H-box
+and $2.1\times$ on the cage. Since no $D$ above the inradius is feasible at
+any $p$, an uncapped estimate starts the search outside the feasible range of
+radii entirely, which is the regime in which $D = 0$ becomes an attracting
+stationary point of $\Phi_\mu$; together with the bound $B(X)$ of
+Equation~\ref{eq:bound} this is what removed the $D = 0$ collapse at $p = 1$.
+The same expression is used by both the solver and the experiment driver, so
+the two cannot disagree.
+
+\begin{rvdraft}
+$\hat D$ is an estimate, and neither direction of error is free. Starting
+above the achievable radius sends Algorithm~\ref{alg:adjust_distance} into its
+infeasible branch: $D$ is snapped to $B(X)$ for whatever configuration it is
+then holding, and the search continues from that configuration rather than
+from a fresh one. On the unit cube at $p = 2$ under the sup norm this is the
+difference between $0.2299$ and $0.2500$, the latter being exactly optimal ---
+two cubes of side $\tfrac12$ tile the unit cube. Starting below it is not
+harmless either. $\Phi_\mu$ drives $D$ upward, but Tabu Search has by then
+settled the points into an arrangement sized for the smaller radius, and that
+arrangement can confine the climb. On the unit cube at $p = 20$ under the sup
+norm, \rvclaim{all four seeds started at $1.30 \hat D$ reach the optimum $\tfrac16$}, a
+$3 \times 3 \times 3$ arrangement with points to spare, while \rvclaim{five of the
+twelve started at or below $\hat D$ end at $D = \tfrac18$}, the
+$4 \times 4 \times 4$ one.
+\end{rvdraft}
+
+We therefore treat the initial radius as a second multi-start dimension. A
+cell's seeds are distributed over a geometric ladder of $K$ rungs spanning a
+factor $\lambda$ either side of the estimate,
+\begin{equation}
+  D_{\text{init}}^{(k)} = \lambda^{\frac{2k}{K - 1} - 1} \, \hat D,
+  \qquad k = 0, \dots, K - 1,
+  \label{eq:dinit_ladder}
+\end{equation}
+each clipped at $r_{\text{in}}(C)$, with $K = 5$ and $\lambda = 1.7$. Seed $s$
+starts on rung $s \bmod K$, so each rung receives four of a cell's twenty seeds.
+The spread is set by measurement rather than tuned: across the non-Euclidean
+cells \rvclaim{the best radius found lies between $0.77 \hat D$ and $1.59 \hat D$}, so
+$\lambda = 1.7$ brackets the observed range with margin. Since every reported
+radius is already the best over a cell's seeds, this costs no additional runs
+--- it widens the multi-start from configurations alone to pairs of
+configuration and initial radius. The inradius used for the cap is computed
+numerically, by maximising clearance from the best of $64$ sampled interior
+points, and so can only err low; it is a conservative cap.
+
+\begin{rvdraft}
+A start high on the ladder can end infeasible, and such a run is not
+discarded. It is restarted from the same seed at a lower radius, half a rung
+at a time: a run that fails from $D_{\text{init}}^{(k)}$ is restarted from
+$\tfrac12 \paren{D_{\text{init}}^{(k-1)} + D_{\text{init}}^{(k)}}$, one that
+fails from there is restarted from $D_{\text{init}}^{(k-1)}$, and so on down to
+$D_{\text{init}}^{(0)}$. Only a run still infeasible from
+$D_{\text{init}}^{(0)}$ is reported infeasible. Because a restart keeps its
+seed, it begins from the same random configuration and differs from the failed
+attempt only in its radius; steps that the inradius cap merges are taken once,
+since repeating a radius would repeat the failure. Every reported time
+includes all of a run's attempts. In the sweep reported here the fallback was
+\rvclaim{needed by $46$ of $4{,}800$ runs: 43 succeeded half a rung down and three after
+two steps, and no run ended infeasible.}
+\end{rvdraft}
+
+The ladder is not arbitrary: the optimum is bracketed by two bounds that hold
+for any norm and any container, convex or not. Write $V = \operatorname{vol}(C)$
+and
+\begin{equation}
+  C_{-D} = \set{x \in C : d(x, \partial C) \ge D}
+  \label{eq:inner_body}
+\end{equation}
+for the set of admissible centres at radius $D$.
+
+\begin{lemma}\label{lem:bracket}
+  Let $D^\star(p)$ be the optimal radius for $p$ points in $C$ under a norm
+  whose unit ball has volume $\kappa_d$. Then
+  \begin{equation*}
+    \underline{D}(p) \;\le\; D^\star(p) \;\le\;
+    \min \set{\paren{\frac{V}{\kappa_d \, p}}^{1/3},\ r_{\text{in}}(C)},
+  \end{equation*}
+  where $\underline{D}(p) = \sup \set{D > 0 : \operatorname{vol}(C_{-D}) >
+  8 \kappa_d (p - 1) D^3}$.
+\end{lemma}
+
+\begin{proof}
+  The balls of radius $D$ about the points of any feasible configuration lie
+  in $C$, by constraint (\textit{iii}), and have pairwise disjoint interiors,
+  since $d(c_i, c_j) \ge 2D$ and the triangle inequality forbids a common
+  interior point. Their volumes therefore sum to at most $V$, so
+  $p \kappa_d D^3 \le V$. And $D \le d(c_1, \partial C) \le r_{\text{in}}(C)$.
+  Together these give the upper bound.
+
+  For the lower bound, fix $D$ with $\operatorname{vol}(C_{-D}) > 8 \kappa_d
+  (p - 1) D^3$. By the argument just given, any subset of $C_{-D}$ whose
+  points are pairwise at least $2D$ apart has at most $V / (\kappa_d D^3)$
+  elements, so there is such a subset $Y$ of largest size. Every $x \in
+  C_{-D}$ lies within distance $2D$ of some $y \in Y$, as otherwise $Y \cup
+  \set{x}$ would be larger. Hence $C_{-D}$ is covered by the balls of radius
+  $2D$ about the points of $Y$, and $\operatorname{vol}(C_{-D}) \le |Y| \,
+  \kappa_d (2D)^3$. By the choice of $D$ this forces $|Y| > p - 1$. Any $p$
+  points of $Y$ are then a feasible configuration at radius $D$: they lie in
+  $C_{-D}$, which is constraint (\textit{iii}), and are pairwise $2D$ apart,
+  which is constraint (\textit{ii}). So $D^\star(p) \ge D$, and taking the
+  supremum over such $D$ gives the lower bound.
+\end{proof}
+
+Nothing in the proof uses convexity, the shape of the ball beyond its volume,
+or the dimension beyond the exponent. With the cap inactive the upper bound
+is $\rho_{\text{init}}^{-1/3} \hat D = 1.587 \hat D$, so the top rung, at
+$1.7 \hat D$, starts above the optimum in every cell: it is on the fallback
+that it depends. On the two convex containers, where $C_{-D}$ is an
+intersection of half-spaces and its volume is exact, $\underline{D}(p)$ lies
+\rvclaim{between $0.51 \hat D$ and $0.70 \hat D$ for $2 \le p \le 84$ in all three
+metrics, against best radii found between $0.80 \hat D$ and $1.59 \hat D$.}\rvnote{lower bound not recomputed this round}
+The top of that range is the upper bound itself: under the sup norm, eight
+cubes of side $\tfrac12$ tile the unit cube, and the $p = 8$ radius
+$\tfrac14$ is exactly $\rho_{\text{init}}^{-1/3} \hat D$.
+The lower bound is what the covering argument can certify, not what a search
+reaches: a start at $\underline{D}(p)$ is guaranteed to admit a feasible
+configuration, but lies at or below the bottom rung, where the sup-norm optima
+of the previous paragraph are missed. On the non-convex containers the bound
+needs a lower estimate of $\operatorname{vol}(C_{-D})$, which a decomposition
+into convex pieces with disjoint interiors supplies, since their inner bodies
+are disjoint subsets of $C_{-D}$; we have not evaluated it there.
+
+The effect is confined to the non-Euclidean metrics, and is not small. Under
+the sup norm the uncorrected estimate produced radii that violated
+monotonicity in $p$ --- $D$ rising as points were added, which is impossible,
+since a configuration of $p + 1$ points contains one of $p$ --- \rvclaim{in nineteen
+cells, every one of them sup norm and none of them $\ell_1$}\rvnote{from the pre-wipe experiment}, exactly the
+asymmetry the constants $\kappa_d$ predict.
+
+\subsection{Cube}\label{sec:cube}
+
+We benchmark our algorithm in the unit cube against analytical optima
+for $p \le 10$ \citep{schaer1966} and best-known configurations for
+$p > 10$ from Packomania \citep{packomania}. We measure performance
+using absolute error ($A_{err} = D_{\mathrm{Ours}} -
+D_{\mathrm{Best}}$) and relative error ($R_{err} =
+A_{err}/D_{\mathrm{Best}} \times 100\%$).
+
+\begin{rvdraft}
+Table~\ref{tab:cube} shows our radius matching the published value at every
+$p \le 40$, the proven optima for $p \le 10$ included, \rvclaim{to within
+$2.3 \times 10^{-8}$ (relative), which is the rounding of the published
+values. At $p = 50$ and $p = 64$ it is short by $8.6 \times 10^{-7}$ and
+$4.1 \times 10^{-6}$, and at $p = 100$ it matches the record.}
+Fig.~\ref{fig:cube_comparison} shows the same comparison across the whole range.
+The comparison with general-purpose solvers is in Section~\ref{sec:baselines}.
+\end{rvdraft}
+
+\input{generated/results_cube}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.3\textwidth]{figures/cube_10.png}
+  \caption{Best-achieved 10-point configuration for the
+    $p$-dispersion problem in the unit cube using the Euclidean metric
+  ($D = 0.21428571$).}
+  \label{fig:cube_10}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.3\textwidth]{figures/cube_sup_64.png}
+  \caption{Best configuration of $p = 64$ points in the unit cube under the
+    $\ell_\infty$ metric ($D = 0.12499999$): 64 cubes of side $\tfrac14$ in a
+    $4 \times 4 \times 4$ grid, the optimum $D = \tfrac18$. Colour gives
+    height.}
+  \label{fig:cube_sup_64}
+\end{figure}
+
+\begin{rvdraft}
+Fig.~\ref{fig:cube_10} shows the best Euclidean configuration for ten
+points. Under the $\ell_\infty$ metric each ball is an axis-aligned cube of
+side $2D$, and at $p = k^3$ the unit cube admits an exact tiling: $k^3$ cubes
+of side $\tfrac1k$ fill it, so $D = \tfrac1{2k}$ meets the upper bound of
+Lemma~\ref{lem:bracket}, $(V/(\kappa_\infty p))^{1/3} = (1/(8k^3))^{1/3} =
+\tfrac1{2k}$, and is optimal. At $p = 27$ our algorithm finds the
+$3 \times 3 \times 3$ grid \rvclaim{in eight of twenty runs}, at $\tfrac16$ to within
+the relative $10^{-9}$ by which every reported radius is shrunk; the rest
+settle on $D = \tfrac18$. At $p = 64$ the tiling is harder to find: \rvclaim{two of
+twenty runs reach the $4 \times 4 \times 4$ grid} (Fig.~\ref{fig:cube_sup_64}),
+again to within $10^{-9}$, and \rvclaim{the other eighteen settle on
+$D = \tfrac1{10}$.}
+\end{rvdraft}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/comparison_cube.png}
+  \caption{Unit cube, Euclidean metric: gap between the Packomania record
+    $D_{\mathrm{P}}$ and our best radius $D$, $(D_{\mathrm{P}} - D)/D_{\mathrm{P}}$
+    in percent. Zero means our radius matches the record; only $p = 50$ and
+    $p = 64$ show a gap, below $0.0005\%$.}
+  \label{fig:cube_comparison}
+\end{figure}
+
+\subsection{Tetrahedron}
+
+\begin{rvdraft}
+We benchmark our algorithm against the best-known results for
+$p$-dispersion in the unit tetrahedron reported by
+\citet{kazakov2018} for $p = 1, \dots, 10$. Additionally, we report
+on our best-achieved minimum distances for $p = 20, 35, 56, 84$, the
+subsequent tetrahedral numbers. \citet{kazakov2018} mention that for
+three-dimensional space, the computational complexity of their
+algorithm increases significantly; hence they did not report on
+instances for $p > 10$. We execute our global optimization algorithm
+using the same parameters as in previous sections the packing
+density-based initialization ($\rho_{\text{init}} = 0.25$) for higher
+values of $p$. While \citet{kazakov2018} report results up to five
+decimal places, we report our results truncated to eight decimal
+places to maintain consistency with other sections of this paper.
+\end{rvdraft}
+
+Table~\ref{tab:tetrahedron} presents the absolute difference
+$A_{\text{err}} = D_{\mathrm{Ours}} - D_{\mathrm{Benchmark}}$ and the
+relative percentage improvement $R_{\text{err}}$ between our solution
+and the benchmark. As shown in the table, our algorithm consistently
+identifies packing configurations with equal or strictly larger
+minimum pairwise distances than \citet{kazakov2018}.
+
+\input{generated/results_tetrahedron}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/comparison_tetrahedron.png}
+  \caption{Unit tetrahedron, Euclidean metric: the radius reported by
+    \citet{kazakov2018} (orange), our best radius (blue), and the optimum
+    Gurobi proves (black dash). At every $p$ our radius sits on the proven
+    optimum; the benchmark falls below it by $0.8\%$ to $9.2\%$.}
+  \label{fig:tetra_gap}
+\end{figure}
+
+\begin{rvdraft}
+To further analyze these improvements, Fig.~\ref{fig:tetra_gap}
+illustrates the comparison between our algorithm and the results of
+\citet{kazakov2018}: our radius is at or above the published benchmark at every
+$p$ it reports. Gurobi proves that the optimum at $p = 10$ is $0.112372$
+(Section~\ref{sec:baselines}), \rvclaim{which our radius matches and the benchmark misses
+by $9.2\%$.}
+\end{rvdraft}
+
+The size of the margin over \citet{kazakov2018} deserves a caveat. At $p = 1$
+the answer is exactly the inradius of the unit regular tetrahedron,
+$1/(2\sqrt{6}) \approx 0.20412$, which both methods here recover to eight
+decimal places and which the published benchmark misses by $1.8\%$. A gap
+against a benchmark that is itself $1.8\%$ short at the one $p$ where the
+optimum is elementary \rvdecide{should be read as a statement about the benchmark's
+tolerance as much as about either solver.}
+Fig.~\ref{fig:tetra_10} provides a visual comparison of the best
+configuration found by our algorithm against the corresponding
+configuration derived from the parameters in \citet{kazakov2018} for
+$p=10$, a tetrahedral number, where the configuration settles into
+the $1$--$3$--$6$ triangular arrangement the container's symmetry admits.
+
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{\columnwidth}
+    \centering
+    \includegraphics[width=0.7\columnwidth]{figures/tetra_10.png}
+    \caption{Our best-achieved configuration for $p=10$ ($D = 0.11237243$).}
+    \label{fig:tetra_10_ours}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{\columnwidth}
+    \centering
+    \includegraphics[width=0.7\columnwidth]{figures/kazakov_same_radius_10.png}
+    \caption{The same configuration drawn at the radius ($D =
+    0.10200$) reported for $p=10$ by \citet{kazakov2018}.}
+    \label{fig:tetra_10_kazakov}
+  \end{subfigure}
+  \caption{Visual comparison of packing density for 10 dispersion
+    points in the unit tetrahedron, an improvement of $10.2\%$ over the
+    benchmark radius. Both panels show the same configuration from the
+    same viewpoint and at the same scale, so the radius is the only
+    difference between them: our method (a) leaves the balls in
+  contact, while at the benchmark radius (b) visible slack remains.}
+  \label{fig:tetra_10}
+\end{figure}
+
+\rvclaim{We achieve a minimum improvement of approximately 0.8\%}
+for all tested values of $p$ compared to \citet{kazakov2018}, with
+the performance gap widening to over 10\% as $p$ reaches the limits
+of the previously reported benchmarks.
+
+\begin{rvdraft}
+Under the other two metrics the balls change shape: under $\ell_1$ each is an
+octahedron, under $\ell_\infty$ an axis-aligned cube. Fig.~\ref{fig:tetra_35}
+shows the best configurations found for $p = 35$, a tetrahedral number, under
+all three metrics. Each builds up in layers from the base of the tetrahedron,
+the spheres into a close-packed pile, the octahedra into a pointed pyramid and
+the cubes into stepped tiers, as the slanted walls force each layer to be
+narrower than the one below.
+\end{rvdraft}
+
+Under $\ell_2$ the layers form the tetrahedral pile. For
+$p = n(n+1)(n+2)/6$ spheres stacked in $n$ layers, with neighbours touching
+and the outer spheres touching the walls, the centres fill a tetrahedron of
+edge $2(n-1)D$ inset by $D$ from every face, whose edge is $1 - 2\sqrt6\,D$.
+Equating the two gives
+\begin{equation}
+  D_n = \frac{1}{2\,(n - 1 + \sqrt6)}.
+  \label{eq:tetra_pile}
+\end{equation}
+\rvclaim{Our radius matches $D_n$ at every tetrahedral number in our grid},
+$p = 4, 10, 20, 35, 56, 84$ ($n = 2, \dots, 7$), to within the relative
+$10^{-9}$ by which every reported radius is shrunk. At
+$n = 3$, $D_3 = 1/(2(2 + \sqrt6)) \approx 0.112372$ is the optimum Gurobi
+certifies at $p = 10$; for $n \ge 4$ the pile is not known to be optimal, and
+we report the match, not optimality.
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}[b]{0.31\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/tetra_l2_35.png}
+    \caption{$\ell_2$: spheres ($D = 0.07752551$).}
+    \label{fig:tetra_l2_35}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.31\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/tetra_l1_35.png}
+    \caption{$\ell_1$: octahedra ($D = 0.09706067$).}
+    \label{fig:tetra_l1_35}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.31\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/tetra_linf_35.png}
+    \caption{$\ell_\infty$: cubes ($D = 0.06039796$).}
+    \label{fig:tetra_linf_35}
+  \end{subfigure}
+  \caption{Best configurations of $p = 35$ points in the unit tetrahedron
+    under the $\ell_2$, $\ell_1$ and $\ell_\infty$ metrics. Under $\ell_2$ the
+    spheres form the five-layer tetrahedral pile of Eq.~\ref{eq:tetra_pile}.
+    Colour gives height.}
+  \label{fig:tetra_35}
+\end{figure*}
+
+\subsection{H-Box}\label{sec:hbox}
+
+Non-convex containers, such as the H-shaped polyhedron, present
+significant geometric challenges for the CpDP. Unlike convex domains,
+non-convex shapes often feature disconnected feasible regions and
+obstructed lines of sight, where the straight-line segment connecting
+two valid points may pass through the infeasible exterior
+\citep{dai2021}. These characteristics create numerous ``trapped''
+local minima that can stall standard optimization algorithms
+\citep{lai2024}. The H-shaped polyhedron was created with inspiration
+from its two-dimensional analogue: the H-shaped polygon \citep{dai2021}.
+
+Table~\ref{tab:h_box} reports the best radius found for each $p$
+in all three metrics. No published values exist for this container; the
+comparison with general-purpose solvers is in Section~\ref{sec:baselines}, where
+the H-box is one of the containers on which they fall behind.
+
+\input{generated/results_h_box}
+
+\begin{rvdraft}
+Under the sup norm each ball is an axis-aligned cube of side $2D$, and at
+$p = 56$ the H-box admits an exact tiling: 56 cubes of side $\tfrac12$ have total
+volume $56 \cdot \tfrac18 = 7$, the volume of the container. The radius
+$D = \tfrac14$ therefore meets the upper bound of Lemma~\ref{lem:bracket},
+$(V / (\kappa_\infty p))^{1/3} = (7 / (8 \cdot 56))^{1/3} = \tfrac14$, and is
+optimal. Our algorithm with its defaults does not find it: \rvclaim{of sixty runs,
+twenty-four settle on $D = \tfrac3{14}$ and thirty-six on $D = \tfrac16$}, at
+$86\%$ and $67\%$ of the optimum. The tiling needs every cube on the grid at
+once. The monotone basin hopping inside Tabu Search cannot make that
+rearrangement, and a restart at $\tfrac3{14}$ or $\tfrac16$ is feasible at once,
+so Tabu Search leaves it unmoved. \rvclaim{With a basin-hopping walk that also accepts
+uphill minima, one run of ten finds the tiling, and the same run with ours
+does not.}\rvnote{seed 9; legacy MBH vs current, all else equal} Continued with the escape phase (Section~\ref{sec:escape}), \rvclaim{all
+twenty of the first twenty runs reach the tiling}, at $\tfrac14$ to within the
+relative $10^{-9}$ by which every reported radius is shrunk
+(Fig.~\ref{fig:h_box_sup_56}). \rvdecide{Table~\ref{tab:h_box} reports the defaults;
+this cell is outside its grid.}
+\end{rvdraft}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.35\textwidth]{figures/h-box_sup_56.png}
+  \caption{The optimal configuration of $p = 56$ points in the H-shaped
+  container under the $\ell_\infty$ metric, $D = \tfrac14$ ($0.24999999$): 56
+  cubes of side $\tfrac12$ tile the container exactly. Found by the escape
+  phase in all 20 runs continued with it, and by none of 60 runs with the
+  defaults. Colour gives height, so each layer of the tiling shows as a
+  band.}
+  \label{fig:h_box_sup_56}
+\end{figure}
+
+\subsection{Star-Shaped Polyhedron}
+
+The star-shaped polyhedron draws inspiration from the Kepler-Poinsot
+polyhedron \citep{coxeter1989} and serves as a rigorous test case for
+non-convex optimization due to its distinctive central convex core
+connected to six narrow, tapering spikes. This originally developed
+geometry creates significant ``bottlenecks'' between the feasible
+sub-regions, making it difficult for optimization algorithms to
+migrate points from one spike to another. Unlike convex containers
+where local descent directions are often globally informative, the
+star-shaped polyhedron requires an algorithm capable of traversing
+infeasible space to escape the local optima found within individual spikes.
+
+\begin{rvdraft}
+In Table~\ref{tab:pointy_star}, we report the best minimum
+distances ($D_{\mathrm{Ours}}$) achieved by our algorithm for a range
+of $p$ values, up to $p = 100$.
+\end{rvdraft}
+
+\input{generated/results_pointy_star}
+
+The results indicate that our algorithm effectively exploits the
+available volume even as the number of points increases. For $p=1$,
+the algorithm identifies the globally optimal placement within the
+central core. As $p$ increases to 6, the algorithm successfully
+distributes points into the six available spikes, maintaining a high
+separation distance of $D \approx 0.9030$. From $p = 7$ on, crowding
+effects force a gradual reduction in the minimum distance $D$ as the
+central core and spikes become filled.
+
+\begin{rvdraft}
+Fig.~\ref{fig:ps_100} shows the best configuration found for $p = 100$. Only
+\rvclaim{24 of the 100 balls sit in the central core; the other 76 are split almost
+evenly among the six spikes, 12 or 13 in each, and the outermost centres lie
+3.5 of the 5 units} from the centre of the star to a tip. The algorithm does
+not crowd the core and leave the spikes empty: it carries points through the
+bottlenecks and fills every spike to a similar depth.
+\end{rvdraft}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{figures/ps_100.png}
+  \caption{Best achieved configuration of $p = 100$ points in the star-shaped
+  container under the Euclidean metric ($D = 0.36219729$): 24 balls in the
+  central core and 12 or 13 in each of the six spikes.}
+  \label{fig:ps_100}
+\end{figure}
+
+\subsection{Ribbed Ventilation Cage}
+
+Finally, we apply our algorithm to the ``ribbed ventilation cage,'' a
+highly complex non-convex polyhedron designed to model modern
+industrial computer casings and heat sinks. Unlike the H-shaped box
+or Star-shaped polyhedron, which feature large distinct sub-regions,
+this container is characterized by numerous corridors and separated
+legs. The inclusion of numerous internal pillars and ribs creates a
+``maze-like'' feasible region, introducing frequent discontinuities
+that pose severe challenges for traditional gradient-based nonlinear optimizers.
+
+The particular design of this ribbed ventilation cage polyhedral
+container is original, although the complexity is practically
+motivated. In thermal engineering, components utilize ribbed
+structures, fins, and microstructures to maximize surface area and
+improve heat dissipation capabilities \citep{xin2025}. Solving the
+CpDP on such a geometry is therefore relevant for optimizing the
+layout of sensors, cooling pipes, or modular components within
+densely packed electronic enclosures. We evaluate our algorithm using
+both the Euclidean metric ($\ell_2$), representing standard spherical
+component packing, and the sup-norm ($\ell_\infty$), which is
+critical for modeling the placement of cubic or box-shaped components
+often found in hardware design.
+
+Table~\ref{tab:cage} reports the best radius found for each $p$ in all three
+metrics.
+
+\input{generated/results_cage}
+
+Fig.~\ref{fig:cage_100_l2} and Fig.~\ref{fig:cage_100_sup} show the best
+configurations found for $p = 100$ points in this container under the
+Euclidean and $\ell_\infty$ metrics.
+
+\begin{rvdraft}
+The cage has a trap of its own. \rvclaim{Of the 900 cage runs, 75 stop at exactly
+$D = \tfrac12$, and at $p = 100$ under $\ell_2$ sixteen of twenty do}, so that
+cell's best is a best of four. Continued with the escape phase
+(Section~\ref{sec:escape}), all sixteen leave it, \rvclaim{reaching $0.726$ to $0.742$,
+and the best radius of the cell rises from $0.74176$ to $0.74220$}. Every
+continuation used its full 15 minutes, a few restarts at this size, \rvdecide{so this
+cell is limited by time rather than by the trap.}\rvnote{old run reached 0.74433}
+\end{rvdraft}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.4\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/cage_100.png}
+    \caption{Best achieved configuration for $p = 100$ points using
+    the Euclidean metric ($D = 0.74175552$).}
+    \label{fig:cage_100_l2}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/cage_sup_100.png}
+    \caption{Best achieved configuration for $p = 100$ points using the
+    $\ell_\infty$ metric ($D = 0.66666666$).}
+    \label{fig:cage_100_sup}
+  \end{minipage}
+\end{figure}
+
+The successful dispersion of $p = 100$ points in this environment
+demonstrates the robustness of our approach. Despite the numerous
+internal obstacles that fracture the search space, the algorithm
+achieves a uniform distribution, effectively utilizing the narrow
+corridors between pillars. This result validates the algorithm's
+capability to handle large-scale dispersion problems ($p = 100$)
+within containers that exhibit both macro-scale non-convexity and
+micro-scale geometric obstructions.
+
+\subsection{Comparison with Stoyan and Yaskov}\label{sec:stoyan}
+
+\begin{rvdraft}
+\citet{stoyan2013} pack congruent spheres of radius one into eight
+multi-connected polyhedral domains: a truncated box, or a cuboid, from which
+through-prisms, polyhedral cones and dihedral angles are removed, so that the
+domain has holes. For each they report the largest number of spheres they
+packed and the time it took. Packing $p$ spheres of radius one is the decision
+version of our problem under $\ell_2$: they fit exactly when
+$D^\star(p) \ge 1$. We rebuilt the eight domains from the coordinates given
+in their paper and ran our algorithm with the settings of the main experiment,
+10 seeds per count, at their count and the four counts above it, and further
+in the two domains where every one of those counts fitted. A count is fitted
+when some seed returns a certified radius of at least one.
+\end{rvdraft}
+
+\begin{table}[t]
+  \caption{Spheres of radius one packed into the eight domains of
+    \citet{stoyan2013}: their count, ours, our best radius at their count,
+    and the time at which one of our runs first held radius one at their
+    count, against their reported time.}
+  \label{tab:stoyan}
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{ccccrr}
+    \hline
+    & \multicolumn{2}{c}{Spheres} & & \multicolumn{2}{c}{Time (min)} \\
+    Example & Theirs & Ours & $D$ at theirs & Ours & Theirs \\
+    \hline
+    1 & 93 & 97 & 1.0068 & 6.8 & 41 \\
+    2 & 91 & 93 & 1.0069 & 2.3 & 34 \\
+    3 & 86 & 88 & 1.0069 & 1.6 & 47 \\
+    4 & 81 & 82 & 1.0065 & 1.9 & 54 \\
+    5 & 79 & 79 & 1.0045 & 3.5 & 60 \\
+    6 & 30 & 31 & 1.0072 & 0.9 & 2 \\
+    7 & 58 & 59 & 1.0059 & 0.9 & 7 \\
+    8 & 73 & 80 & 1.0326 & 0.2 & 12 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{rvdraft}
+\rvclaim{We fit more spheres than published in seven of the eight domains}, by one to
+seven, and as many in the fifth (Table~\ref{tab:stoyan},
+Fig.~\ref{fig:stoyan}). \rvclaim{At their published counts, 71 of our 80 runs reach
+radius one, and the first does so within 7 minutes in every domain.} Their
+times were measured on an AMD Athlon 64 X2 6000+ in Delphi, \rvdecide{so the time
+columns indicate scale rather than a like-for-like comparison.}
+Fig.~\ref{fig:stoyan_packings} shows each domain at our count. \rvclaim{The gains are
+largest in the box of example 1, which has no holes, and in example 8, where
+the hole is shortest.}
+\end{rvdraft}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/stoyan_yaskov_packings.png}
+  \caption{The most spheres of radius one we fit into each domain of
+    \citet{stoyan2013}, best seed of that count; their published count below.
+    The removed pieces (prisms, cones, dihedral angles and the tapered holes
+    of examples 6 to 8) are drawn in grey, and spheres are shaded by height.
+    The centres of these and every other configuration we report are in the
+    repository, with a script that checks them.}
+  \label{fig:stoyan_packings}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/stoyan_yaskov.png}
+  \caption{Best certified radius over 10 seeds at each sphere count tried, in
+    the eight domains of \citet{stoyan2013}, under $\ell_2$. A count is fitted
+    (blue) when the radius reaches one (dashed); the ring marks their
+    published count, and the panel title gives their count and ours.}
+  \label{fig:stoyan}
+\end{figure*}
+
+\begin{rvdraft}
+The domain of example 6 shows how the search can stall. The cuboid there is
+pierced by a tapered hole whose floor leaves a wall below it, $1.97$ thick at
+one end and $1$ at the other. A sphere that ends in that wall, against the end
+face, the bottom and the sloping floor of the hole, can have radius at most
+$0.93364$, the inradius of that wedge. \rvclaim{Eight of the ten seeds at every count
+stop at exactly this radius}, because a restart at the best radius found so far
+is already feasible there and Tabu Search, which runs only until the target
+radius is feasible, never has to move the trapped sphere. The two seeds that
+avoid the wall fit 31 spheres.
+\end{rvdraft}
+
+\begin{rvdraft}
+To see whether the trap or the domain limits the count, we continued the 50
+saved runs of example 6 with the escape phase (Section~\ref{sec:escape}), at
+whose target a sphere in the wall is infeasible and must move. Every trapped
+run escaped: none ends with a sphere in the wall, and
+\rvclaim{their radii rose from $0.93364$ to between $0.968$ and $1.007$}
+(Fig.~\ref{fig:stoyan_ex6}). \rvclaim{The median radius at each count rose from
+$0.934$ to between $0.978$ and $0.998$. One more seed fits 30 spheres, but none
+fits 32}, so the escape phase removes the trap without raising our count of
+31. \rvclaim{All but one of the 50 continuations stopped at the 15-minute limit}, before
+patience ran out, so a longer phase may raise these radii further.
+\end{rvdraft}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/stoyan_yaskov_ex6.png}
+  \caption{Example 6 of \citet{stoyan2013}, seen end-on along the tapered
+    hole (grey; the far opening is white). Left: a run with three spheres
+    (purple) in the wall under the hole, which caps the radius at
+    $0.93364$. Right: the same run continued with the escape phase, the wall
+    empty and the radius $1.00699$.}
+  \label{fig:stoyan_ex6}
+\end{figure}
+
+\begin{rvdraft}
+\rvdecide{The same domains under $\ell_1$ and $\ell_\infty$ have no published
+counterpart}\rvnote{keep or cut}, and behave as the volumes of the balls predict: at the published
+counts \rvclaim{our best radius is $1.17$ to $1.36$ under $\ell_1$}, whose ball is an
+octahedron, and every count tried fits, while under $\ell_\infty$, whose ball
+is a cube, \rvclaim{it is $0.85$ to $0.89$ and none fits.}
+\end{rvdraft}
+
+\subsection{Comparison with General-Purpose Solvers}\label{sec:baselines}
+
+\rvcor{A referee's first question about a specialised method is whether a
+general-purpose solver, handed the same problem, would do as well.}\rvnote{tone} We answer it
+under a protocol fixed in writing before any run, which also committed us to
+reporting every cell, including those we lose.
+
+\paragraph{Solvers and formulation.} The baselines are IPOPT 3.14, an
+interior-point method \citep{wachter2006}, and SLSQP, sequential quadratic
+programming \citep{kraft1988, scipy2020}. Each is given the constrained program
+$\max D$ subject to $d(c_i, c_j) \ge 2D$ and a clearance of at least $D$ for
+every point, formulated as a practitioner would pose it. Dispersion is
+$\norm{c_i - c_j}_2^2 \ge 4D^2$ under $\ell_2$; under $\ell_1$ and
+$\ell_\infty$, whose norms are not differentiable, it uses a smooth
+approximation of width $10^{-6}$ times the container's extent. On the convex
+containers, containment is one exact linear constraint per face,
+$\ang{n_f, c_i - P_f} \ge D \norm{n_f}_*$. On the non-convex ones it is a signed
+clearance oracle, the exact distance to the boundary inside and its negative
+outside, with an analytic gradient, so that a solver always has a direction
+back into the container. Both solvers receive analytic Jacobians, are
+restarted from random configurations until their budget ends, and never see
+our energy model or search.
+
+\paragraph{Budget and cells.} The 45 cells are every container and metric at
+$p \in \set{10, 20, 40}$. Each solver makes 10 trials per cell, one core each,
+and every trial on a cell receives the same wall time,
+$\max \set{60\,\text{s},\ 2 t_{\text{med}}}$, where $t_{\text{med}}$ is our
+algorithm's median run time on that cell in the main experiment. A start or
+local solve still running when the budget ends does not count. Every radius,
+for every solver, is scored as certified by the bound $B(X)$ of
+Equation~\ref{eq:bound}.
+
+\begin{rvdraft}
+\paragraph{Quality.} At equal time our algorithm finds a larger radius
+(best of 10) \rvclaim{than IPOPT in 32 of the 45 cells and than SLSQP in 25, and ties
+the rest to within $10^{-6}$ (relative); it is behind in none.} A
+two-sided Wilcoxon signed-rank test on the paired best radii gives
+\rvclaim{$p = 1.1 \times 10^{-13}$ against IPOPT and $p = 3.3 \times 10^{-4}$ against
+SLSQP.} The advantage follows the geometry
+(Fig.~\ref{fig:baseline_quality}): on the convex containers at $p = 10$ all
+three solvers reach the same radius, and \rvclaim{our margin there is at most $5.3\%$}
+at $p = 20$ and $40$, while on the non-convex containers it is ahead by
+\rvclaim{up to $2.6\times$ IPOPT (star, $\ell_2$, $p = 40$) and $1.6\times$ SLSQP (cage,
+$\ell_1$, $p = 40$)}. In every non-convex container the largest gap is at
+$p = 40$.
+\end{rvdraft}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/baseline_quality.png}
+  \caption{How much larger our best radius is than each baseline's, in every
+    cell: best of 10 trials at equal wall time. One stem per cell and baseline
+    (IPOPT orange, SLSQP green); a stem's height is our advantage, and a dot on
+    the line is a tie. Within each panel the cells run $p = 10, 20, 40$, and
+    within each $p$ the three metrics. The vertical scale is logarithmic.}
+  \label{fig:baseline_quality}
+\end{figure*}
+
+\begin{rvdraft}
+\paragraph{Speed.} The general-purpose solvers are faster where they succeed.
+In the 8 cells all three solvers solve, all of them convex with $p \le 20$,
+\rvclaim{the median trial reaches $99.9\%$ of the best radius found $1.5$--$13\times$
+sooner with SLSQP, and up to $3.9\times$ sooner with IPOPT}, which is slower than
+our algorithm in some of them. Our algorithm pays for its ladder start and Tabu
+Search before its first result: in one of its 450 trials the first start was
+still running when the budget ended, and such a trial scores zero. Its
+advantage is reach, not speed. \rvclaim{In 19 cells only our algorithm reaches the
+target in most trials}; the reverse never happens, and in 7 cells no solver
+does. Fig.~\ref{fig:baseline_profile} puts both facts in one picture. SLSQP is
+the first to the target in 9 cells and reaches it in 18, 9 of them after our
+algorithm: when it succeeds it is fast, and otherwise it stalls below the
+target. \rvclaim{Our algorithm is first in 29 cells and reaches the target later in 9
+more, 38 in all; IPOPT reaches it in 9 and is never first.} Fig.~\ref{fig:baseline_anytime} shows the
+same pattern over time on four hard cells: the baselines rise quickly and stop,
+while our algorithm starts later and keeps improving.
+\end{rvdraft}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/baseline_anytime.png}
+  \caption{Best certified radius against elapsed time on four hard cells, as
+    a fraction of the best radius known on the cell (Packomania for the cube);
+    median over 10 trials.}
+  \label{fig:baseline_anytime}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/baseline_reach.png}
+  \caption{Reaching $99.9\%$ of the best radius found, judged by each solver's
+    median trial, over the 15 cells (five containers, three metrics) at each
+    $p$ of the comparison panel. (a) The number of cells in which the median
+    trial reaches the target within the budget. (b) The median time it takes,
+    over those cells only; a solver with no such cell at some $p$ has no point
+    there.}
+  \label{fig:baseline_profile}
+\end{figure*}
+
+\begin{rvdraft}
+\paragraph{Feasibility of reported radii.} A local solver stops when its
+constraint violation falls below a tolerance, so the radius it reports can
+exceed the radius its configuration supports. Of SLSQP's converged local
+solves, \rvclaim{$36.5\%$ over-state the radius by more than $10^{-6}$ (relative),
+$0.9\%$ by more than $1\%$, and $1.0\%$ report convergence on a configuration
+that supports no positive radius at all. For IPOPT the shares are $18.3\%$ and
+under $0.01\%$.} Every radius in this comparison, for every solver, is therefore
+the certified $B(X)$; our algorithm reports $B(X)$ by construction.
+\end{rvdraft}
+
+\begin{rvdraft}
+\paragraph{Optimality.} For the convex containers under $\ell_2$, Gurobi's
+spatial branch-and-bound \citep{gurobi2026}, warm-started from our best
+configuration, closes its optimality gap within one hour for the cube with
+$p \le 9$ and the tetrahedron with $p \le 10$. \rvclaim{In every one of these cases our
+radius is within $1.5 \times 10^{-5}$ of Gurobi's bound}, which is the
+resolution of Gurobi's constraint tolerance. For the cube at $p = 10$, where
+Gurobi does not close its gap in an hour, Packomania records a proven optimum
+of $3/14$, which our radius matches to the relative $10^{-9}$ by which every
+reported radius is shrunk. On the tetrahedron at $p = 10$ the proven optimum
+is $0.112372$; the benchmark of \citet{kazakov2018}, $0.102$, is $9.2\%$ below
+it.
+\end{rvdraft}
+
+\begin{rvdraft}
+Gurobi also entered the equal-budget comparison on the six cells it can model
+(cube and tetrahedron, $\ell_2$, $p = 10, 20, 40$), on one core per trial like
+the other solvers, scored by the certified radius of its best incumbent. It
+ties our algorithm at $p = 10$ and on the cube at $p = 40$, and is behind
+elsewhere: \rvclaim{by $1.3\%$ on the cube at $p = 20$, and by $7.2\%$ and $3.8\%$ on the
+tetrahedron at $p = 20$ and $40$}; at $p = 20$ our algorithm reaches the radius
+of the stacked tetrahedral arrangement, $1/(6 + 2\sqrt6)$.
+\end{rvdraft}
+
+\subsection{Computational Efficiency and Scalability}\label{sec:runtime}
+
+\begin{rvdraft}
+To evaluate scalability, we recorded the wall-clock time of every run, all
+of its starts and any fallback attempts included ($\epsilon = 10^{-8}$).
+Fig.~\ref{fig:combined_runtime} plots, for every container and $p$, the mean
+over the twenty runs of a cell on logarithmic axes, where a power law is a
+straight line and its exponent is the slope.
+\end{rvdraft}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.62\textwidth]{figures/runtime_euclidean.png}
+  \caption{\textbf{Mean solve time per run, Euclidean metric.} Each point is
+    the mean wall-clock time over the seeds of one cell; both axes are
+    logarithmic. The ribbed cage is included but does not scale with $p$; see
+  the text.}
+  \label{fig:combined_runtime}
+\end{figure*}
+
+\begin{rvdraft}
+The 30-minute limit shapes the right of the plot. \rvclaim{It ended 599 of the
+$4{,}800$ runs, all at $p \ge 20$ and two thirds of them at $p \ge 50$}, so the mean
+times there measure the limit as much as the algorithm, and the curves of the
+cube, H-box and star flatten as they approach it. Fitting $\log t$ against
+$\log p$ over $p \ge 10$ gives \rvclaim{exponents of $2.32$ for the cube
+($R^2 = 0.90$) and $2.06$ for the H-box ($R^2 = 0.78$)}, consistent with the
+$\mathcal{O}(p^2)$ pairwise distance checks and the $\mathcal{O}(p M)$ boundary
+checks, where $M$ is the number of faces, \rvclaim{and $1.39$ for the star
+($R^2 = 0.81$), whose curve the limit flattens from $p = 40$. The tetrahedron
+($1.31$, $R^2 = 0.41$) and the ribbed cage ($0.14$, $R^2 = 0.10$)} do not follow
+a power law. On the tetrahedron no Euclidean run reaches the limit, and the
+time is set less by $p$ than by how soon the restarts stop raising the radius,
+which ends a run after $\lceil 3 \ln p\rceil$ restarts without a gain: \rvclaim{the
+mean is 32 to 60 seconds at the tetrahedral numbers $p = 35, 56$ and $84$,
+and 930 seconds at $p = 40$}. On the cage the cost is set mostly by
+feasibility recovery inside a domain whose free volume is broken into narrow
+channels; it reaches the limit by $p = 30$, and its mean falls beyond
+$p = 40$.
+\end{rvdraft}
+
+\begin{rvdraft}
+No container shows growth faster than polynomial up to the limit. The slowest
+cell, the star under $\ell_1$ at $p = 100$, \rvclaim{averages $2{,}121$ seconds per run}:
+its runs reach the limit and then finish the restart under way.
+\end{rvdraft}
+
+\section{Conclusion}
+
+\begin{rvdraft}
+This paper introduces a robust global optimization framework for the
+Continuous $p$-Dispersion Problem (CpDP) in three-dimensional
+polyhedral containers under any norm-induced metric. By defining an
+almost-everywhere differentiable
+feasibility-residual function and extending the Tabu Search algorithm
+\cite{lai2024}, we successfully transition from restrictive
+two-dimensional planar checks to a comprehensive three-dimensional
+formulation utilizing a ray-casting procedure and projection-based
+distance calculations to faces, edges, and vertices. Empirical
+evaluations confirm that our method matches the proven optima and
+best-known values in the unit cube \cite{schaer1966, packomania}; reaches
+the optima Gurobi certifies in the regular tetrahedron, \rvclaim{which the
+grid-based values of \citet{kazakov2018} miss by up to $9.2\%$}; packs more
+spheres than published in seven of the eight multi-connected domains of
+\citet{stoyan2013}; and, at equal wall time, \rvclaim{finds a smaller radius than
+IPOPT or SLSQP in none of 45 cells}. It also sets benchmarks for three
+non-convex containers of our own design, with every configuration's centres
+published alongside a script that checks them, offering a powerful tool for
+real-world applications such as robotic
+collision avoidance and facility layout \cite{abdulghafoor2021, loganathan2024}.
+\end{rvdraft}
+
+\begin{rvdraft}
+Restarting at the best radius has a blind spot: a random start already
+feasible at that radius is never moved, and in three of our cells this held
+runs in place. The escape phase of Section~\ref{sec:escape} removed it where
+we applied it, but we chose those cells after seeing them fail; \rvdecide{evaluating it
+across the whole benchmark, and deciding whether it belongs in the default
+algorithm, is future work.}
+\end{rvdraft}
+
+Because our energy formulation relies on dimension-independent vector
+operations, it provides a natural foundation for extension into
+$n$-dimensional spaces ($\mathbb{R}^n$). The primary adaptation
+required for higher dimensions is generalizing the geometric
+container representation, specifically determining how to precisely
+model $(n-1)$-dimensional bounding hyperplanes and extending the
+ray-casting validity checks. Furthermore, future work will focus on
+incorporating more sophisticated, non-planar geometries such as
+curved surfaces. While polyhedral distances currently admit closed
+forms --- orthogonal projection in the Euclidean case, and a finite
+search over the dual unit ball's vertices for a general polyhedral norm
+--- curved boundaries require
+representations like spline patches or implicit surfaces,
+necessitating the development of computationally efficient distance
+evaluation methods that do not rely on closed-form projections.
+
+\pagebreak
+
+\begin{widetext}
+  \section*{Acknowledgements}~\rvcor{\textsf{\scriptsize[!]}}\rvnote{revtex widetext; C\&OR also wants funding, CRediT, data and AI-use statements}
+  The authors would like to thank Ram Padmanabhan for their valuable
+  feedback and editorial assistance throughout the preparation of
+  this manuscript.
+\end{widetext}
+
+\bibliographystyle{unsrtnat}
+\bibliography{continuous-p-dispersion-in-three-dimensions}
+
+\end{document}

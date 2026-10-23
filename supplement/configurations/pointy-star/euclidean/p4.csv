@@ -1,0 +1,12 @@
+# container: pointy-star
+# geometry: ../../../containers/pointy_star.json
+# metric: EUCLIDEAN
+# p: 4
+# radius: 0.9029640201785563
+# study: sweep
+# source: output/pointy-star/p4/euclidean/seed0.npz (seed 0, commit e237b48)
+i,x,y,z
+0,-0.0,-0.0,6.276983964948434
+1,-0.0,-0.0,3.7230160350515673
+2,-0.0,1.2769839649484351,4.999999999999999
+3,-0.0,-1.2769839649484334,5.000000000000001

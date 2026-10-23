@@ -1,0 +1,14 @@
+# LaTeX build artifacts -- the PDF is a build product, not a source
+*.aux
+*.log
+*.out
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.bak*
+indent.log
+*.pdf
