@@ -1,0 +1,18 @@
+# LaTeX build artifacts -- the PDF is a build product, not a source
+*.aux
+*.log
+*.out
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.bak*
+indent.log
+*.pdf
+# revtex writes an empty <jobname>Notes.bib on every build
+*Notes.bib
+# elsarticle writes a <jobname>.spl on every build
+*.spl

@@ -1,0 +1,5 @@
+- Global optimization for continuous p-dispersion in 3D convex and non-convex polyhedra
+- Exact distances under any polyhedral norm from the vertices of the dual unit ball
+- Never behind IPOPT or SLSQP at equal time; up to 2.4× larger radius
+- Packs more unit spheres than published in 7 of 8 Stoyan–Yaskov domains
+- Reaches every certified optimum; all configurations published with a checker

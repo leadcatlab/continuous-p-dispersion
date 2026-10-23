@@ -1,0 +1,37 @@
+# Formatting and linting: `make format` (format + autofix), `make lint` (check only).
+target-version = "py311"
+line-length = 100
+extend-exclude = [".ipopt", "jobs", "paper", "supplement"]
+
+[format]
+quote-style = "single"
+docstring-code-format = true
+
+[lint]
+select = [
+  "E", "W",   # pycodestyle
+  "F",        # pyflakes
+  "I",        # import sorting
+  "Q",        # quotes (agrees with the formatter: single inline, double docstrings)
+  "UP",       # pyupgrade, to 3.11
+  "B",        # bugbear
+  "C4",       # comprehensions
+  "SIM",      # simplifications
+  "RUF",      # ruff's own
+]
+ignore = [
+  "E501",                        # the formatter wraps code; long strings and comments stay
+  "E741",                        # l, O, I are the paper's own symbols in places
+  "RUF001", "RUF002", "RUF003",  # math symbols in strings, docstrings and comments are intended
+]
+
+[lint.per-file-ignores]
+"*.ipynb" = ["E402"]   # notebooks import where a cell needs it
+
+[lint.flake8-quotes]
+inline-quotes = "single"
+docstring-quotes = "double"
+multiline-quotes = "double"
+
+[lint.isort]
+known-first-party = ["tsgo"]

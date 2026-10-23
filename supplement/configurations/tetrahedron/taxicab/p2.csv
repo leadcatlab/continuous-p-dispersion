@@ -1,0 +1,10 @@
+# container: tetrahedron
+# geometry: ../../../containers/tetrahedron.json
+# metric: TAXICAB
+# p: 2
+# radius: 0.17776456693299125
+# study: sweep
+# source: supplement/runs/tetrahedron/taxicab/p2/seed0.npz (seed 0, commit baaa92c)
+i,x,y,z
+0,0.6107448912734476,0.2406138325401106,0.17776456711075692
+1,0.5,0.3045524253282106,0.35861021727072334

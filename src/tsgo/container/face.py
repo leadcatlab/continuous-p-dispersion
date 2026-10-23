@@ -1,11 +1,28 @@
 import numpy as np
-from typing import List, Union
 
 from tsgo.container.point import Point
 
+# How far off a face's plane a point may lie and still count as on it.
+#
+# This single constant governs two tests that must agree: whether a point lies
+# *on* a face (Face.contains, and through it Container.contains) and whether a
+# face is *active* with respect to a point. When they disagreed, a point a few
+# 1e-9 outside a wall was classified inside the container while that same wall
+# failed the strict `h >= 0` active test -- so the point's own floor dropped out
+# of its active set, its clearance fell back to a distant edge, and a ball
+# resting on the floor scored as perfectly feasible. Any change here must be
+# made here only.
+EPS_PLANE = 1e-8
+
 
 class Face:
-    def __init__(self, vertices: List[Point], normal: np.ndarray, description: str = "", holes: List[List[Point]] = None):
+    def __init__(
+        self,
+        vertices: list[Point],
+        normal: np.ndarray,
+        description: str = '',
+        holes: list[list[Point]] | None = None,
+    ):
         if holes is None:
             holes = []
         self.vertices = vertices
@@ -20,17 +37,30 @@ class Face:
         self._build_2d_cache()
 
     def _adjust_normal(self):
-        v1 = self.vertices[1].as_array() - self.vertices[0].as_array()
-        v2 = self.vertices[2].as_array() - self.vertices[0].as_array()
-        computed_normal = np.cross(v1, v2).astype(float)
+        # From v0, v1 and the first vertex not collinear with them: a ring may
+        # carry collinear vertices (where an edge of a neighbouring face ends
+        # partway along this one), and v0, v1, v2 on one line gave a zero
+        # normal -- silently, with every distance to the face then NaN.
+        V = [v.as_array().astype(float) for v in self.vertices]
+        v1 = V[1] - V[0]
+        computed_normal = np.zeros(3)
+        for vk in V[2:]:
+            computed_normal = np.cross(v1, vk - V[0])
+            if np.linalg.norm(computed_normal) > 1e-12 * np.linalg.norm(v1) * np.linalg.norm(
+                vk - V[0]
+            ):
+                break
         norm = np.linalg.norm(computed_normal)
-        if norm > 0:
-            computed_normal /= norm
+        if norm == 0:
+            raise ValueError(
+                f"face {getattr(self, 'description', '')!r}: all vertices are collinear"
+            )
+        computed_normal = computed_normal / norm
         if np.dot(computed_normal, self.normal) < 0:
             computed_normal = -computed_normal
         self.normal = computed_normal
 
-    def _get_edges(self) -> List[tuple[Point, Point]]:
+    def _get_edges(self) -> list[tuple[Point, Point]]:
         edges = []
         for i in range(len(self.vertices)):
             a = self.vertices[i]
@@ -47,9 +77,24 @@ class Face:
         point_vector = point.as_array()
         return float(np.dot(self.normal, point_vector - self._P0))
 
-    def project_point(self, point: Point) -> Point:
-        d = self.half_space(point)
-        return Point.from_array(point.as_array() - d * self.normal)
+    def project_point(self, point: Point, metric: str = 'EUCLIDEAN') -> Point:
+        """Nearest point of this face's plane under `metric`.
+
+        For the Euclidean metric this is the orthogonal foot. Under a general
+        norm the nearest point of a plane is not the orthogonal foot, and using
+        it over-estimates the clearance to the boundary -- by up to 32% on
+        containers with slanted faces -- which lets a ball cross a wall while
+        the energy still reads zero.
+        """
+        from tsgo.container.norms import plane_nearest
+
+        if metric.upper() in ('EUCLIDEAN', 'L2'):
+            d = self.half_space(point)
+            return Point.from_array(point.as_array() - d * self.normal)
+        _, foot = plane_nearest(
+            point.as_array(), np.asarray(self.normal, dtype=float), self._P0, metric
+        )
+        return Point.from_array(foot)
 
     # ----------------------------
     # Fast cached point-in-face
@@ -62,10 +107,7 @@ class Face:
         # choose u from an edge direction not parallel to normal
         e = (self.vertices[1].as_array() - P0).astype(float)
         e_norm = np.linalg.norm(e)
-        if e_norm == 0:
-            e = np.array([1.0, 0.0, 0.0], dtype=float)
-        else:
-            e = e / e_norm
+        e = np.array([1.0, 0.0, 0.0], dtype=float) if e_norm == 0 else e / e_norm
 
         # ensure u is in plane
         e = e - np.dot(e, n) * n
@@ -95,8 +137,10 @@ class Face:
         outer2d = np.vstack([to2d(v.as_array().astype(float)) for v in self.vertices])
         self._outer2d = outer2d
         self._outer_bbox = (
-            float(np.min(outer2d[:, 0])), float(np.max(outer2d[:, 0])),
-            float(np.min(outer2d[:, 1])), float(np.max(outer2d[:, 1])),
+            float(np.min(outer2d[:, 0])),
+            float(np.max(outer2d[:, 0])),
+            float(np.min(outer2d[:, 1])),
+            float(np.max(outer2d[:, 1])),
         )
 
         # holes
@@ -105,10 +149,14 @@ class Face:
         for hole in self.holes:
             h2d = np.vstack([to2d(v.as_array().astype(float)) for v in hole])
             self._holes2d.append(h2d)
-            self._holes_bbox.append((
-                float(np.min(h2d[:, 0])), float(np.max(h2d[:, 0])),
-                float(np.min(h2d[:, 1])), float(np.max(h2d[:, 1])),
-            ))
+            self._holes_bbox.append(
+                (
+                    float(np.min(h2d[:, 0])),
+                    float(np.max(h2d[:, 0])),
+                    float(np.min(h2d[:, 1])),
+                    float(np.max(h2d[:, 1])),
+                )
+            )
 
     @staticmethod
     def _point_on_segment(q, a, b, eps=1e-10) -> bool:
@@ -130,10 +178,7 @@ class Face:
             return False
 
         ab2 = abx * abx + aby * aby
-        if dot > ab2 + eps:
-            return False
-
-        return True
+        return not dot > ab2 + eps
 
     @staticmethod
     def _even_odd_contains_2d(q, poly2d: np.ndarray, bbox, eps=1e-12) -> bool:
@@ -163,7 +208,7 @@ class Face:
 
         return inside
 
-    def contains(self, point: Union[Point, np.ndarray], eps_plane: float = 1e-8) -> bool:
+    def contains(self, point: Point | np.ndarray, eps_plane: float = EPS_PLANE) -> bool:
         if isinstance(point, np.ndarray):
             Q3 = point.astype(float)
         else:
@@ -180,15 +225,20 @@ class Face:
             return False
 
         # inside a hole => not contained
-        for h2d, hb in zip(self._holes2d, self._holes_bbox):
+        for h2d, hb in zip(self._holes2d, self._holes_bbox, strict=False):
             if self._even_odd_contains_2d(q2, h2d, hb):
                 return False
 
         return True
-    
+
     @property
     def area(self) -> float:
-        # using shoelace formula for polygon area
-        x = self._outer2d[:, 0]
-        y = self._outer2d[:, 1]
-        return 0.5 * abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+        # Shoelace formula, outer ring less its holes. Counting the holes as
+        # solid over-stated the cage's volume as 531.3 against a true 450 (with
+        # the partition normals it also had wrong), which fed straight into
+        # the initial-radius estimate.
+        def shoelace(ring):
+            x, y = ring[:, 0], ring[:, 1]
+            return 0.5 * abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+
+        return shoelace(self._outer2d) - sum(shoelace(h) for h in self._holes2d)

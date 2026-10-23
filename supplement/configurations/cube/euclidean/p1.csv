@@ -1,0 +1,9 @@
+# container: cube
+# geometry: ../../../containers/cube.json
+# metric: EUCLIDEAN
+# p: 1
+# radius: 0.4999999995
+# study: sweep
+# source: supplement/runs/cube/euclidean/p1/seed0.npz (seed 0, commit baaa92c)
+i,x,y,z
+0,-2.617128439838727e-17,5.4141205124854344e-18,2.030105524998694e-17

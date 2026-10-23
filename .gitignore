@@ -25,9 +25,10 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-output/*
-old_output/*
-output/*.pkl
+# Every final result is under supplement/ (tracked; supplement/runs holds one
+# small .npz per run, ~5 KB). Job state -- queues, SLURM logs, raw benchmark
+# trials, ad-hoc solver runs -- goes under jobs/ and is never tracked.
+jobs/
 logs/*
 
 # PyInstaller
@@ -170,3 +171,26 @@ src/run-many.sh
 
 # Generated figures
 figures/
+# ...but the paper's figures are part of the manuscript: the hand-drawn ones
+# exist nowhere else, and the generated ones must match the committed PDF.
+!paper/figures/
+!paper/figures/**
+!supplement/figures/
+!supplement/figures/**
+
+# Generated LaTeX tables (supplement/tables is tracked)
+tables/
+!supplement/tables/
+!supplement/tables/**
+
+# Paper build products (sources and figures are tracked; the PDF is not)
+paper/generated/
+
+# Cluster-specific job setup (slurm/env.sh.example is the template)
+slurm/env.sh
+# Ipopt for cyipopt, from conda-forge (slurm/env.sh.example)
+.ipopt/
+
+# Color-coded review copy of the manuscript (make review)
+paper/*-review-copy*
+refs/

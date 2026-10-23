@@ -1,0 +1,10 @@
+# container: pointy-star
+# geometry: ../../../containers/pointy_star.json
+# metric: SUP_NORM
+# p: 2
+# radius: 0.8333333324999999
+# study: sweep
+# source: supplement/runs/pointy-star/sup_norm/p2/seed0.npz (seed 0, commit baaa92c)
+i,x,y,z
+0,-0.0,-0.0,4.166666666666667
+1,-0.0,-0.0,5.833333333333334
