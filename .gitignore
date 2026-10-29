@@ -188,3 +188,6 @@ paper/generated/
 output_archive_*/
 output_pilot/
 output_extra/
+
+# Cluster-specific job setup (slurm/env.sh.example is the template)
+slurm/env.sh
