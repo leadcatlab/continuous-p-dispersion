@@ -107,6 +107,10 @@ def _fmt(x, nd=8):
 def _signed(x, nd=8):
     if x is None or (isinstance(x, float) and pd.isna(x)):
         return "--"
+    # A value that prints as zero carries no sign: +0.0000 and -0.0000 were
+    # differences far below the printed precision.
+    if f"{abs(x):.{nd}f}" == f"{0.0:.{nd}f}":
+        return f"{0.0:.{nd}f}"
     return (f"$-${abs(x):.{nd}f}" if x < 0 else f"+{x:.{nd}f}")
 
 
@@ -191,6 +195,7 @@ def all_metrics_latex(sweep: pd.DataFrame, container: str, label: str,
     ps = sorted(ok["p"].unique())
     ref = (load_reference().get(container, {}) or {}).get("EUCLIDEAN")
     pub = {int(k): float(v) for k, v in (ref or {}).get("values", {}).items()}
+    cmp_nd = min(DECIMALS, int((ref or {}).get("decimals", DECIMALS)))
     name = LABEL.get(container, container)
     sym = {m: METRIC_TEX[m] for m in METRICS}
 
@@ -203,15 +208,20 @@ def all_metrics_latex(sweep: pd.DataFrame, container: str, label: str,
         rows = []
         for p in ps:
             if p in pub and ("EUCLIDEAN", p) in best.index:
-                ours = truncate(float(best[("EUCLIDEAN", p)]))
-                r = [_fmt(pub[p]), _signed(100.0 * (ours - pub[p]) / pub[p], 4)]
+                # Both truncated to the same precision -- eight decimals, or
+                # fewer if the reference gives fewer -- so a gap that is only
+                # rounding reads as zero.
+                ours = truncate(float(best[("EUCLIDEAN", p)]), cmp_nd)
+                ref_t = truncate(pub[p], cmp_nd)
+                r = [_fmt(ref_t, cmp_nd), _signed(100.0 * (ours - ref_t) / ref_t, 4)]
             else:
                 r = ["--", "--"]
             rows.append([str(p), cell("EUCLIDEAN", p)] + r + [cell("TAXICAB", p), cell("SUP_NORM", p)])
         cap = (f"{name}: best radius found in each metric, truncated to eight decimals. "
                f"For ${sym['EUCLIDEAN']}$ the published value ({_tex_escape(ref['label'])}) and the "
                r"relative difference $R_{\text{err}} = (D - D_{\mathrm{ref}})/D_{\mathrm{ref}}$ "
-               "are given; negative values are cells where the published value is ahead.")
+               f"are given, both truncated to {cmp_nd} decimals; "
+               "negative values are cells where the published value is ahead.")
         if ref.get("note"):
             cap += " " + _tex_escape(ref["note"])
         env, colspec = "table*", "c|c|c|c|c|c"
