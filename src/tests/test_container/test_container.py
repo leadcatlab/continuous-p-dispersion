@@ -249,3 +249,25 @@ def test_volume_matches_the_divergence_theorem_on_the_raw_rings(key, name):
     exact = sum(vec_area(R) @ R[0] for _, R in rings) / 3.0
     assert exact > 0
     assert CONTAINERS[key]().volume == pytest.approx(exact, rel=1e-12)
+
+
+@pytest.mark.parametrize("key", ["cube", "h-box", "tetrahedron", "pointy-star", "cage"]
+                         + [f"stoyan-yaskov-{k}" for k in range(1, 9)])
+def test_no_two_faces_overlap(key):
+    # Regression: in the cage the top ribs rested on the partitions, and both
+    # the partition tops and the rib bottoms covered the contact area. A ray
+    # through it hit two faces at the same t, the crossing dedup in contains()
+    # counted one, and the parity flipped for ~1.7% of test points.
+    from tsgo.container.sample_polyhedron import CONTAINERS
+    faces = CONTAINERS[key]().faces
+    rng = np.random.default_rng(0)
+    for i, A in enumerate(faces):
+        nA = A.normal / np.linalg.norm(A.normal)
+        VA = np.array([v.as_array() for v in A.vertices], dtype=float)
+        for B in faces[i + 1:]:
+            nB = B.normal / np.linalg.norm(B.normal)
+            if abs(abs(nA @ nB) - 1.0) > 1e-9 or abs(nA @ (B.vertices[0].as_array() - VA[0])) > 1e-9:
+                continue
+            for x in VA.min(0) + rng.random((400, 3)) * np.ptp(VA, axis=0):
+                x = x - (nA @ (x - VA[0])) * nA
+                assert not (A.contains(x) and B.contains(x)), f"{A.description} and {B.description} overlap at {x}"
