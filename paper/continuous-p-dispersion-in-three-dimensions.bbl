@@ -1,4 +1,4 @@
-\begin{thebibliography}{29}
+\begin{thebibliography}{35}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -105,15 +105,21 @@ James~R. Munkres.
 \newblock \emph{Analysis on Manifolds}.
 \newblock Advanced Books Classics. Addison-Wesley, 1991.
 
+\bibitem[Horn and Johnson(2012)]{horn2012}
+Roger~A. Horn and Charles~R. Johnson.
+\newblock \emph{Matrix Analysis}.
+\newblock Cambridge University Press, 2 edition, 2012.
+
 \bibitem[Fletcher(1987)]{fletcher1987}
 Roger Fletcher.
 \newblock \emph{Practical Methods of Optimization}.
 \newblock Wiley, 1987.
 
-\bibitem[Wang et~al.(2005)Wang, Li, and Wu]{wang2005}
-Wencheng Wang, Jing Li, and Enhua Wu.
-\newblock 2{D} point-in-polygon test by classifying edges into layers.
-\newblock \emph{Computers \& Graphics}, 29:\penalty0 427--439, 2005.
+\bibitem[Byrd et~al.(1995)Byrd, Lu, Nocedal, and Zhu]{byrd1995}
+Richard~H. Byrd, Peihuang Lu, Jorge Nocedal, and Ciyou Zhu.
+\newblock A limited memory algorithm for bound constrained optimization.
+\newblock \emph{SIAM Journal on Scientific Computing}, 16\penalty0
+  (5):\penalty0 1190--1208, 1995.
 
 \bibitem[Horvat(2012)]{horvat2012}
 Denis Horvat.
@@ -124,6 +130,33 @@ Denis Horvat.
 Lawrence~C. Evans and Ronald~F. Gariepy.
 \newblock \emph{{Measure Theory and Fine Properties of Functions}}.
 \newblock CRC Press, revised edition, 2015.
+
+\bibitem[Boyd and Vandenberghe(2004)]{boyd2004}
+Stephen Boyd and Lieven Vandenberghe.
+\newblock \emph{Convex Optimization}.
+\newblock Cambridge University Press, 2004.
+
+\bibitem[Rockafellar(1970)]{rockafellar1970}
+R.~Tyrrell Rockafellar.
+\newblock \emph{Convex Analysis}.
+\newblock Princeton University Press, 1970.
+
+\bibitem[Danskin(1967)]{danskin1967}
+John~M. Danskin.
+\newblock \emph{The Theory of Max-Min and its Application to Weapons Allocation
+  Problems}.
+\newblock Springer, 1967.
+
+\bibitem[Bertsekas(1999)]{bertsekas1999}
+Dimitri~P. Bertsekas.
+\newblock \emph{Nonlinear Programming}.
+\newblock Athena Scientific, 2 edition, 1999.
+
+\bibitem[Mangasarian(1999)]{mangasarian1999}
+Olvi~L. Mangasarian.
+\newblock Arbitrary-norm separating plane.
+\newblock \emph{Operations Research Letters}, 24\penalty0 (1--2):\penalty0
+  15--23, 1999.
 
 \bibitem[Fiacco and McCormick(1964)]{fiacco1964}
 Anthony~V. Fiacco and Garth~P. McCormick.
