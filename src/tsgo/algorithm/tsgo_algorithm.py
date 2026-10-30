@@ -54,8 +54,8 @@ def default_restart_patience(p: int) -> int:
 # around the same optimum.
 RESTART_RTOL = 1e-7
 
-# Escape phase (opt-in, off in every published sweep): restarts aimed above the
-# best radius, run after the normal restarts have stopped.
+# Escape (opt-in): a restart that ends feasible but no better than the best
+# radius retries from its own configuration with tabu aimed this much higher.
 ESCAPE_FACTOR = 1.02
 
 
@@ -76,7 +76,9 @@ def escape_restarts(
     verbose: bool = False,
     on_start=None,
 ) -> Tuple[np.ndarray, float, int]:
-    """Restarts whose tabu target is factor * D_opt rather than D_opt.
+    """Restarts whose tabu target is factor * D_opt rather than D_opt, run after
+    a saved run has finished (escape.py). The in-run escape option is in
+    _tsgo_algorithm.
 
     A normal restart runs tabu at D_opt, and tabu only moves points while the
     energy is positive. A start that is already feasible at D_opt therefore
@@ -124,14 +126,13 @@ def escape_restarts(
 
 
 def escape_seeds(seed: int, iterations: int, n: int):
-    """The streams escape_restarts uses in a run with this worker seed.
+    """The streams escape_restarts uses to continue a run with this worker seed.
 
     _tsgo_algorithm spawns, from SeedSequence(seed), one stream per start and
     then one for the ray directions; the escape streams are the next n
-    children. Spawning is stateful, so the normal part of a run is unchanged
-    by the phase, and a continuation from a saved run (escape.py) draws the
-    same streams the run itself would have drawn. Also returns the ray stream,
-    which a continuation must reuse so the energy is the run's own."""
+    children, which the run itself never draws, so a continuation (escape.py)
+    leaves the run's own part unchanged. Also returns the ray stream, which a
+    continuation must reuse so the energy is the run's own."""
     ss = np.random.SeedSequence(seed)
     ss.spawn(max(iterations, 1))
     rays = ss.spawn(1)[0]
@@ -156,8 +157,6 @@ def _tsgo_algorithm(
     restart_patience: Optional[int] = None,
     polish: bool = True,
     escape_factor: Optional[float] = None,
-    escape_patience: Optional[int] = None,
-    escape_time_limit: Optional[float] = None,
 ) -> Tuple[np.ndarray, float, float]:
     """One TSGO run: a start at D_init, then restarts at the best radius so far.
 
@@ -178,12 +177,16 @@ def _tsgo_algorithm(
     It runs once, on the final answer, so the search itself is unchanged, and
     it never lowers the certified radius.
 
-    With `escape_factor` (off by default, and off in every published sweep),
-    the polished result then goes through escape_restarts: restarts aimed at
-    escape_factor * D_opt, stopping after `escape_patience` in a row without a
-    gain (default restart_patience, else ceil(3 ln p)) or `escape_time_limit`
-    seconds. Everything before it is unchanged, so the phase can only raise
-    the result, and a saved run can be continued with it (escape.py).
+    With `escape_factor` (off by default), a restart whose tabu search ends
+    feasible but whose radius does not beat the best (by RESTART_RTOL) gets one
+    escape attempt. Tabu search is run again from that restart's configuration,
+    aimed at escape_factor * D_opt; a start that was feasible at D_opt -- and so
+    left unmoved by tabu, however poor its layout -- is infeasible there and has
+    to move. adjust_distance then grows the radius from wherever tabu leaves
+    it, or snaps it down to what the configuration supports if tabu ended
+    infeasible. The result replaces the best only if it beats it, and counts
+    as an improvement for restart_patience like any other restart. It runs
+    inside the time limit, and a run without the option is unchanged.
     """
     vprint = print if verbose else lambda *args, **kwargs: None
     if isinstance(container, str):
@@ -288,28 +291,38 @@ def _tsgo_algorithm(
             if D > D_opt and ef.E(X, D, container=container, metric=metric) < eps:
                 improved = D > D_opt * (1.0 + RESTART_RTOL)
                 X_opt, D_opt = X, D
+            if escape_factor and not improved and D_opt > 0.0:
+                target = D_opt * escape_factor
+                X = tabu_search(
+                    X,
+                    D=target,
+                    container=container,
+                    beta_max=beta_max,
+                    Q=Q,
+                    optimization_method=optimization_method,
+                    metric=metric,
+                    eps=eps,
+                    verbose=verbose,
+                    rng=rng,
+                )
+                X, D = adjust_distance(
+                    X0=X,
+                    D0=target,
+                    container=container,
+                    metric=metric,
+                    optimization_method=optimization_method,
+                    eps=eps,
+                    verbose=verbose,
+                )
+                if D > D_opt and ef.E(X, D, container=container, metric=metric) < eps:
+                    improved = D > D_opt * (1.0 + RESTART_RTOL)
+                    X_opt, D_opt = X, D
+                vprint(f"[ESCAPE] restart {restart}: target={target:.6f} best={D_opt:.6f}")
         stalled = 0 if improved else stalled + 1
         _record()
 
     if polish and D_opt > 0.0:
         X_opt, D_opt = polish_configuration(X_opt, container, metric)
-
-    if escape_factor and D_opt > 0.0:
-        k = escape_patience or restart_patience or default_restart_patience(p)
-        # The streams after the run's own, as escape_seeds reproduces them.
-        seeds = seed_seq.spawn(max(iterations, 1))
-
-        def _escape_record(X_e, D_e):
-            nonlocal X_opt, D_opt
-            X_opt, D_opt = X_e, D_e
-            _record()
-
-        D_before = D_opt
-        X_opt, D_opt, _ = escape_restarts(
-            X_opt, D_opt, p, container, metric, seeds, escape_factor, k, escape_time_limit,
-            Q, beta_max, eps, optimization_method, verbose=verbose, on_start=_escape_record)
-        if polish and D_opt > D_before:
-            X_opt, D_opt = polish_configuration(X_opt, container, metric)
 
     elapsed_time = time.perf_counter() - start_time
     
@@ -376,8 +389,6 @@ def tsgo_algorithm_parallel(
     time_limit: Optional[float] = None,
     trace: Optional[list] = None,
     escape_factor: Optional[float] = None,
-    escape_patience: Optional[int] = None,
-    escape_time_limit: Optional[float] = None,
 ) -> Tuple[np.ndarray, float]:
     """
     Run `_tsgo_algorithm` in parallel `parallel_iterations` times and return the (X, D)
@@ -434,8 +445,6 @@ def tsgo_algorithm_parallel(
                 polish=polish,
                 time_limit=time_limit,
                 escape_factor=escape_factor,
-                escape_patience=escape_patience,
-                escape_time_limit=escape_time_limit,
             )
             for ws in worker_seeds
         ]

@@ -239,12 +239,9 @@ def _time_limit(args) -> Optional[float]:
 
 
 def _escape_kwargs(args) -> Dict:
-    """The escape phase's solver options; empty unless --escape-factor is given."""
+    """The escape option for the solver; empty unless --escape-factor is given."""
     f = getattr(args, "escape_factor", None)
-    if not f:
-        return {}
-    return {"escape_factor": f, "escape_patience": args.escape_patience or None,
-            "escape_time_limit": args.escape_time_limit or None}
+    return {"escape_factor": f} if f else {}
 
 
 def run_cell(container_name: str, metric: str, p: int, seed: int, args,
@@ -370,13 +367,10 @@ def main() -> None:
                     help="Fraction of the container the initial-radius estimate fills; 0.25 is the value in the paper.")
     ap.add_argument("--boundary-mode", choices=["sum", "min"], default=None)
     ap.add_argument("--escape-factor", dest="escape_factor", type=float, default=None,
-                    help="Opt-in escape phase after the normal restarts: restarts aimed at this "
-                         "multiple of the best radius (e.g. 1.02). Off by default; writes extra "
-                         "escape_* columns, so use its own --out and --output-root.")
-    ap.add_argument("--escape-patience", dest="escape_patience", type=int, default=None,
-                    help="Escape starts in a row without a gain before stopping. Default: the restart patience.")
-    ap.add_argument("--escape-time-limit", dest="escape_time_limit", type=float, default=900.0,
-                    help="Seconds for the escape phase. Default 900.")
+                    help="Opt-in escape: a restart that ends feasible but no better retries from its "
+                         "configuration with tabu aimed at this multiple of the best radius (e.g. "
+                         "1.02). Off by default; writes an extra escape_factor column, so use its "
+                         "own --out and --output-root.")
     ap.add_argument("--dry-run", action="store_true", help="List the cells and exit.")
     args = ap.parse_args()
 

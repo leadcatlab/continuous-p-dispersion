@@ -6,10 +6,11 @@
 Each run file under --src (the results tree) is loaded and its saved best
 configuration goes through the escape phase: restarts whose tabu target is
 --factor times the best radius, stopping after the run's restart patience in a
-row without a gain or --time-limit seconds. The streams and ray directions are
-the ones the run itself would have used had it been made with
-`tsgo-batch --escape-factor`, so a continuation is that run, minus the
-recomputation of its normal part.
+row without a gain or --time-limit seconds. This is the post-run phase used for
+the earlier escape diagnosis (Stoyan & Yaskov example 6, h-box l-inf p = 56,
+cage l2 p = 100). It is not what `--escape-factor` does now: that option retries
+each unproductive restart inside the run (tsgo_algorithm._tsgo_algorithm), so
+a fresh run with it differs from a continuation made here.
 
 The source files are never touched. Results go to their own tree,
 --dest/<container>/p<p>/<metric>/seed<k>.npz (default output/variants/escape),

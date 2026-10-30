@@ -9,8 +9,9 @@ so an interrupted sweep resumes where it stopped.
 Settings are the solver's defaults: ladder start at density 0.25, restarts at
 the best radius until ceil(3 ln p) in a row fail to raise it, capped at 41
 starts and 30 minutes, Q = max(3, round(ln p)), final LP tightening.
---escape-factor adds the escape phase to the same run, after the normal
-restarts (tsgo_algorithm.escape_restarts); the run is then tagged sweep-escape.
+--escape-factor turns on escape: a restart that ends feasible but no better
+retries from its configuration with tabu aimed that much higher, inside the
+same time limit; the run is then tagged sweep-escape.
 
     python -m tsgo.experiments.cell_run CONTAINER METRIC P SEED [--output-root output]
         [--escape-factor 1.02]
@@ -36,9 +37,8 @@ def main() -> None:
     ap.add_argument("--time-limit", dest="time_limit", type=float, default=1800.0,
                     help="seconds per run; 0 turns it off")
     ap.add_argument("--escape-factor", dest="escape_factor", type=float, default=None,
-                    help="escape phase: restarts targeting this multiple of the best radius; off by default")
-    ap.add_argument("--escape-time-limit", dest="escape_time_limit", type=float, default=900.0,
-                    help="seconds for the escape phase")
+                    help="escape: retry a restart that gains nothing with tabu aimed at this "
+                         "multiple of the best radius; off by default")
     a = ap.parse_args()
 
     npz = os.path.join(batch.run_dir(a.output_root, a.container, a.p, a.metric), f"seed{a.seed}.npz")
@@ -52,8 +52,7 @@ def main() -> None:
     args = types.SimpleNamespace(d_init=None, packing_density=0.25, output_root=a.output_root,
                                  eps=1e-8, iterations=a.starts, processes=1, Q=None, beta_max=10,
                                  method="L-BFGS-B", restart_patience=a.restart_patience,
-                                 time_limit=a.time_limit, escape_factor=a.escape_factor,
-                                 escape_patience=None, escape_time_limit=a.escape_time_limit)
+                                 time_limit=a.time_limit, escape_factor=a.escape_factor)
     tag_hash = "sweep-escape" if a.escape_factor else "sweep"
     row, failed = batch.run_cell(a.container, a.metric, a.p, a.seed, args, commit, tag_hash)
     print(f"{tag} D={row['D']} feasible={row['feasible']} wall={row['wall_time_s']}s"
