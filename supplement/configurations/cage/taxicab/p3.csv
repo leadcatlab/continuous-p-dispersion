@@ -1,0 +1,11 @@
+# container: cage
+# geometry: ../../../containers/ribbed_cage.json
+# metric: TAXICAB
+# p: 3
+# radius: 1.9999999979999983
+# study: sweep
+# source: supplement/runs/cage/taxicab/p3/seed0.npz (seed 0, commit baaa92c)
+i,x,y,z
+0,7.0,8.5,2.5
+1,4.999999999999998,2.4999999999999996,2.4999999999999996
+2,3.0000000000000004,8.5,2.5000000000000004

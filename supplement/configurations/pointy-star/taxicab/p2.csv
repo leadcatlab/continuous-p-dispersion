@@ -1,0 +1,10 @@
+# container: pointy-star
+# geometry: ../../../containers/pointy_star.json
+# metric: TAXICAB
+# p: 2
+# radius: 1.1999999987999999
+# study: sweep
+# source: supplement/runs/pointy-star/taxicab/p2/seed0.npz (seed 0, commit baaa92c)
+i,x,y,z
+0,0.39999999999999997,0.39999999999999997,5.3999999999999995
+1,-0.3999999999999999,-0.3999999999999999,4.6

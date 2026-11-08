@@ -1,0 +1,10 @@
+# container: tetrahedron
+# geometry: ../../../containers/tetrahedron.json
+# metric: EUCLIDEAN
+# p: 2
+# radius: 0.14494897413336877
+# study: sweep
+# source: supplement/runs/tetrahedron/euclidean/p2/seed0.npz (seed 0, commit baaa92c)
+i,x,y,z
+0,0.6449489742783177,0.20498880527646593,0.1449489742783178
+1,0.3550510257216821,0.20498880527646593,0.1449489742783178

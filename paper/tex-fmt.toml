@@ -1,0 +1,10 @@
+# Formatting for `make fmt`.
+#
+# Hard wrap at 80 columns. Note this reflows a paragraph from the edit point
+# onwards, so a one-word change can show up as several changed lines in a
+# diff -- run `make fmt` as its own commit rather than mixing it with content
+# edits, and the history stays readable.
+wrap = true
+wraplen = 80
+tabsize = 2
+usetabs = false
