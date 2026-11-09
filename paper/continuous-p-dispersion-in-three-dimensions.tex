@@ -53,17 +53,18 @@
 \author[uiuc]{Melkior Ornik}
 \ead{mornik@illinois.edu}
 \affiliation[uiuc]{organization={University of Illinois Urbana-Champaign},
-  city={Urbana}, state={IL}, country={USA}}
+  addressline={Talbot Laboratory, 104 S. Wright St.},
+  city={Urbana}, postcode={61801}, state={IL}, country={USA}}
 \cortext[cor1]{Corresponding author.}
 
 \begin{abstract}
-  The Continuous $p$-Dispersion Problem (CpDP) with boundary constraints asks
+  The Continuous $p$-Dispersion Problem with boundary constraints asks
   for the placement of $p$ points in a compact subset of Euclidean space so that
   the minimum distance between any two points, and between the points and the
   boundary of the set, is maximized. It arises in facility placement, network
   design, sampling and particle simulation, is NP-hard, and existing algorithms
   address mainly two-dimensional containers. We introduce an almost-everywhere
-  differentiable model and a global optimization algorithm for the CpDP in
+  differentiable model and a global optimization algorithm for this problem in
   convex and non-convex three-dimensional polyhedra under any norm-induced
   metric. It extends planar dispersion techniques to three dimensions through
   face orientation, exact metric distances from a point to the faces, edges and
@@ -75,8 +76,8 @@
   the published benchmark for the regular tetrahedron. Given the same wall time
   as the general-purpose solvers IPOPT and SLSQP, it finds a larger radius in 30
   and 23 of 45 test cases respectively, by up to a factor of $2.4$, and a
-  smaller one in none. In the eight multi-connected polyhedral domains of Stoyan
-  and Yaskov, it packs more spheres of radius one than published in seven, by up
+  smaller one in none. In the eight polyhedral domains of Stoyan
+  and Yaskov (2013), it packs more spheres of radius one than published in seven, by up
   to eight, and as many in the eighth.
 \end{abstract}
 
@@ -1318,7 +1319,7 @@ short of a configuration's local maximum, and with it the cube at $p = 100$
 reaches the Packomania record. These values are recorded in every row of our
 results table.
 
-\paragraph{Escape phase.} A restart runs Tabu Search at the
+\paragraph{Escape phase} A restart runs Tabu Search at the
 best radius found so far, and Tabu Search moves points only while the
 residual is positive. A random start that is already feasible at that radius
 is therefore returned unmoved, however poor its layout, and a run whose best
@@ -1501,6 +1502,16 @@ The comparison with general-purpose solvers is in Section~\ref{sec:baselines}.
 
 \begin{figure}[htbp]
   \centering
+  \includegraphics[width=0.7\textwidth]{figures/comparison_cube.pdf}
+  \caption{Unit cube, Euclidean metric: gap between the Packomania record
+    $D_{\mathrm{P}}$ and our best radius $D$, $(D_{\mathrm{P}} - D)/D_{\mathrm{P}}$
+    in percent. Zero means our radius matches the record; only $p = 50$ and
+    $p = 64$ show a gap, of $0.00006\%$ and $0.00062\%$.}
+  \label{fig:cube_comparison}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
   \includegraphics[width=0.3\textwidth]{figures/cube_10.png}
   \caption{Best-achieved 10-point configuration for the
     $p$-dispersion problem in the unit cube using the Euclidean metric
@@ -1529,15 +1540,6 @@ the relative $10^{-9}$ by which every reported radius is shrunk, and at
 $p = 64$ all 20 runs reach the $4 \times 4 \times 4$ grid
 (Fig.~\ref{fig:cube_sup_64}), again to within $10^{-9}$.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.7\textwidth]{figures/comparison_cube.png}
-  \caption{Unit cube, Euclidean metric: gap between the Packomania record
-    $D_{\mathrm{P}}$ and our best radius $D$, $(D_{\mathrm{P}} - D)/D_{\mathrm{P}}$
-    in percent. Zero means our radius matches the record; only $p = 50$ and
-    $p = 64$ show a gap, of $0.00006\%$ and $0.00062\%$.}
-  \label{fig:cube_comparison}
-\end{figure}
 
 \subsection{Tetrahedron}
 
@@ -1565,7 +1567,7 @@ minimum pairwise distances than \citet{kazakov2018}.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.7\textwidth]{figures/comparison_tetrahedron.png}
+  \includegraphics[width=0.7\textwidth]{figures/comparison_tetrahedron.pdf}
   \caption{Unit tetrahedron, Euclidean metric: the radius reported by
     \citet{kazakov2018} (orange), our best radius (blue), and the optimum
     Gurobi proves (black dash). At every $p$ our radius sits on the proven
@@ -1890,6 +1892,17 @@ box of example 1, which has no holes, and in example 2 (four each).
 
 \begin{figure}[htbp]
   \centering
+  \includegraphics[width=\textwidth]{figures/stoyan_yaskov.pdf}
+  \caption{Best certified radius over 10 seeds at each sphere count tried, in
+    the eight domains of \citet{stoyan2013}, under $\ell_2$; at 95 spheres in
+    example 2, 88 in example 3 and 81 and 82 in example 8, over further seeds as well (Table~\ref{tab:stoyan}). A count is fitted
+    (blue) when the radius reaches one (dashed); the ring marks their
+    published count, and the panel title gives their count and ours.}
+  \label{fig:stoyan}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
   \includegraphics[width=\textwidth]{figures/stoyan_yaskov_packings.png}
   \caption{The most spheres of radius one we fit into each domain of
     \citet{stoyan2013}, best seed of that count; their published count below.
@@ -1900,16 +1913,6 @@ box of example 1, which has no holes, and in example 2 (four each).
   \label{fig:stoyan_packings}
 \end{figure}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{figures/stoyan_yaskov.png}
-  \caption{Best certified radius over 10 seeds at each sphere count tried, in
-    the eight domains of \citet{stoyan2013}, under $\ell_2$; at 95 spheres in
-    example 2, 88 in example 3 and 81 and 82 in example 8, over further seeds as well (Table~\ref{tab:stoyan}). A count is fitted
-    (blue) when the radius reaches one (dashed); the ring marks their
-    published count, and the panel title gives their count and ours.}
-  \label{fig:stoyan}
-\end{figure}
 
 The domain of example 6 shows how the search can stall. The cuboid there is
 pierced by a tapered hole whose floor leaves a wall below it, $1.97$ thick at
@@ -1946,7 +1949,7 @@ repository. The last of them was made after earlier runs of the comparison:
 our algorithm includes the escape phase, the budgets come from the main
 experiment reported here, and every trial ran on the same cluster.
 
-\paragraph{Solvers and formulation.} The baselines are IPOPT 3.14, an
+\paragraph{Solvers and formulation} The baselines are IPOPT 3.14, an
 interior-point method \citep{wachter2006}, and SLSQP, sequential quadratic
 programming \citep{kraft1988, scipy2020}. Each is given the constrained program
 $\max D$ subject to $d(c_i, c_j) \ge 2D$ and a clearance of at least $D$ for
@@ -1962,7 +1965,7 @@ back into the container. Both solvers receive analytic Jacobians, are
 restarted from random configurations until their budget ends, and never see
 our energy model or search.
 
-\paragraph{Budget and cells.} The 45 cells are every container and metric at
+\paragraph{Budget and cells} The 45 cells are every container and metric at
 $p \in \set{10, 20, 40}$. Each solver makes 10 trials per cell, one core each,
 and every trial on a cell receives the same wall time,
 $\max \set{60\,\text{s},\ 2 t_{\text{med}}}$, where $t_{\text{med}}$ is our
@@ -1972,7 +1975,7 @@ budget ends does not count. Every radius,
 for every solver, is scored as certified by the bound $B(X)$ of
 Equation~\ref{eq:bound}.
 
-\paragraph{Quality.} At equal time our algorithm finds a larger radius
+\paragraph{Quality} At equal time our algorithm finds a larger radius
 (best of 10) than IPOPT in 30 of the 45 cells and than SLSQP in 23, and ties
 the rest to within $10^{-6}$ (relative); it is behind in none. A
 two-sided Wilcoxon signed-rank test on the paired best radii gives
@@ -1987,7 +1990,7 @@ $p = 40$.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/baseline_quality.png}
+  \includegraphics[width=\textwidth]{figures/baseline_quality.pdf}
   \caption{How much larger our best radius is than each baseline's, in every
     cell: best of 10 trials at equal wall time. One stem per cell and baseline
     (IPOPT orange, SLSQP green); a stem's height is our advantage, and a dot on
@@ -1996,7 +1999,7 @@ $p = 40$.
   \label{fig:baseline_quality}
 \end{figure}
 
-\paragraph{Speed.} The general-purpose solvers are faster where they succeed.
+\paragraph{Speed} The general-purpose solvers are faster where they succeed.
 In the 12 cells in which the median trial of all three solvers reaches
 $99.9\%$ of the best radius found, ten of them convex, SLSQP gets there sooner
 than our algorithm in seven, by up to $17\times$, and IPOPT in five, by up to
@@ -2018,16 +2021,7 @@ first start completes, and keeps improving.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\textwidth]{figures/baseline_anytime.png}
-  \caption{Best certified radius against elapsed time on four hard cells, as
-    a fraction of the best radius known on the cell (Packomania for the cube);
-    median over 10 trials.}
-  \label{fig:baseline_anytime}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.8\textwidth]{figures/baseline_reach.png}
+  \includegraphics[width=0.8\textwidth]{figures/baseline_reach.pdf}
   \caption{Reaching $99.9\%$ of the best radius found, judged by each solver's
     median trial, over the 15 cells (five containers, three metrics) at each
     $p$ of the comparison panel. (a) The number of cells in which the median
@@ -2037,7 +2031,17 @@ first start completes, and keeps improving.
   \label{fig:baseline_profile}
 \end{figure}
 
-\paragraph{Feasibility of reported radii.} A local solver stops when its
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/baseline_anytime.pdf}
+  \caption{Best certified radius against elapsed time on four hard cells, as
+    a fraction of the best radius known on the cell (Packomania for the cube);
+    median over 10 trials.}
+  \label{fig:baseline_anytime}
+\end{figure}
+
+
+\paragraph{Feasibility of reported radii} A local solver stops when its
 constraint violation falls below a tolerance, so the radius it reports can
 exceed the radius its configuration supports. Of SLSQP's converged local
 solves, $41.8\%$ over-state the radius by more than $10^{-6}$ (relative),
@@ -2046,7 +2050,7 @@ that supports no positive radius at all. For IPOPT the shares are $17.4\%$ and
 under $0.01\%$. Every radius in this comparison, for every solver, is therefore
 the certified $B(X)$; our algorithm reports $B(X)$ by construction.
 
-\paragraph{Optimality.} For the convex containers under $\ell_2$, Gurobi's
+\paragraph{Optimality} For the convex containers under $\ell_2$, Gurobi's
 spatial branch-and-bound \citep{gurobi2026}, warm-started from our best
 configuration, closes its optimality gap within one hour for the cube with
 $p \le 9$ and the tetrahedron with $p \le 10$. In every one of these cases our
@@ -2075,7 +2079,7 @@ straight line and its exponent is the slope.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.62\textwidth]{figures/runtime_euclidean.png}
+  \includegraphics[width=0.62\textwidth]{figures/runtime_euclidean.pdf}
   \caption{\textbf{Mean solve time per run, Euclidean metric.} Each point is
     the mean wall-clock time over the seeds of one cell; both axes are
     logarithmic. The curves flatten where runs reach the time limits; see
@@ -2157,11 +2161,6 @@ representations like spline patches or implicit surfaces,
 necessitating the development of computationally efficient distance
 evaluation methods that do not rely on closed-form projections.
 
-\section*{Acknowledgements}
-The authors would like to thank Ram Padmanabhan for their valuable
-feedback and editorial assistance throughout the preparation of
-this manuscript.
-
 \section*{Funding}
 This research did not receive any specific grant from funding agencies in the
 public, commercial, or not-for-profit sectors.
@@ -2190,6 +2189,11 @@ During the preparation of this work the authors used Claude Opus 5.5
 the text of the manuscript. After using
 this tool, the authors reviewed and edited the content as needed and take
 full responsibility for the content of the published article.
+
+\section*{Acknowledgements}
+The authors would like to thank Ram Padmanabhan for their valuable
+feedback and editorial assistance throughout the preparation of
+this manuscript.
 
 \bibliographystyle{elsarticle-num-names}
 \bibliography{continuous-p-dispersion-in-three-dimensions}

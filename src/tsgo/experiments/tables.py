@@ -138,7 +138,7 @@ def _plain_latex(spec: dict[str, object], label: str) -> str:
         r'  \centering',
         f'  \\caption{{{cap}}}',
         f'  \\label{{{label}}}',
-        r'  \begin{tabular}{c|c}',
+        r'  \begin{tabular}{cc}',
         r'    \hline',
         r'    $p$ & $D_{\mathrm{Ours}}$ \\',
         r'    \hline',
@@ -191,7 +191,7 @@ def to_latex(spec: dict[str, object], label: str) -> str:
     out += [
         f'  \\caption{{{cap}}}',
         f'  \\label{{{label}}}',
-        r'  \begin{tabular}{' + 'c|' * (len(cols) - 1) + 'c}',
+        r'  \begin{tabular}{' + 'c' * len(cols) + '}',
         r'    \hline',
         '    ' + ' & '.join(cols) + r' \\',
         r'    \hline',
@@ -259,7 +259,7 @@ def all_metrics_latex(sweep: pd.DataFrame, container: str, label: str, extended_
         )
         if ref.get('note'):
             cap += ' ' + _tex_escape(ref['note'])
-        env, colspec = 'table*', 'c|c|c|c|c|c'
+        env, colspec = 'table*', 'cccccc'
     else:
         head = ['$p$'] + [f'$D$, ${sym[m]}$' for m in METRICS]
         rows = [[str(p)] + [cell(m, p) for m in METRICS] for p in ps]
@@ -267,7 +267,7 @@ def all_metrics_latex(sweep: pd.DataFrame, container: str, label: str, extended_
             f'{name}: best radius found in each metric, truncated to eight decimals. '
             'No published values exist for this container.'
         )
-        env, colspec = 'table', 'c|c|c|c'
+        env, colspec = 'table', 'cccc'
     if extended_ps:
         ps_txt = ', '.join(str(int(x)) for x in sorted(extended_ps))
         cap += (

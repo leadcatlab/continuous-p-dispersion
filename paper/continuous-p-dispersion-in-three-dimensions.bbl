@@ -18,6 +18,7 @@
   p‐dispersion and maxisum dispersion problems},
 \newblock \bibinfo{journal}{Geographical Analysis} \bibinfo{volume}{19}
   (\bibinfo{year}{1987}) \bibinfo{pages}{315--329}.
+  \DOIprefix\doi{10.1111/j.1538-4632.1987.tb00133.x}.
 %Type = Article
 \bibitem[{Drezner and Erkut(1995)}]{drezner1995}
 \bibinfo{author}{Z.~Drezner}, \bibinfo{author}{E.~Erkut},
@@ -25,12 +26,14 @@
   non-linear programming},
 \newblock \bibinfo{journal}{Journal of the Operational Research Society}
   \bibinfo{volume}{46} (\bibinfo{year}{1995}) \bibinfo{pages}{516--520}.
+  \DOIprefix\doi{10.1057/jors.1995.70}.
 %Type = Article
 \bibitem[{Baur and Fekete(2001)}]{baurfekete2001}
 \bibinfo{author}{C.~Baur}, \bibinfo{author}{S.~P. Fekete},
 \newblock \bibinfo{title}{Approximation of geometric dispersion problems},
 \newblock \bibinfo{journal}{Algorithmica} \bibinfo{volume}{30}
   (\bibinfo{year}{2001}) \bibinfo{pages}{451--470}.
+  \DOIprefix\doi{10.1007/s00453-001-0022-x}.
 %Type = Article
 \bibitem[{Graham et~al.(1998)Graham, Lubachevsky, Nurmela, and
   Östergård}]{graham1998}
@@ -39,6 +42,7 @@
 \newblock \bibinfo{title}{Dense packings of congruent circles in a circle},
 \newblock \bibinfo{journal}{Discrete Mathematics} \bibinfo{volume}{181}
   (\bibinfo{year}{1998}) \bibinfo{pages}{139--154}.
+  \DOIprefix\doi{10.1016/S0012-365X(97)00050-2}.
 %Type = Article
 \bibitem[{Dai et~al.(2021)Dai, Xu, and Ornik}]{dai2021}
 \bibinfo{author}{Z.~Dai}, \bibinfo{author}{K.~Xu}, \bibinfo{author}{M.~Ornik},
@@ -46,15 +50,17 @@
   constraints in non-convex polygons},
 \newblock \bibinfo{journal}{Annals of Operations Research}
   \bibinfo{volume}{307} (\bibinfo{year}{2021}) \bibinfo{pages}{75--91}.
+  \DOIprefix\doi{10.1007/s10479-021-04281-z}.
 %Type = Article
-\bibitem[{Lai et~al.(2024)Lai, Lin, Hao, and Wu}]{lai2024}
+\bibitem[{Lai et~al.(2025)Lai, Lin, Hao, and Wu}]{lai2024}
 \bibinfo{author}{X.~Lai}, \bibinfo{author}{Z.~Lin}, \bibinfo{author}{J.-K.
   Hao}, \bibinfo{author}{Q.~Wu},
 \newblock \bibinfo{title}{An {E}fficient {O}ptimization {M}odel and {T}abu
   {S}earch-{B}ased {G}lobal {O}ptimization {A}pproach for the {C}ontinuous
   p-{D}ispersion {P}roblem},
 \newblock \bibinfo{journal}{INFORMS Journal on Computing} \bibinfo{volume}{37}
-  (\bibinfo{year}{2024}).
+  (\bibinfo{year}{2025}) \bibinfo{pages}{1018--1043}.
+  \DOIprefix\doi{10.1287/ijoc.2023.0089}.
 %Type = Article
 \bibitem[{Kazakov et~al.(2018)Kazakov, Lempert, and Ta}]{kazakov2018}
 \bibinfo{author}{A.~L. Kazakov}, \bibinfo{author}{A.~A. Lempert},
@@ -63,6 +69,7 @@
   three-dimension non-euclidean space},
 \newblock \bibinfo{journal}{IFAC-PapersOnLine} \bibinfo{volume}{51}
   (\bibinfo{year}{2018}) \bibinfo{pages}{782--787}.
+  \DOIprefix\doi{10.1016/j.ifacol.2018.11.450}.
 %Type = Article
 \bibitem[{Stoyan and Yaskov(2013)}]{stoyan2013}
 \bibinfo{author}{Y.~G. Stoyan}, \bibinfo{author}{G.~N. Yaskov},
@@ -70,6 +77,7 @@
   polyhedral domain},
 \newblock \bibinfo{journal}{International Transactions in Operational Research}
   \bibinfo{volume}{20} (\bibinfo{year}{2013}) \bibinfo{pages}{79--99}.
+  \DOIprefix\doi{10.1111/j.1475-3995.2012.00859.x}.
 %Type = Article
 \bibitem[{Abdulghafoor and Bakolas(2021)}]{abdulghafoor2021}
 \bibinfo{author}{A.~Z. Abdulghafoor}, \bibinfo{author}{E.~Bakolas},
@@ -77,6 +85,7 @@
   with guaranteed collision avoidance in cluttered environments},
 \newblock \bibinfo{journal}{IFAC-PapersOnLine} \bibinfo{volume}{54}
   (\bibinfo{year}{2021}) \bibinfo{pages}{771--776}.
+  \DOIprefix\doi{10.1016/j.ifacol.2021.11.265}.
 %Type = Article
 \bibitem[{Loganathan et~al.(2024)Loganathan, Veerappan, Manoharan, and
   Derebew}]{loganathan2024}
@@ -86,17 +95,19 @@
   networks using the quasi-opposition-based lemurs optimization algorithm},
 \newblock \bibinfo{journal}{International Journal of Computational Intelligence
   Systems} \bibinfo{volume}{17} (\bibinfo{year}{2024}) \bibinfo{pages}{218}.
+  \DOIprefix\doi{10.1007/s44196-024-00628-z}.
 %Type = Book
 \bibitem[{Glover and Laguna(1997)}]{glover1997}
 \bibinfo{author}{F.~W. Glover}, \bibinfo{author}{M.~Laguna},
   \bibinfo{title}{{T}abu {S}earch}, \bibinfo{publisher}{Springer},
-  \bibinfo{year}{1997}.
+  \bibinfo{year}{1997}. \DOIprefix\doi{10.1007/978-1-4615-6089-0}.
 %Type = Article
 \bibitem[{Schaer(1966)}]{schaer1966}
 \bibinfo{author}{J.~Schaer},
 \newblock \bibinfo{title}{On the densest packing of spheres in a cube},
 \newblock \bibinfo{journal}{Canadian Mathematical Bulletin} \bibinfo{volume}{9}
   (\bibinfo{year}{1966}) \bibinfo{pages}{265--270}.
+  \DOIprefix\doi{10.4153/cmb-1966-033-0}.
 %Type = Inproceedings
 \bibitem[{Schaer(1994)}]{schaer1994}
 \bibinfo{author}{J.~Schaer},
@@ -124,7 +135,7 @@
   \bibinfo{author}{M.~van Kreveld}, \bibinfo{author}{M.~Overmars},
   \bibinfo{title}{Computational Geometry: Algorithms and Applications},
   \bibinfo{edition}{3rd} ed., \bibinfo{publisher}{Springer},
-  \bibinfo{year}{2008}.
+  \bibinfo{year}{2008}. \DOIprefix\doi{10.1007/978-3-540-77974-2}.
 %Type = Book
 \bibitem[{Munkres(1991)}]{munkres1991}
 \bibinfo{author}{J.~R. Munkres}, \bibinfo{title}{Analysis on Manifolds},
@@ -134,6 +145,7 @@
 \bibitem[{Fletcher(1987)}]{fletcher1987}
 \bibinfo{author}{R.~Fletcher}, \bibinfo{title}{Practical Methods of
   Optimization}, \bibinfo{publisher}{Wiley}, \bibinfo{year}{1987}.
+  \DOIprefix\doi{10.1002/9781118723203}.
 %Type = Article
 \bibitem[{Byrd et~al.(1995)Byrd, Lu, Nocedal, and Zhu}]{byrd1995}
 \bibinfo{author}{R.~H. Byrd}, \bibinfo{author}{P.~Lu},
@@ -150,6 +162,7 @@
   layers},
 \newblock \bibinfo{journal}{Computers \& Graphics} \bibinfo{volume}{29}
   (\bibinfo{year}{2005}) \bibinfo{pages}{427--439}.
+  \DOIprefix\doi{10.1016/j.cag.2005.03.001}.
 %Type = Article
 \bibitem[{Feito and Torres(1997)}]{feito1997}
 \bibinfo{author}{F.~R. Feito}, \bibinfo{author}{J.~C. Torres},
@@ -171,13 +184,14 @@
 \newblock \bibinfo{title}{Ray-casting point-in-polyhedron test},
 \newblock in: \bibinfo{booktitle}{Proceedings of CESCG 2012: The 16th Central
   European Seminar on Computer Graphics}, \bibinfo{year}{2012}. \URLprefix
-  \url{https://www.old.cescg.org/CESCG-2012/papers/Horvat-Ray-casting_point-in-polyhedron_test.pdf}.
+  \url{https://www.old.cescg.org/CESCG-2012/papers/Horvat-Ray-casting_point-in-polyhedron_test.pdf},
+  \bibinfo{note}{accessed 8 November 2026}.
 %Type = Book
 \bibitem[{Evans and Gariepy(2015)}]{evans2015}
 \bibinfo{author}{L.~C. Evans}, \bibinfo{author}{R.~F. Gariepy},
   \bibinfo{title}{{Measure Theory and Fine Properties of Functions}},
   \bibinfo{edition}{revised} ed., \bibinfo{publisher}{CRC Press},
-  \bibinfo{year}{2015}.
+  \bibinfo{year}{2015}. \DOIprefix\doi{10.1201/b18333}.
 %Type = Article
 \bibitem[{Fiacco and McCormick(1964)}]{fiacco1964}
 \bibinfo{author}{A.~V. Fiacco}, \bibinfo{author}{G.~P. McCormick},
@@ -185,16 +199,18 @@
   unconstrained minimization technique for nonlinear programming},
 \newblock \bibinfo{journal}{Management Science} \bibinfo{volume}{10}
   (\bibinfo{year}{1964}) \bibinfo{pages}{601--617}.
+  \DOIprefix\doi{10.1287/mnsc.10.4.601}.
 %Type = Book
 \bibitem[{Bäck et~al.(2013)Bäck, Foussette, and Krause}]{back2013}
 \bibinfo{author}{T.~Bäck}, \bibinfo{author}{C.~Foussette},
   \bibinfo{author}{P.~Krause}, \bibinfo{title}{Contemporary Evolution
   Strategies}, \bibinfo{publisher}{Springer}, \bibinfo{year}{2013}.
+  \DOIprefix\doi{10.1007/978-3-642-40137-4}.
 %Type = Misc
 \bibitem[{{Gurobi Optimization, LLC}(2026)}]{gurobi2026}
 \bibinfo{author}{{Gurobi Optimization, LLC}}, \bibinfo{title}{Gurobi optimizer
   reference manual}, \bibinfo{howpublished}{\url{https://www.gurobi.com}},
-  \bibinfo{year}{2026}. \bibinfo{note}{Version 13.0}.
+  \bibinfo{year}{2026}. \bibinfo{note}{Version 13.0. Accessed 8 November 2026}.
 %Type = Article
 \bibitem[{W{\"a}chter and Biegler(2006)}]{wachter2006}
 \bibinfo{author}{A.~W{\"a}chter}, \bibinfo{author}{L.~T. Biegler},
@@ -202,6 +218,7 @@
   line-search algorithm for large-scale nonlinear programming},
 \newblock \bibinfo{journal}{Mathematical Programming} \bibinfo{volume}{106}
   (\bibinfo{year}{2006}) \bibinfo{pages}{25--57}.
+  \DOIprefix\doi{10.1007/s10107-004-0559-y}.
 %Type = Techreport
 \bibitem[{Kraft(1988)}]{kraft1988}
 \bibinfo{author}{D.~Kraft}, \bibinfo{title}{A Software Package for Sequential
@@ -237,6 +254,7 @@
   Computing in Python}},
 \newblock \bibinfo{journal}{Nature Methods} \bibinfo{volume}{17}
   (\bibinfo{year}{2020}) \bibinfo{pages}{261--272}.
+  \DOIprefix\doi{10.1038/s41592-019-0686-2}.
 %Type = Article
 \bibitem[{Groemer(1986)}]{groemer1986}
 \bibinfo{author}{H.~Groemer},
@@ -244,6 +262,7 @@
   constants},
 \newblock \bibinfo{journal}{Discrete \& Computational Geometry}
   \bibinfo{volume}{1} (\bibinfo{year}{1986}) \bibinfo{pages}{183--193}.
+  \DOIprefix\doi{10.1007/BF02187693}.
 %Type = Article
 \bibitem[{Coxeter(1989)}]{coxeter1989}
 \bibinfo{author}{H.~S.~M. Coxeter},
@@ -258,6 +277,7 @@
 \newblock \bibinfo{title}{Heat transfer enhancement of diamond rib mounted in
   periodic merging chambers of micro channel heat sink},
 \newblock \bibinfo{journal}{Micromachines} \bibinfo{volume}{16}
-  (\bibinfo{year}{2025}).
+  (\bibinfo{year}{2025}) \bibinfo{pages}{533}.
+  \DOIprefix\doi{10.3390/mi16050533}.
 
 \end{thebibliography}

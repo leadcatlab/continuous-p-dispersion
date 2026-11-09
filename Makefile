@@ -5,7 +5,6 @@
 #   make fmt       format the manuscript with tex-fmt (skipped where it is not installed)
 #   make paper     tables + figures + fmt + build the PDF (before a sweep has
 #                  finished: committed figures, placeholder tables)
-#   make review    color-coded review copy (LuaLaTeX): paper/<paper>-review-copy.pdf
 #   make watch     continuous rebuild on save
 #   make clean     remove LaTeX build artifacts
 #   make format    format the Python code and fix what ruff can (ruff.toml)
@@ -28,7 +27,7 @@ ifeq ($(shell command -v latexmk 2>/dev/null),)
   export PATH := $(if $(wildcard $(TEXLIVE)/latexmk),$(TEXLIVE):)$(PATH)
 endif
 
-.PHONY: all paper review figures tables fmt watch clean distclean check help format lint
+.PHONY: all paper figures tables fmt watch clean distclean check help format lint
 
 help:
 	@grep -E '^#   make' $(MAKEFILE_LIST) | sed 's/^#   /  /'
@@ -70,13 +69,6 @@ fmt:
 paper: tables figures fmt
 	cd $(PAPERDIR) && $(LATEXMK) $(PAPER).tex
 	@echo "built $(PAPERDIR)/$(PAPER).pdf"
-
-# The same manuscript with its review markup in color (yellow: claims, orange:
-# decisions, magenta: notes); markup only renders under LuaLaTeX.
-review: tables figures
-	cd $(PAPERDIR) && latexmk -lualatex -interaction=nonstopmode -halt-on-error \
-	  -jobname=$(PAPER)-review-copy $(PAPER).tex
-	@echo "built $(PAPERDIR)/$(PAPER)-review-copy.pdf"
 
 # Rebuild on save. Leaves figures alone; run `make figures` when results change.
 watch:
