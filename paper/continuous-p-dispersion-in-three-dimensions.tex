@@ -1234,6 +1234,42 @@ improve upon the current global maximum $D^*$. At the local level, the
 subroutines minimize Equation~\ref{eq:E} with a gradient-based solver, using
 the closed-form gradients described above.
 
+\subsection{Computational Cost}\label{sec:complexity}
+
+Let $n_C$ be the total number of vertices, edges, faces and fan triangles of
+the container. For a fixed norm, one evaluation of $E_D$ and its gradient costs
+\begin{equation}
+  \mathcal{O}(p^2 + p \, n_C),
+  \label{eq:eval_cost}
+\end{equation}
+the first term for the pairs of points and the second for each point against
+the boundary. As the gradient is expressed in closed form, its order is the
+same as the residual, whereas finite differences would need $3p + 1$ evaluations
+of $E_D$ per gradient. In our implementation, skipping pairs too far apart to
+interact lowers the constant but not this worst-case order.
+
+The \textsc{LocalOpt} of a neighbor move runs at most $L = 100$
+iterations of L-BFGS-B, each using a bounded number of evaluations in its line
+search, and so costs $\mathcal{O}(L (p^2 + p \, n_C))$. One 
+iteration of Algorithm~\ref{alg:tabu_search} performs $Q^2$ of these, which is
+$\mathcal{O}(\ln^2 p)$ with $Q = \max(3, \operatorname{round}(\ln p))$, and
+then 10 hops of \textsc{MBH}. Scoring the $10p$ vacancy sites and the $p$
+points adds only the order of Equation~\ref{eq:eval_cost}. The hops of
+\textsc{MBH} and the runs of \textsc{LocalOptPhi} stop on the convergence tests
+of the solver rather than on this cap. Algorithm~\ref{alg:adjust_distance}
+performs at most 15 penalty solves, and at
+most five nested retries of at most 5 solves each, so 40 in all, and
+Algorithm~\ref{alg:global_opt} performs at most $N$ restarts, stopping after
+$R$ restarts without a gain or once the time limit $T$ has passed;
+the first start always runs to completion, and \textsc{Escape}, which has its
+own time limit, is excluded from this count.
+
+The problem is NP-hard and $E_D$ is non-convex, so we claim no bound on the
+number of iterations needed to reach a global optimum, and Tabu Search
+continues for as long as it improves within $\beta$ iterations. We therefore
+measure how the total run time grows with $p$ in
+Section~\ref{sec:runtime}.
+
 \section{Results and Evaluation}
 
 Every run reported here was made on one core of a compute node of the
@@ -1379,15 +1415,15 @@ rather than $\tfrac16$ at $p = 20$. With the ladder and the escape phase,
 all 20 seeds reach the optimum in both cells.
 
 We therefore treat the initial radius as a second multi-start dimension. A
-cell's seeds are distributed over a geometric ladder of $K$ rungs spanning a
+cell's seeds are distributed over a geometric ladder of $M$ rungs spanning a
 factor $\lambda$ either side of the estimate,
 \begin{equation}
-  D_{\text{init}}^{(k)} = \lambda^{\frac{2k}{K - 1} - 1} \, \hat D,
-  \qquad k = 0, \dots, K - 1,
+  D_{\text{init}}^{(k)} = \lambda^{\frac{2k}{M - 1} - 1} \, \hat D,
+  \qquad k = 0, \dots, M - 1,
   \label{eq:dinit_ladder}
 \end{equation}
-each clipped at $r_{\text{in}}(C)$, with $K = 5$ and $\lambda = 1.7$. Seed $s$
-starts on rung $s \bmod K$, so each rung receives four of a cell's 20 seeds.
+each clipped at $r_{\text{in}}(C)$, with $M = 5$ and $\lambda = 1.7$. Seed $s$
+starts on rung $s \bmod M$, so each rung receives four of a cell's 20 seeds.
 The spread is set by measurement rather than tuned: across the non-Euclidean
 cells the best radius found lies between $0.77 \hat D$ and $1.59 \hat D$, so
 $\lambda = 1.7$ brackets the observed range with margin. Since every reported
