@@ -2134,8 +2134,9 @@ $10\%$ of runs pass 30 minutes. This gives exponents of $1.15$ for the
 cube ($p \le 40$, $R^2 = 0.94$), $1.78$ for the H-box ($p \le 30$, except $20$, $R^2 = 0.97$),
 $1.30$ for the star ($p \le 10$, $R^2 = 0.97$), $1.71$ for the ribbed cage
 ($p \le 9$, $R^2 = 0.98$) and $0.94$ for the tetrahedron (every $p$ except $40$,
-$R^2 = 0.97$), all below the $\mathcal{O}(p^2)$ of the pairwise distance
-checks; the short ranges of the star and the cage make theirs the least
+$R^2 = 0.97$), all below 2, the exponent of the worst-case cost of one evaluation
+(Equation~\ref{eq:eval_cost}), which skipping distant pairs keeps from
+being reached at these sizes; the short ranges of the star and the cage make theirs the least
 certain. On the tetrahedron the time is set less by $p$ than by how
 soon the restarts stop raising the radius, which ends a run after
 $\lceil 3 \ln p\rceil$ restarts without a gain: the mean is 483 to 1{,}027
