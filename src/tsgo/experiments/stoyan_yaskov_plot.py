@@ -31,6 +31,7 @@ from tsgo.experiments.plots import (
     INK,
     INK_SOFT,
     SURFACE,
+    save_figure,
     _style,
 )
 
@@ -139,7 +140,7 @@ def main() -> None:
     )
     fig.tight_layout(pad=0.4, rect=(0, 0, 1, 0.93), h_pad=1.2, w_pad=1.0)
     path = os.path.join(args.out, 'stoyan_yaskov.png')
-    fig.savefig(path, dpi=300, facecolor=SURFACE)
+    save_figure(fig, path, dpi=300, facecolor=SURFACE)
     plt.close(fig)
     print(pd.DataFrame(rows).to_string(index=False))
     print(f'[stoyan_yaskov_plot] wrote {path}')

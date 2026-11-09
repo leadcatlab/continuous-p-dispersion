@@ -16,3 +16,5 @@ indent.log
 *Notes.bib
 # elsarticle writes a <jobname>.spl on every build
 *.spl
+# vector figures are sources, not build products
+!figures/*.pdf

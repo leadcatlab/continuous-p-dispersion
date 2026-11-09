@@ -61,6 +61,14 @@ METRIC_LABEL = {
 }
 
 
+def save_figure(fig: plt.Figure, path: str, **kwargs) -> None:
+    """Write a chart as a raster and, beside it, as a vector PDF with embedded fonts."""
+    fig.savefig(path, **kwargs)
+    pdf_kwargs = {k: v for k, v in kwargs.items() if k != 'dpi'}
+    with plt.rc_context({'pdf.fonttype': 42}):
+        fig.savefig(os.path.splitext(path)[0] + '.pdf', **pdf_kwargs)
+
+
 def _style(ax) -> None:
     """Recessive chrome: solid hairline grid a shade off the surface."""
     ax.set_facecolor(SURFACE)
@@ -173,7 +181,7 @@ def runtime_chart(
 
     fig.tight_layout(pad=0.4)
     os.makedirs(os.path.dirname(out_path) or '.', exist_ok=True)
-    fig.savefig(out_path, dpi=dpi, facecolor=SURFACE)
+    save_figure(fig, out_path, dpi=dpi, facecolor=SURFACE)
     plt.close(fig)
     return plotted
 
@@ -335,7 +343,7 @@ def comparison_chart(
 
     fig.tight_layout(pad=0.4)
     os.makedirs(os.path.dirname(out_path) or '.', exist_ok=True)
-    fig.savefig(out_path, dpi=dpi, facecolor=SURFACE)
+    save_figure(fig, out_path, dpi=dpi, facecolor=SURFACE)
     plt.close(fig)
     ratio = [round(float(ours[p]) / values[p], 6) for p in ps]
     return {'This work': {'p': ps, 'ratio': ratio, 'gap': [gap[p] for p in ps]}}

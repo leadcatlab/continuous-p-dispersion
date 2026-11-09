@@ -191,6 +191,4 @@ slurm/env.sh
 # Ipopt for cyipopt, from conda-forge (slurm/env.sh.example)
 .ipopt/
 
-# Color-coded review copy of the manuscript (make review)
-paper/*-review-copy*
 refs/

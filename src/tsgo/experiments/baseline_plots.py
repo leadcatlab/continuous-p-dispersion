@@ -38,6 +38,7 @@ from tsgo.experiments.plots import (
     INK_SOFT,
     LABEL,
     SURFACE,
+    save_figure,
     _style,
 )
 
@@ -151,7 +152,7 @@ def quality(df: pd.DataFrame, path: str) -> None:
         va='top',
     )
     fig.tight_layout(pad=0.5, h_pad=2.2, w_pad=1.0)
-    fig.savefig(path, dpi=300, facecolor=SURFACE)
+    save_figure(fig, path, dpi=300, facecolor=SURFACE)
     plt.close(fig)
 
 
@@ -229,7 +230,7 @@ def anytime(df: pd.DataFrame, path: str, cells) -> None:
         bbox_to_anchor=(0.5, 1.0),
     )
     fig.tight_layout(pad=0.4, rect=(0, 0, 1, 0.94), h_pad=1.4, w_pad=1.6)
-    fig.savefig(path, dpi=300, facecolor=SURFACE)
+    save_figure(fig, path, dpi=300, facecolor=SURFACE)
     plt.close(fig)
 
 
@@ -286,13 +287,15 @@ def outcomes(ratios: pd.DataFrame, path: str) -> pd.DataFrame:
     ax.set_xlabel('cells (of 45)', fontsize=FS_LABEL, color=INK_SOFT, labelpad=2)
     ax.tick_params(axis='y', length=0)
     fig.tight_layout(pad=0.4)
-    fig.savefig(path, dpi=300, facecolor=SURFACE)
+    save_figure(fig, path, dpi=300, facecolor=SURFACE)
     plt.close(fig)
     return t
 
 
 # End labels in panel (a) that would collide at the last p (SLSQP 1, IPOPT 0).
 A_NUDGE = {'slsqp': 0.6, 'ipopt': -0.6}
+# Panel (b) has a log axis, so its nudges are factors (TSGO and IPOPT nearly coincide at p = 40).
+B_NUDGE = {'tsgo': 1.3, 'ipopt': 1 / 1.3}
 
 
 def reach(tt: pd.DataFrame, path: str, target: float = 0.999) -> pd.DataFrame:
@@ -361,7 +364,7 @@ def reach(tt: pd.DataFrame, path: str, target: float = 0.999) -> pd.DataFrame:
         if len(h):
             b.text(
                 hx[-1] + 0.12,
-                h.time.iloc[-1],
+                h.time.iloc[-1] * B_NUDGE.get(s, 1),
                 SOLVER_LABEL[s],
                 color=SOLVER_COLOR[s],
                 fontsize=FS_NOTE,
@@ -378,7 +381,7 @@ def reach(tt: pd.DataFrame, path: str, target: float = 0.999) -> pd.DataFrame:
     b.set_ylabel('median time to target (s)', fontsize=FS_LABEL, color=INK_SOFT)
     b.set_title('(b) how fast, where reached', fontsize=FS_LABEL, color=INK, loc='left')
     fig.tight_layout(pad=0.4, w_pad=1.5)
-    fig.savefig(path, dpi=300, facecolor=SURFACE, bbox_inches='tight', pad_inches=0.03)
+    save_figure(fig, path, dpi=300, facecolor=SURFACE, bbox_inches='tight', pad_inches=0.03)
     plt.close(fig)
     return t
 
