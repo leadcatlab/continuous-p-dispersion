@@ -178,14 +178,14 @@
 \newblock \bibinfo{journal}{Computers \& Graphics} \bibinfo{volume}{29}
   (\bibinfo{year}{2005}) \bibinfo{pages}{616--624}.
   \DOIprefix\doi{10.1016/j.cag.2005.05.012}.
-%Type = Inproceedings
-\bibitem[{Horvat(2012)}]{horvat2012}
-\bibinfo{author}{D.~Horvat},
-\newblock \bibinfo{title}{Ray-casting point-in-polyhedron test},
-\newblock in: \bibinfo{booktitle}{Proceedings of CESCG 2012: The 16th Central
-  European Seminar on Computer Graphics}, \bibinfo{year}{2012}. \URLprefix
-  \url{https://www.old.cescg.org/CESCG-2012/papers/Horvat-Ray-casting_point-in-polyhedron_test.pdf},
-  \bibinfo{note}{accessed 8 November 2026}.
+%Type = Article
+\bibitem[{Nooruddin and Turk(2003)}]{nooruddin2003}
+\bibinfo{author}{F.~S. Nooruddin}, \bibinfo{author}{G.~Turk},
+\newblock \bibinfo{title}{Simplification and repair of polygonal models using
+  volumetric techniques},
+\newblock \bibinfo{journal}{IEEE Transactions on Visualization and Computer
+  Graphics} \bibinfo{volume}{9} (\bibinfo{year}{2003})
+  \bibinfo{pages}{191--205}. \DOIprefix\doi{10.1109/TVCG.2003.1196006}.
 %Type = Book
 \bibitem[{Evans and Gariepy(2015)}]{evans2015}
 \bibinfo{author}{L.~C. Evans}, \bibinfo{author}{R.~F. Gariepy},
