@@ -45,7 +45,7 @@ def gather() -> tuple:
                 if not g:
                     continue
                 d = dest.format(c=g['c'], p=g['p'], m=g['m'].lower())
-                target = os.path.join(d, f"seed{g['s']}.json")
+                target = os.path.join(d, f'seed{g["s"]}.json')
                 if os.path.exists(target):
                     if not filecmp.cmp(f, target, shallow=False):
                         sys.exit(f'REFUSED: {target} exists and differs from {f}')

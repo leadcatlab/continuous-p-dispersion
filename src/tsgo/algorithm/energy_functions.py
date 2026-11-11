@@ -131,10 +131,10 @@ def _record_time(name: str, dt: float) -> None:
         avg = stat['time'] / stat['calls']
         total = avg * stat['calls']
         print(
-            f"[TIMING] {name:18s} | "
-            f"calls = {stat['calls']:6d} | "
-            f"avg = {avg:.6f} s | "
-            f"total = {total:.6f} s"
+            f'[TIMING] {name:18s} | '
+            f'calls = {stat["calls"]:6d} | '
+            f'avg = {avg:.6f} s | '
+            f'total = {total:.6f} s'
         )
 
 

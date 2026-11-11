@@ -9,27 +9,27 @@ h_box = h_box()
 def test_half_space_1():
     point = Point(0, 0, 0)
     for face in cube.faces:
-        assert (
-            face.half_space(point) > 0
-        ), f'Face {face.description} should have a positive half-space value.'
+        assert face.half_space(point) > 0, (
+            f'Face {face.description} should have a positive half-space value.'
+        )
 
 
 def test_half_space_2():
     point = Point(1, 1, 1)
     right_face = cube.faces[0]
-    assert (
-        right_face.half_space(point) == 0
-    ), 'Right Face should have a half-space value of 0 for point (1,1,1).'
+    assert right_face.half_space(point) == 0, (
+        'Right Face should have a half-space value of 0 for point (1,1,1).'
+    )
 
     top_face = cube.faces[2]
-    assert (
-        top_face.half_space(point) == 0
-    ), 'Top Face should have a half-space value of 0 for point (1,1,1).'
+    assert top_face.half_space(point) == 0, (
+        'Top Face should have a half-space value of 0 for point (1,1,1).'
+    )
 
     bottom_face = cube.faces[3]
-    assert (
-        bottom_face.half_space(point) > 0
-    ), 'Bottom Face should have a half-space value of 0 for point (1,1,1).'
+    assert bottom_face.half_space(point) > 0, (
+        'Bottom Face should have a half-space value of 0 for point (1,1,1).'
+    )
 
 
 def test_face_contains_1():

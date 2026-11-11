@@ -14,48 +14,48 @@ cage = cage_sample()
 
 def test_contains_square_box():
     assert cube.contains((0, 0, 0)) is True, 'Point (0, 0, 0) should be inside the cube.'
-    assert (
-        cube.contains(np.array([0.5, 0.5, 0.5])) is True
-    ), 'Point (0.5, 0.5, 0.5) should be inside the cube.'
-    assert (
-        cube.contains(Point(-0.5, -0.5, -0.5)) is True
-    ), 'Point (-0.5, -0.5, -0.5) should be inside the cube.'
-    assert (
-        cube.contains(Point(-0.255, -1.12355, 0.53204)) is False
-    ), 'Point (-0.255, -1.12355, 0.53204) should be outside the cube.'
-    assert (
-        cube.contains(Point(-0.255, -0.12355, 0.53204)) is True
-    ), 'Point (-0.255, -0.12355, 0.53204) should be inside the cube.'
-    assert (
-        cube.contains(Point(1, -1, 1)) is True
-    ), 'Point (1, -1, 1) should be on the surface of the cube.'
-    assert (
-        cube.contains(Point(1, -0.5, 0.5)) is True
-    ), 'Point (1, -0.5, 0.5) should be on the surface of the cube.'
-    assert (
-        cube.contains(Point(1, -0.5, 1)) is True
-    ), 'Point (1, -0.5, 1) should be on the surface of the cube.'
+    assert cube.contains(np.array([0.5, 0.5, 0.5])) is True, (
+        'Point (0.5, 0.5, 0.5) should be inside the cube.'
+    )
+    assert cube.contains(Point(-0.5, -0.5, -0.5)) is True, (
+        'Point (-0.5, -0.5, -0.5) should be inside the cube.'
+    )
+    assert cube.contains(Point(-0.255, -1.12355, 0.53204)) is False, (
+        'Point (-0.255, -1.12355, 0.53204) should be outside the cube.'
+    )
+    assert cube.contains(Point(-0.255, -0.12355, 0.53204)) is True, (
+        'Point (-0.255, -0.12355, 0.53204) should be inside the cube.'
+    )
+    assert cube.contains(Point(1, -1, 1)) is True, (
+        'Point (1, -1, 1) should be on the surface of the cube.'
+    )
+    assert cube.contains(Point(1, -0.5, 0.5)) is True, (
+        'Point (1, -0.5, 0.5) should be on the surface of the cube.'
+    )
+    assert cube.contains(Point(1, -0.5, 1)) is True, (
+        'Point (1, -0.5, 1) should be on the surface of the cube.'
+    )
 
 
 def test_contains_h_box():
-    assert (
-        h_box.contains(Point(0.5, 0.5, 1.5)) is True
-    ), 'Point (0.5, 0.5, 1.5) should be inside the horizontal box.'
-    assert (
-        h_box.contains(Point(0.5, 0.5, 3)) is True
-    ), 'Point (0.5, 0.5, 3) should be on the surface of the horizontal box.'
-    assert (
-        h_box.contains(Point(1.5, 0.5, 1.5)) is True
-    ), 'Point (1.5, 0.5, 1.5) should be inside the central box.'
-    assert (
-        h_box.contains(Point(2.5, 0.5, 1.5)) is True
-    ), 'Point (2.5, 0.5, 1.5) should be inside the horizontal box.'
-    assert (
-        h_box.contains(Point(2.5, 0.5, 3)) is True
-    ), 'Point (2.5, 0.5, 3) should be on the surface of the horizontal box.'
-    assert (
-        h_box.contains(Point(0, 0, 0)) is True
-    ), 'Point (0, 0, 0) should be on the surface of the horizontal box.'
+    assert h_box.contains(Point(0.5, 0.5, 1.5)) is True, (
+        'Point (0.5, 0.5, 1.5) should be inside the horizontal box.'
+    )
+    assert h_box.contains(Point(0.5, 0.5, 3)) is True, (
+        'Point (0.5, 0.5, 3) should be on the surface of the horizontal box.'
+    )
+    assert h_box.contains(Point(1.5, 0.5, 1.5)) is True, (
+        'Point (1.5, 0.5, 1.5) should be inside the central box.'
+    )
+    assert h_box.contains(Point(2.5, 0.5, 1.5)) is True, (
+        'Point (2.5, 0.5, 1.5) should be inside the horizontal box.'
+    )
+    assert h_box.contains(Point(2.5, 0.5, 3)) is True, (
+        'Point (2.5, 0.5, 3) should be on the surface of the horizontal box.'
+    )
+    assert h_box.contains(Point(0, 0, 0)) is True, (
+        'Point (0, 0, 0) should be on the surface of the horizontal box.'
+    )
 
 
 def test_contains_outside_points():
@@ -67,15 +67,15 @@ def test_contains_outside_points():
 def test_active_plane_square_box():
     point = Point(0.5, 0.5, 0.5)
     for face in cube.faces:
-        assert (
-            cube._is_active_plane(face, point, True) is True
-        ), f'Face {face.description} should be an active plane for point {point}.'
+        assert cube._is_active_plane(face, point, True) is True, (
+            f'Face {face.description} should be an active plane for point {point}.'
+        )
 
     point = Point(0, 0, -10)
     face = cube.faces[1]
-    assert (
-        cube._is_active_plane(face, point, False) is False
-    ), f'Face {face.description} should not be an active plane for point {point}.'
+    assert cube._is_active_plane(face, point, False) is False, (
+        f'Face {face.description} should not be an active plane for point {point}.'
+    )
 
 
 def test_active_plane_outside():
@@ -146,89 +146,89 @@ def test_contains_with_different_input_types():
 
 
 def test_contains_ribbed_cage():
-    assert (
-        cage.contains(Point(0, 0, 0)) is True
-    ), 'Point (0, 0, 0) is on the boundary of the ribbed cage.'
+    assert cage.contains(Point(0, 0, 0)) is True, (
+        'Point (0, 0, 0) is on the boundary of the ribbed cage.'
+    )
 
     # Bottom rib
-    assert (
-        cage.contains(Point(1.5, 1.5, 0.1)) is False
-    ), 'Point (1.5, 1.5, 0.1) should be outside the ribbed cage.'
-    assert (
-        cage.contains(Point(1.5, 1.5, -0.1)) is False
-    ), 'Point (1.5, 1.5, -0.1) should be outside the ribbed cage.'
-    assert (
-        cage.contains(Point(1.5, 1.5, 0)) is False
-    ), 'Point (1.5, 1.5, 0) should be outside the ribbed cage.'
-    assert (
-        cage.contains(Point(1.5, 1.5, 0.5)) is False
-    ), 'Point (1.5, 1.5, 0.5) should be outside the ribbed cage.'
-    assert (
-        cage.contains(Point(1.5, 1.5, 0.75)) is False
-    ), 'Point (1.5, 1.5, 0.75) should be outside the ribbed cage.'
+    assert cage.contains(Point(1.5, 1.5, 0.1)) is False, (
+        'Point (1.5, 1.5, 0.1) should be outside the ribbed cage.'
+    )
+    assert cage.contains(Point(1.5, 1.5, -0.1)) is False, (
+        'Point (1.5, 1.5, -0.1) should be outside the ribbed cage.'
+    )
+    assert cage.contains(Point(1.5, 1.5, 0)) is False, (
+        'Point (1.5, 1.5, 0) should be outside the ribbed cage.'
+    )
+    assert cage.contains(Point(1.5, 1.5, 0.5)) is False, (
+        'Point (1.5, 1.5, 0.5) should be outside the ribbed cage.'
+    )
+    assert cage.contains(Point(1.5, 1.5, 0.75)) is False, (
+        'Point (1.5, 1.5, 0.75) should be outside the ribbed cage.'
+    )
 
     # Second rib
-    assert (
-        cage.contains(Point(2.5, 3.5, 0.5)) is False
-    ), 'Point (2.5, 3.5, 0.5) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(2.5, 3.5, 1)) is True
-    ), 'Point (2.5, 3.5, 1) should be on the boundary of the ribbed cage.'
+    assert cage.contains(Point(2.5, 3.5, 0.5)) is False, (
+        'Point (2.5, 3.5, 0.5) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(2.5, 3.5, 1)) is True, (
+        'Point (2.5, 3.5, 1) should be on the boundary of the ribbed cage.'
+    )
 
     # Left partiton
-    assert (
-        cage.contains(Point(0, 5.5, 1)) is False
-    ), 'Point (0, 5.5, 1) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(0, 5.5, 0)) is False
-    ), 'Point (0, 5.5, 0) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(0, 5.5, 3)) is False
-    ), 'Point (0, 5.5, 3) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(4, 5.5, 0)) is True
-    ), 'Point (4, 5.5, 0) should be on the boundary of the ribbed cage.'
+    assert cage.contains(Point(0, 5.5, 1)) is False, (
+        'Point (0, 5.5, 1) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(0, 5.5, 0)) is False, (
+        'Point (0, 5.5, 0) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(0, 5.5, 3)) is False, (
+        'Point (0, 5.5, 3) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(4, 5.5, 0)) is True, (
+        'Point (4, 5.5, 0) should be on the boundary of the ribbed cage.'
+    )
 
     # Right partition
-    assert (
-        cage.contains(Point(9.5, 5.5, 1)) is False
-    ), 'Point (4, 5.5, 1) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(9.5, 5.5, 0)) is False
-    ), 'Point (4, 5.5, 0) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(9.3, 5.5, 3)) is False
-    ), 'Point (4, 5.5, 3) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(6, 5.5, 0)) is True
-    ), 'Point (6, 5.5, 0) should be on the boundary of the ribbed cage.'
+    assert cage.contains(Point(9.5, 5.5, 1)) is False, (
+        'Point (4, 5.5, 1) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(9.5, 5.5, 0)) is False, (
+        'Point (4, 5.5, 0) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(9.3, 5.5, 3)) is False, (
+        'Point (4, 5.5, 3) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(6, 5.5, 0)) is True, (
+        'Point (6, 5.5, 0) should be on the boundary of the ribbed cage.'
+    )
 
     # Top Ribs
-    assert (
-        cage.contains(Point(2, 5, 5)) is False
-    ), 'Point (2, 5, 5) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(2, 5, 4.5)) is False
-    ), 'Point (2, 5, 4.5) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(4, 5, 5)) is False
-    ), 'Point (4, 5, 5) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(6, 5, 4.5)) is False
-    ), 'Point (6, 5, 4.5) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(8, 5, 4.37)) is False
-    ), 'Point (8, 5, 4.37) should be outside of the ribbed cage.'
-    assert (
-        cage.contains(Point(8, 5, 4)) is True
-    ), 'Point (8, 5, 4) should be on the boundary of the ribbed cage.'
+    assert cage.contains(Point(2, 5, 5)) is False, (
+        'Point (2, 5, 5) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(2, 5, 4.5)) is False, (
+        'Point (2, 5, 4.5) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(4, 5, 5)) is False, (
+        'Point (4, 5, 5) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(6, 5, 4.5)) is False, (
+        'Point (6, 5, 4.5) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(8, 5, 4.37)) is False, (
+        'Point (8, 5, 4.37) should be outside of the ribbed cage.'
+    )
+    assert cage.contains(Point(8, 5, 4)) is True, (
+        'Point (8, 5, 4) should be on the boundary of the ribbed cage.'
+    )
 
 
 def test_contains_ribbed_cage_outside_points():
     point = Point.from_array([-0.08396896, 3.23984771, -1.15235849])
-    assert (
-        cage.contains(point) is False
-    ), 'Point (-0.08396896,3.23984771,-1.15235849) should be outside the ribbed cage.'
+    assert cage.contains(point) is False, (
+        'Point (-0.08396896,3.23984771,-1.15235849) should be outside the ribbed cage.'
+    )
 
 
 def test_contains_does_not_share_a_verdict_across_a_wall():
@@ -316,9 +316,9 @@ def test_normal_hints_orient_a_closed_surface_consistently(name):
         for a, b in zip(R, np.roll(R, -1, axis=0), strict=False):
             walked[(tuple(np.round(a, 9)), tuple(np.round(b, 9)))] += 1
     for (a, b), n in walked.items():
-        assert (
-            n == 1 and walked[(b, a)] == 1
-        ), f'edge {a}->{b} is not shared by oppositely walked faces'
+        assert n == 1 and walked[(b, a)] == 1, (
+            f'edge {a}->{b} is not shared by oppositely walked faces'
+        )
 
 
 @pytest.mark.parametrize('key,name', sorted(ALL_FILES.items()))
@@ -370,9 +370,9 @@ def test_no_two_faces_overlap(key):
             edges_j = [(e[0].as_array(), e[1].as_array()) for e in fj.edges]
             off_j = np.min([_segment_distance(Q, a, b) for a, b in edges_j], axis=0) > 1e-6 * span
             both = [q for q, ok in zip(Q, off_j, strict=False) if ok and fj.contains(q)]
-            assert (
-                not both
-            ), f'{key}: faces {fi.description!r} and {fj.description!r} overlap at {both[0]}'
+            assert not both, (
+                f'{key}: faces {fi.description!r} and {fj.description!r} overlap at {both[0]}'
+            )
 
 
 def test_a_face_listed_from_collinear_vertices_keeps_its_normal():

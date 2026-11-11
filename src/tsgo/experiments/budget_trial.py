@@ -249,8 +249,8 @@ def main() -> None:
         json.dump(res, fh)
     os.replace(tmp, dest)
     print(
-        f"{solver:7s}{name:12s}{metric:10s}p={p:<3d}s={seed} best={res['best']:.8f} "
-        f"starts={res['starts']} wall={res['wall']:.0f}s budget={budget:.0f}s",
+        f'{solver:7s}{name:12s}{metric:10s}p={p:<3d}s={seed} best={res["best"]:.8f} '
+        f'starts={res["starts"]} wall={res["wall"]:.0f}s budget={budget:.0f}s',
         flush=True,
     )
 

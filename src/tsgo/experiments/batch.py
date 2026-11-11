@@ -629,10 +629,10 @@ def main() -> None:
             fh.flush()
             done_frac = i / len(todo)
             eta = (time.perf_counter() - t_start) / done_frac * (1 - done_frac)
-            status = 'FAILED ' + failed if failed else f"D={row['D']} feasible={row['feasible']}"
+            status = 'FAILED ' + failed if failed else f'D={row["D"]} feasible={row["feasible"]}'
             print(
-                f"[{i}/{len(todo)}] {cname:<12} {metric:<9} p={p:<3} seed={seed:<2} "
-                f"{row['wall_time_s']:>8}s  {status}   eta {eta/60:.1f}m",
+                f'[{i}/{len(todo)}] {cname:<12} {metric:<9} p={p:<3} seed={seed:<2} '
+                f'{row["wall_time_s"]:>8}s  {status}   eta {eta / 60:.1f}m',
                 flush=True,
             )
     for root, dirs, _ in os.walk(args.output_root):
@@ -641,7 +641,7 @@ def main() -> None:
                 import shutil
 
                 shutil.rmtree(os.path.join(root, d), ignore_errors=True)
-    print(f'[batch] done in {(time.perf_counter()-t_start)/60:.1f}m')
+    print(f'[batch] done in {(time.perf_counter() - t_start) / 60:.1f}m')
     print(f'[batch]   summary   -> {args.out}')
     print(
         f'[batch]   solutions -> {args.output_root}/<container>/<metric>/p<p>/seed<n>.{{npz,pkl}}'

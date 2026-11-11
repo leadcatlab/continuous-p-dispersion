@@ -95,7 +95,7 @@ def main() -> None:
     tag_hash = 'sweep-escape' if a.escape_factor else 'sweep'
     row, failed = batch.run_cell(a.container, a.metric, a.p, a.seed, args, commit, tag_hash)
     print(
-        f"{tag} D={row['D']} feasible={row['feasible']} wall={row['wall_time_s']}s"
+        f'{tag} D={row["D"]} feasible={row["feasible"]} wall={row["wall_time_s"]}s'
         + (f' FAILED {failed}' if failed else ''),
         flush=True,
     )

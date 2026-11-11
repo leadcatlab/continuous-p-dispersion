@@ -275,7 +275,7 @@ def comparison_chart(
         top = max(max(ys) * 1.3, 1e-6)
         ax.set_ylim(-0.08 * top, top)
         ax.set_ylabel(
-            f"gap to {ref.get('label', 'reference')} (%)",
+            f'gap to {ref.get("label", "reference")} (%)',
             fontsize=FS_LABEL,
             color=INK_SOFT,
             labelpad=3,

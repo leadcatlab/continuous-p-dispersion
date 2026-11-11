@@ -106,17 +106,17 @@ def run(cells, out) -> None:
                     'p': p,
                     'status': r['status'],
                     'tsgo_best': f'{tsgo:.10f}',
-                    'gurobi_incumbent': f"{r['D_incumbent']:.10f}",
-                    'gurobi_bound': f"{r['D_bound']:.10f}",
-                    'gap_tsgo_to_bound': f"{(r['D_bound'] - tsgo) / r['D_bound']:.3e}",
-                    'wall_s': f"{r['wall_s']:.1f}",
+                    'gurobi_incumbent': f'{r["D_incumbent"]:.10f}',
+                    'gurobi_bound': f'{r["D_bound"]:.10f}',
+                    'gap_tsgo_to_bound': f'{(r["D_bound"] - tsgo) / r["D_bound"]:.3e}',
+                    'wall_s': f'{r["wall_s"]:.1f}',
                     'time_limit_s': 3600,
                 }
             )
             fh.flush()
             print(
-                f"{name:12s} p={p:<3d} {r['status']:10s} tsgo={tsgo:.8f} bound={r['D_bound']:.8f} "
-                f"gap={(r['D_bound'] - tsgo) / r['D_bound']:.2e} {r['wall_s']:.0f}s",
+                f'{name:12s} p={p:<3d} {r["status"]:10s} tsgo={tsgo:.8f} bound={r["D_bound"]:.8f} '
+                f'gap={(r["D_bound"] - tsgo) / r["D_bound"]:.2e} {r["wall_s"]:.0f}s',
                 flush=True,
             )
 

@@ -32,9 +32,9 @@ def test_strip_chrome_preserves_box_aspect(aspect):
     after = np.asarray(ax.get_box_aspect(), dtype=float)
     plt.close(fig)
     # zoom may rescale uniformly; the ratios between axes must not change
-    assert np.allclose(
-        after / after[0], before / before[0], atol=1e-9
-    ), f'strip_chrome changed the box aspect ratios: {before} -> {after}'
+    assert np.allclose(after / after[0], before / before[0], atol=1e-9), (
+        f'strip_chrome changed the box aspect ratios: {before} -> {after}'
+    )
 
 
 def test_strip_chrome_keeps_equal_axes_equal():

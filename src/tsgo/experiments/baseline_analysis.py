@@ -166,8 +166,8 @@ def main() -> None:
             x = tt[(tt.target == frac) & (tt.solver == s)]
             reached = x[np.isfinite(x.median_time)]
             lines.append(
-                f"| {frac:.1%} | {s} | {len(reached)} of {len(x)} | "
-                f"{reached.median_time.median() if len(reached) else float('nan'):.1f} |"
+                f'| {frac:.1%} | {s} | {len(reached)} of {len(x)} | '
+                f'{reached.median_time.median() if len(reached) else float("nan"):.1f} |'
             )
     lines.append('')
     # performance profile at the 99.9% target

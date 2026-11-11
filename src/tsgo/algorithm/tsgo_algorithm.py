@@ -503,9 +503,9 @@ def tsgo_algorithm_parallel(
         # No worker reached feasibility; surface it rather than returning None,
         # which previously crashed downstream in run_tsgo's energy report.
         raise NoFeasibleConfiguration(
-            f"No feasible configuration found for p={p} in {getattr(container, 'description', container)} "
-            f"(D_init={D_init}, eps={eps}, processes={processes}, seed={seed}). "
-            f"Try a smaller D_init or more iterations."
+            f'No feasible configuration found for p={p} in {getattr(container, "description", container)} '
+            f'(D_init={D_init}, eps={eps}, processes={processes}, seed={seed}). '
+            f'Try a smaller D_init or more iterations.'
         )
 
     return best_X, best_D
@@ -704,7 +704,7 @@ def adjust_distance(
         energy = round(ef.E(X, D, container, metric=metric), decimal_places)
         phi = round(ef.phi(X, D, mu, container, metric=metric), decimal_places)
         vprint(
-            f'[ADJUST DISTANCE @ {get_datetime()}] Completed {iterations+1}/{iter_max} in {iteration_elapsed_time:.4f}s | D: {D:.10f} | E: {energy:.8f} | phi: {phi:.8f}'
+            f'[ADJUST DISTANCE @ {get_datetime()}] Completed {iterations + 1}/{iter_max} in {iteration_elapsed_time:.4f}s | D: {D:.10f} | E: {energy:.8f} | phi: {phi:.8f}'
         )
 
         if no_change_counter >= 3:

@@ -89,12 +89,12 @@ def test_get_edges_bbox_and_caching():
     container = cube()
     emin, emax, edges = ef._get_edges_bbox(container)
     assert isinstance(edges, list), 'Edges should be a list'
-    assert all(
-        isinstance(edge, tuple) and len(edge) == 2 for edge in edges
-    ), 'Each edge should be a tuple of two points'
-    assert (
-        isinstance((emin, emax), tuple) and len((emin, emax)) == 2
-    ), 'BBox should be a tuple of (min_point, max_point)'
+    assert all(isinstance(edge, tuple) and len(edge) == 2 for edge in edges), (
+        'Each edge should be a tuple of two points'
+    )
+    assert isinstance((emin, emax), tuple) and len((emin, emax)) == 2, (
+        'BBox should be a tuple of (min_point, max_point)'
+    )
 
     # Test the caching
     cached_emin, cached_emax, cached_edges = ef._get_edges_bbox(container)
@@ -109,9 +109,9 @@ def test_lij():
     point1 = Point(0, 0, 0)
     point2 = Point(1, 1, 1)
 
-    assert ef.l_ij(point1, point2, D=1.0) == 2 - np.sqrt(
-        3
-    ), 'Points are less than 2D apart, penalty should be 2 - sqrt(3)'
+    assert ef.l_ij(point1, point2, D=1.0) == 2 - np.sqrt(3), (
+        'Points are less than 2D apart, penalty should be 2 - sqrt(3)'
+    )
 
 
 def test_lij_far_apart():
@@ -170,9 +170,9 @@ def test_E_cube():
 
     assert container.contains(Point.from_array(points[0])), 'Point should be inside the cube'
     assert ef.dispersion_penalty(points, D) == 0, 'Single point should have zero dispersion penalty'
-    assert (
-        ef.container_penalty(points, D, container) > 0
-    ), 'Point near boundary should have positive container penalty'
+    assert ef.container_penalty(points, D, container) > 0, (
+        'Point near boundary should have positive container penalty'
+    )
     assert ef.E(points, D, container) > 1e-2
 
 

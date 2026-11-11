@@ -178,9 +178,11 @@ def main():
     print(f'runs from  : {args.output_root}/<container>/<metric>/p<p>/seed<k>.npz')
     print(f'rows       : {len(rows)}   unique keys: {len(seen)}')
     also = ' (or --cell-seeds)' if want else ''
-    print(f'cells      : {len(cells)}   complete at {args.seeds} seeds{also}: {len(cells) - len(short)}')
+    print(
+        f'cells      : {len(cells)}   complete at {args.seeds} seeds{also}: {len(cells) - len(short)}'
+    )
     if commit_i is not None:
-        print(f"commits    : {', '.join(sorted(commits))}")
+        print(f'commits    : {", ".join(sorted(commits))}')
     if short:
         sample = sorted(short.items())[:8]
         print(

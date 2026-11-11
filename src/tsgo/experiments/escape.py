@@ -218,10 +218,10 @@ def main() -> None:
             w.writerow(r)
             fh.flush()
             print(
-                f"[{i}/{len(todo)}] {r['container']} p={r['p']} seed={r['seed']}  "
-                f"D {float(r['D_before']):.5f} -> {float(r['D']):.5f}  "
-                f"starts={r['escape_starts']} {float(r['escape_wall_s']):.0f}s  "
-                f"feasible={r['feasible']}  [{(time.perf_counter() - t_start) / 60:.1f}m]",
+                f'[{i}/{len(todo)}] {r["container"]} p={r["p"]} seed={r["seed"]}  '
+                f'D {float(r["D_before"]):.5f} -> {float(r["D"]):.5f}  '
+                f'starts={r["escape_starts"]} {float(r["escape_wall_s"]):.0f}s  '
+                f'feasible={r["feasible"]}  [{(time.perf_counter() - t_start) / 60:.1f}m]',
                 flush=True,
             )
 

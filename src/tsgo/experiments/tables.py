@@ -143,7 +143,7 @@ def _plain_latex(spec: dict[str, object], label: str) -> str:
         r'    $p$ & $D_{\mathrm{Ours}}$ \\',
         r'    \hline',
     ]
-    out += [f"    {r['p']} & {_fmt(r['ours'])} \\\\" for r in spec['rows']]
+    out += [f'    {r["p"]} & {_fmt(r["ours"])} \\\\' for r in spec['rows']]
     out += [r'    \hline', r'  \end{tabular}', r'\end{table}']
     return '\n'.join(out) + '\n'
 
@@ -180,9 +180,9 @@ def to_latex(spec: dict[str, object], label: str) -> str:
     if has_budget:
         cap += (
             r" ``budget'' is the wall time the baseline actually received on "
-            r"that cell, as a multiple of our own mean run; the nominal "
-            f"grant is ${spec['nominal_scale']:.0f}\\times$, and a value "
-            r"below it means the per-run ceiling bound."
+            r'that cell, as a multiple of our own mean run; the nominal '
+            f'grant is ${spec["nominal_scale"]:.0f}\\times$, and a value '
+            r'below it means the per-run ceiling bound.'
         )
     if ref and ref.get('note'):
         # The note is prose from a data file, so it has to be escaped: a bare
@@ -237,11 +237,11 @@ def all_metrics_latex(sweep: pd.DataFrame, container: str, label: str, extended_
     if pub:
         head = [
             '$p$',
-            f"$D$, ${sym['EUCLIDEAN']}$",
-            f"{ref['label']}",
+            f'$D$, ${sym["EUCLIDEAN"]}$',
+            f'{ref["label"]}',
             r'$R_{\text{err}}$ (\%)',
-            f"$D$, ${sym['TAXICAB']}$",
-            f"$D$, ${sym['SUP_NORM']}$",
+            f'$D$, ${sym["TAXICAB"]}$',
+            f'$D$, ${sym["SUP_NORM"]}$',
         ]
         rows = []
         for p in ps:
@@ -252,10 +252,10 @@ def all_metrics_latex(sweep: pd.DataFrame, container: str, label: str, extended_
                 r = ['--', '--']
             rows.append([str(p), cell('EUCLIDEAN', p), *r, cell('TAXICAB', p), cell('SUP_NORM', p)])
         cap = (
-            f"{name}: best radius found in each metric, truncated to eight decimals. "
-            f"For ${sym['EUCLIDEAN']}$ the published value ({_tex_escape(ref['label'])}) and the "
-            r"relative difference $R_{\text{err}} = (D - D_{\mathrm{ref}})/D_{\mathrm{ref}}$ "
-            "are given; negative values are cells where the published value is ahead."
+            f'{name}: best radius found in each metric, truncated to eight decimals. '
+            f'For ${sym["EUCLIDEAN"]}$ the published value ({_tex_escape(ref["label"])}) and the '
+            r'relative difference $R_{\text{err}} = (D - D_{\mathrm{ref}})/D_{\mathrm{ref}}$ '
+            'are given; negative values are cells where the published value is ahead.'
         )
         if ref.get('note'):
             cap += ' ' + _tex_escape(ref['note'])
@@ -322,7 +322,7 @@ def main() -> None:
         with open(path, 'w') as fh:
             fh.write(to_latex(spec, label))
         n_ref = sum(1 for r in spec['rows'] if r['ref'] is not None)
-        print(f"[tables] {path}  ({len(spec['rows'])} rows, {n_ref} with a reference)")
+        print(f'[tables] {path}  ({len(spec["rows"])} rows, {n_ref} with a reference)')
 
 
 if __name__ == '__main__':

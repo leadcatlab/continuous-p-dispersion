@@ -38,8 +38,8 @@ from tsgo.experiments.plots import (
     INK_SOFT,
     LABEL,
     SURFACE,
-    save_figure,
     _style,
+    save_figure,
 )
 
 SOLVER_COLOR = {'tsgo': '#2a78d6', 'ipopt': '#eb6834', 'slsqp': '#1baf7a'}

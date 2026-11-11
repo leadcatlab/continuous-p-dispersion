@@ -199,8 +199,8 @@ def main() -> None:
     with open(a.out, 'w') as fh:
         json.dump(doc, fh, separators=(',', ':'))
     print(
-        f"{totals['done']}/{doc['total']} done, {totals['running']} running, "
-        f"{totals['failed']} failed; eta {doc['etaHours']} h -> {a.out}"
+        f'{totals["done"]}/{doc["total"]} done, {totals["running"]} running, '
+        f'{totals["failed"]} failed; eta {doc["etaHours"]} h -> {a.out}'
     )
 
 

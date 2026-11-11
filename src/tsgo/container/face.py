@@ -53,7 +53,7 @@ class Face:
         norm = np.linalg.norm(computed_normal)
         if norm == 0:
             raise ValueError(
-                f"face {getattr(self, 'description', '')!r}: all vertices are collinear"
+                f'face {getattr(self, "description", "")!r}: all vertices are collinear'
             )
         computed_normal = computed_normal / norm
         if np.dot(computed_normal, self.normal) < 0:

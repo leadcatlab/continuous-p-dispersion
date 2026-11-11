@@ -51,9 +51,9 @@ def test_point_just_outside_a_wall_keeps_that_wall_active(metric):
     assert min(abs(f.z + 0.5) for f in feet) < 1e-8, 'the floor must be among them'
 
     D = 0.25
-    assert (
-        ef.E(x[None, :], D, C, metric) > 0.9 * D * D
-    ), 'a ball sitting on the floor must not score as feasible'
+    assert ef.E(x[None, :], D, C, metric) > 0.9 * D * D, (
+        'a ball sitting on the floor must not score as feasible'
+    )
 
 
 def test_stored_false_feasible_run_is_now_caught():
@@ -136,6 +136,6 @@ def test_clearance_never_over_estimates_the_boundary_distance(name, metric):
         model = min(model, float(d.min()))
 
         upper = float(norm.value(S - x[None, :]).min())
-        assert model <= upper * (
-            1 + 1e-9
-        ), f'clearance {model} over-estimates the boundary distance {upper}'
+        assert model <= upper * (1 + 1e-9), (
+            f'clearance {model} over-estimates the boundary distance {upper}'
+        )

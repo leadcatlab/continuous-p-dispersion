@@ -31,8 +31,8 @@ from tsgo.experiments.plots import (
     INK,
     INK_SOFT,
     SURFACE,
-    save_figure,
     _style,
+    save_figure,
 )
 
 FIT = '#2a78d6'  # count fitted at radius 1

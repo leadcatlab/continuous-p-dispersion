@@ -120,8 +120,7 @@ def main() -> None:
     ap.add_argument(
         '--archive',
         default='',
-        help='keep a copy of each figure named for the run that '
-        'produced it; empty string disables',
+        help='keep a copy of each figure named for the run that produced it; empty string disables',
     )
     ap.add_argument(
         '--provenance',
@@ -299,8 +298,7 @@ def main() -> None:
                 (min(v['ratio']) for v in series.values() if v['ratio']), default=float('nan')
             )
             print(
-                f'[figures] {name}.png  <- comparison/{container}/{metric}, '
-                f'worst ratio {worst:.3f}'
+                f'[figures] {name}.png  <- comparison/{container}/{metric}, worst ratio {worst:.3f}'
             )
             built.append(name)
             continue
@@ -314,7 +312,7 @@ def main() -> None:
         dest = os.path.join(args.figures, f'{name}.png')
         if args.list:
             cs = sorted(set(have['container']))
-            print(f"  {name:<24} <- runtime/{metric}: {', '.join(cs)}")
+            print(f'  {name:<24} <- runtime/{metric}: {", ".join(cs)}')
             built.append(name)
             continue
         from tsgo.experiments.plots import runtime_chart
@@ -328,10 +326,7 @@ def main() -> None:
             'rendered_at': datetime.now().isoformat(timespec='seconds'),
         }
         cells = sum(len(v['p']) for v in series.values())
-        print(
-            f'[figures] {name}.png  <- runtime/{metric}, '
-            f'{len(series)} containers, {cells} cells'
-        )
+        print(f'[figures] {name}.png  <- runtime/{metric}, {len(series)} containers, {cells} cells')
         built.append(name)
 
     for name, why in missing:
@@ -339,8 +334,8 @@ def main() -> None:
 
     for name, spec in pending.items():
         print(
-            f"[figures] PENDING {name}: {spec.get('reason', 'not yet reproducible')} "
-            f"-- committed image retained",
+            f'[figures] PENDING {name}: {spec.get("reason", "not yet reproducible")} '
+            f'-- committed image retained',
             file=sys.stderr,
         )
 

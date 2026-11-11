@@ -144,11 +144,11 @@ def main() -> None:
                     'D_tsgo_std': f'{np.std(Ds, ddof=1) if len(Ds) > 1 else 0.0:.3e}',
                     't_tsgo_total_s': f'{np.sum(ts):.3f}',
                     't_tsgo_mean_s': f'{np.mean(ts):.3f}',
-                    'D_gurobi': f"{g['D_incumbent']:.10f}",
+                    'D_gurobi': f'{g["D_incumbent"]:.10f}',
                     'D_gurobi_bound': f'{bound:.10f}',
-                    'gurobi_gap': f"{g['gap']:.3e}",
+                    'gurobi_gap': f'{g["gap"]:.3e}',
                     'gurobi_status': g['status'],
-                    't_gurobi_s': f"{g['wall_s']:.3f}",
+                    't_gurobi_s': f'{g["wall_s"]:.3f}',
                     'rel_err_vs_bound': f'{rel:.6f}',
                     'certified_optimal': certified,
                     'git_commit': commit,
@@ -157,9 +157,9 @@ def main() -> None:
                 w.writerow(row)
                 fh.flush()
                 print(
-                    f"{cname:<12} p={p:<3} TSGO {D_best:.8f} ({np.sum(ts):6.1f}s)   "
-                    f"Gurobi {g['D_incumbent']:.8f} bound {bound:.8f} "
-                    f"[{g['status']}, {g['wall_s']:.1f}s]   gap to bound {rel:.4f}%",
+                    f'{cname:<12} p={p:<3} TSGO {D_best:.8f} ({np.sum(ts):6.1f}s)   '
+                    f'Gurobi {g["D_incumbent"]:.8f} bound {bound:.8f} '
+                    f'[{g["status"]}, {g["wall_s"]:.1f}s]   gap to bound {rel:.4f}%',
                     flush=True,
                 )
     print(f'-> {args.out}')
