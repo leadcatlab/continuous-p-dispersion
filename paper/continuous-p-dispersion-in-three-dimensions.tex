@@ -157,7 +157,7 @@ straightforward to model within this framework. We build on the work
 from \citet{lai2024} by defining a feasibility-residual function to
 approximately solve the CpDP with boundary constraints for convex and
 non-convex polyhedral containers in $\R^3$. A feasibility-residual
-function $E(x) = 0$ if and only if $x$ is feasible solution, and
+function satisfies $E(x) = 0$ if and only if $x$ is a feasible solution, and
 $E(x) > 0$ otherwise. To minimize this function, we utilize the Tabu
 Search heuristic \cite{glover1997} which improves upon standard local
 searches by marking previously visited configurations as ``tabu'' to
@@ -207,12 +207,12 @@ The Continuous $p$-Dispersion Problem (CpDP) asks to place $p$
 points, i.e., \textit{sites}, within a compact subset, i.e., a
 \textit{container}, in $\R^n$ so that the minimum pairwise distance
 between the sites is maximized \citep{drezner1995}. A variation on
-the CpDP includes ``boundary constraints'' which asks that the
+the CpDP includes ``boundary constraints'', which ask that the
 minimum distance between any two points, as well as the points and
 the boundary of this compact set be maximized \citep{baurfekete2001}.
 Most existing algorithms that solve the CpDP do so in the setting of
 bounded, polygonal containers in two dimensions, possibly with holes.
-In the three dimensions, the natural extension is to consider bounded
+In three dimensions, the natural extension is to consider bounded
 containers which are polyhedra with polyhedral holes. A
 \textit{polyhedron} is a closed and bounded solid $C$ whose boundary
 $\partial C$ can be covered by finitely many planes \cite{berg2008}.
@@ -223,7 +223,7 @@ We denote $C = (V, \mathcal{E}, \mathcal{F})$ where $V$ is the set of vertices
 of $C$, $\mathcal{E}$ is the set of edges of $C$ and $\mathcal{F}$ is the set of
 faces of $C$; the script letters distinguish these sets from the energy $E$ of
 Equation~\ref{eq:E} and from an individual face $F$. We
-require that the interior of a polyhedral container be non-empty,
+require that the interior of a polyhedral container be nonempty,
 therefore providing the polyhedral container with a consistent
 orientation with inward normals \citep{munkres1991}. We write $x \in
 C$ for an element $x \in \R^3$ inside the polyhedron but outside its
@@ -315,7 +315,7 @@ crucial property of this formulation is that $E_D(X) = 0$ if and only
 if $(X, D)$ is a feasible solution. Because $E_D$ is
 almost-everywhere differentiable, it allows for the application of
 efficient gradient-based optimization methods, such as the
-Limited-memory Broyden-Fletcher-Goldfarb-Shanno algorithm with bound constraints (L-BFGS-B)
+limited-memory Broyden--Fletcher--Goldfarb--Shanno algorithm with bound constraints (L-BFGS-B)
 \citep{fletcher1987, byrd1995}. This approach proved exceptionally powerful,
 enabling the rapid convergence to local optima from random initial
 configurations.
@@ -325,8 +325,8 @@ dimensions introduces several significant challenges. While the
 dispersion penalty term is easy enough to compute in any finite
 number of dimensions, computing the boundary penalty term in three
 dimensions becomes computationally complex. First, \citet{lai2024}
-defines their boundary constraint term in a manner which heavily
-relies on planar geometry where counter-clockwise traversal of closed
+define their boundary constraint term in a manner which heavily
+relies on planar geometry where counterclockwise traversal of closed
 polygonal loops provides a canonical way to distinguish the interior
 from the exterior. We generalize boundary orientation of polygonal
 containers from two-dimensional vertex traversal to three dimensions
@@ -470,8 +470,8 @@ minimum of such an envelope over $[0, 1]$ is attained at an endpoint or at a
 kink, and every kink is a crossing of two of the lines, so the exact minimizer
 lies in the finite set
 \begin{equation*}
-  \set{0, 1} \cup \set{\tfrac{\alpha_j - \alpha_i}{\beta_i - \beta_j}
-  : i < j} \cap [0, 1],
+  \paren{\set{0, 1} \cup \set{\tfrac{\alpha_j - \alpha_i}{\beta_i - \beta_j}
+  : i < j, \ \beta_i \ne \beta_j}} \cap [0, 1],
 \end{equation*}
 and is obtained by evaluation rather than by search.
 
@@ -510,10 +510,11 @@ Euclidean intuition fails on both. First, the orthogonal projection of $x$ onto
 $P$ lies at distance $\abs{h} \norm{N} / \norm{N}_2^2$ from $x$. Since
 $\ang{N, N} \le \norm{N} \, \norm{N}_*$, this is never less than the distance of
 Equation~\ref{eq:plane}, and it equals it only when $\norm{N}_2^2 = \norm{N} \,
-\norm{N}_*$, as for the axis-aligned walls of the cube under $\ell_1$ or
-$\ell_\infty$. Using the projection in place of Equation~\ref{eq:plane}
-therefore over-estimates the distance from a dispersion point to every other
-wall. Second,
+\norm{N}_*$. Under $\ell_1$ or $\ell_\infty$ this holds exactly when all
+nonzero components of $N$ have the same absolute value, as for the
+axis-aligned walls of the cube. Using the projection in place of
+Equation~\ref{eq:plane} therefore over-estimates the distance from a
+dispersion point to any wall where equality fails. Second,
 the nearest point need not be unique: the set of optimal directions
 \begin{equation*}
   U^* = \set{u : \norm{u} \le 1, \ \ang{N, u} = \norm{N}_*}
@@ -525,7 +526,7 @@ square rather than forming a single foot. All of them lie at the same distance
 from $x$, so Equation~\ref{eq:plane} is unambiguous; but they lie at different
 places on $P$, and the next definition turns on \emph{where} they lie.
 
-Second, before we define the boundary constraint term, we need two
+Before we define the boundary constraint term, we need two
 auxiliary definitions which are three-dimensional analogues of the
 definitions presented by \citet{lai2024}:
 
@@ -746,7 +747,7 @@ C$, where $O_i$ switches branches. Each is cut out by finitely many equations,
 so both are finite unions of sets of codimension one and therefore have
 Lebesgue measure zero. Hence $E$ is differentiable almost everywhere on
 $(\R^3)^p \times \R_{>0}$, which is what permits the use of gradient-based
-solvers such as L-BFGS \citep{fletcher1987}.
+solvers such as L-BFGS-B \citep{fletcher1987, byrd1995}.
 
 We note that $E$ is not continuous everywhere, and that both of its
 discontinuities come from the same source: under a sum, a single geometric
@@ -822,7 +823,7 @@ constraints frequently trap standard optimization tools in poor local
 optima \citep{dai2021}. As shown in
 Fig.~\ref{fig:tabu_search_overview}, within each iteration, the Tabu
 Search procedure acts as a feasibility solver by minimizing the
-feasibility-residual function~\ref{eq:E} to find a valid
+feasibility-residual function of Equation~\ref{eq:E} to find a valid
 configuration given a fixed minimum distance $D$. Once a feasible
 configuration is found, a distance adjustment procedure applies the
 Sequential Unconstrained Minimization Technique (SUMT)
@@ -848,7 +849,7 @@ framework used by \citet{lai2024}. Tabu Search is a combinatorial
 heuristic designed to escape poor local configurations (high-energy)
 and move the system toward a better (lower-energy) arrangement of
 dispersion points inside the container. The core principle behind the
-Tabu Search is the \textit{tabu list} which maintains a short term
+Tabu Search is the \textit{tabu list} which maintains a short-term
 list of recent moves that are temporarily forbidden in subsequent
 iterations \citep{glover1997}. The tabu list ensures the algorithm
 does not fall into cycles of re-evaluating configurations.
@@ -933,7 +934,7 @@ configuration to our local optimization subroutine,
 \textsc{LocalOpt}. \textsc{LocalOpt} serves as the mandatory bridge
 between the discrete combinatorial search and the continuous solution
 space. It utilizes a gradient-based solver, specifically the
-Limited-memory Broyden-Fletcher-Goldfarb-Shanno algorithm with bound constraints (L-BFGS-B)
+limited-memory Broyden--Fletcher--Goldfarb--Shanno algorithm with bound constraints (L-BFGS-B)
 \citep{fletcher1987, byrd1995}, to drive the rough candidate configuration
 toward the nearest smooth minimum of the energy function.
 Consequently, the Tabu Search algorithm never compares unrefined
@@ -970,7 +971,6 @@ produced. Placing it outside the loop would leave each tabu iteration to
 terminate in its own basin with no means of leaving it.
 
 \begin{algorithm}[H]
-  %\SingleSpacedXI % <--- INFORMS-specific single spacing command
   \caption{Tabu Search}
   \begin{algorithmic}[1]
     \Require $C$ (Container), $X$ (configuration), $D \in \R_{> 0}$,
@@ -1079,7 +1079,6 @@ the configuration $X$ and the allowed minimum distance $D$ through
 local optimization to find a local optimum of the original CpDP.
 
 \begin{algorithm}[H]
-  %\SingleSpacedXI % <--- INFORMS-specific single spacing command
   \caption{Adjust Distance}
   \begin{algorithmic}[1]
     \Require $X_0$ (configuration), $D_0 \in \R_{> 0}$, $K \in \Z_{> 0}$,
@@ -1178,7 +1177,6 @@ particularly crucial for non-convex containers where the feasible
 region may be disconnected.
 
 \begin{algorithm}[H]
-  %\SingleSpacedXI % <--- INFORMS-specific single spacing command
   \caption{Global Optimization}
   \begin{algorithmic}[1]
     \Require $p \in \mathbb{N}$, $C$, $D_{\text{init}} \in \R_{>0}$, $N$ (most
@@ -1225,7 +1223,7 @@ search operators utilized by \citet{lai2024}. An initial
 configuration is generated via \textsc{RandomSolution}, followed by
 \textsc{TabuSearch} to locate the nearest local minimum. We then
 employ a strict feasibility check: only if the feasibility-residual
-value $E_D(X)$ for the configuration X falls below the tolerance
+value $E_D(X)$ for the configuration $X$ falls below the tolerance
 threshold $\epsilon$ does the algorithm proceed to
 \textsc{AdjustDistance}. This ensures that computational resources in
 the expensive refinement phase are reserved solely for valid,
@@ -1393,7 +1391,7 @@ sup norm, with consequences described below.
 The cap is not a refinement but a necessity. A volume-based estimate knows
 nothing about shape, and on containers whose volume is distributed into thin
 or branching regions it over-estimates badly: by $1.5\times$ on the H-box
-and $2.1\times$ on the cage. Since no $D$ above the inradius is feasible at
+and $1.9\times$ on the cage. Since no $D$ above the inradius is feasible at
 any $p$, an uncapped estimate starts the search outside the feasible range of
 radii entirely, which is the regime in which $D = 0$ becomes an attracting
 stationary point of $\Phi_\mu$; the cap and the bound $B(X)$ of
@@ -1502,8 +1500,9 @@ cubes of side $\tfrac12$ tile the unit cube, and the $p = 8$ radius
 $\tfrac14$ is exactly $\rho_{\text{init}}^{-1/3} \hat D$.
 The lower bound is what the covering argument can certify, not what a search
 reaches: a start at $\underline{D}(p)$ is guaranteed to admit a feasible
-configuration, but lies at or below the bottom rung, where the sup-norm optima
-of the previous paragraph are missed. On the non-convex containers the bound
+configuration, but lies below the ladder's second rung ($0.77 \hat D$), among
+the low starts that missed the sup-norm optimum in the development runs
+described above. On the non-convex containers the bound
 needs a lower estimate of $\operatorname{volume}(C_{-D})$, which a decomposition
 into convex pieces with disjoint interiors supplies, since their inner bodies
 are disjoint subsets of $C_{-D}$; we have not evaluated it there.
@@ -1529,7 +1528,7 @@ A_{err}/D_{\mathrm{Best}} \times 100\%$).
 Table~\ref{tab:cube} shows our radius matching the published value at every
 $p \le 40$, the proven optima for $p \le 10$ included, to within
 $2.3 \times 10^{-8}$ (relative), which is the rounding of the published
-values. At $p = 50$ and $p = 64$ it is short by $5.6 \times 10^{-7}$ and
+values. At $p = 50$ and $p = 64$ it is short by $5.8 \times 10^{-7}$ and
 $6.2 \times 10^{-6}$, and at $p = 100$ it matches the record.
 Fig.~\ref{fig:cube_comparison} shows the same comparison across the whole range.
 The comparison with general-purpose solvers is in Section~\ref{sec:baselines}.
@@ -1709,7 +1708,7 @@ we report the match, not optimality.
   \end{subfigure}
   \caption{Best configurations of $p = 35$ points in the unit tetrahedron
     under the $\ell_2$, $\ell_1$ and $\ell_\infty$ metrics. Under $\ell_2$ the
-    spheres form the five-layer tetrahedral pile of Eq.~\ref{eq:tetra_pile}.
+    spheres form the five-layer tetrahedral pile of Equation~\ref{eq:tetra_pile}.
     Color gives height.}
   \label{fig:tetra_35}
 \end{figure}
@@ -1763,7 +1762,7 @@ Table~\ref{tab:h_box}.
 
 \subsection{Star-Shaped Polyhedron}
 
-The star-shaped polyhedron draws inspiration from the Kepler-Poinsot
+The star-shaped polyhedron draws inspiration from the Kepler--Poinsot
 polyhedron \citep{coxeter1989} and serves as a rigorous test case for
 non-convex optimization due to its distinctive central convex core
 connected to six narrow, tapering spikes. This originally developed
@@ -1824,7 +1823,7 @@ CpDP on such a geometry is therefore relevant for optimizing the
 layout of sensors, cooling pipes, or modular components within
 densely packed electronic enclosures. We evaluate our algorithm using
 both the Euclidean metric ($\ell_2$), representing standard spherical
-component packing, and the sup-norm ($\ell_\infty$), which is
+component packing, and the sup norm ($\ell_\infty$), which is
 critical for modeling the placement of cubic or box-shaped components
 often found in hardware design.
 
@@ -1840,8 +1839,7 @@ Euclidean and $\ell_\infty$ metrics.
 The cage has a trap of its own, a radius of exactly $D = \tfrac12$.
 Eleven of the 900 cage runs stop there, all under $\ell_\infty$ at $p = 100$, so under $\ell_\infty$ the escape phase
 does not release it. None stops there under $\ell_2$, where the 20 runs at
-$p = 100$ reach $0.718$ to $0.741$; that cell is limited by time rather than
-by the trap, since its runs use their full time.
+$p = 100$ reach $0.718$ to $0.741$ and 12 of them reach the 30-minute limit.
 
 \begin{figure}[htbp]
   \centering
@@ -2129,8 +2127,8 @@ then up to 15 for the escape phase, each stopping a start under way.
 them at $p \ge 50$, so the mean times there measure the limits as much as the
 algorithm, and the curves of the cube, H-box and star flatten as they reach
 them, by $p = 50$, $50$ and $30$. We therefore fit $\log t$ against
-$\log p$ only over the cells below the limits, those in which fewer than
-$10\%$ of runs pass 30 minutes. This gives exponents of $1.15$ for the
+$\log p$ only over the cells with $p \ge 2$ below the limits, those in which
+fewer than $10\%$ of runs pass 30 minutes. This gives exponents of $1.15$ for the
 cube ($p \le 40$, $R^2 = 0.94$), $1.78$ for the H-box ($p \le 30$, except $20$, $R^2 = 0.97$),
 $1.30$ for the star ($p \le 10$, $R^2 = 0.97$), $1.71$ for the ribbed cage
 ($p \le 9$, $R^2 = 0.98$) and $0.94$ for the tetrahedron (every $p$ except $40$,
