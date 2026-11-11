@@ -2,7 +2,8 @@
 #
 #   make figures   rebuild generated figures from supplement/tables/sweep.csv
 #   make tables    rebuild the summary table
-#   make fmt       format the manuscript with tex-fmt (skipped where it is not installed)
+#   make fmt       format the manuscript: tex-fmt, then refill prose paragraphs to
+#                  80 columns (skipped where tex-fmt is not installed)
 #   make paper     tables + figures + fmt + build the PDF (before a sweep has
 #                  finished: committed figures, placeholder tables)
 #   make watch     continuous rebuild on save
@@ -60,10 +61,15 @@ tables:
 # tex-fmt rather than latexindent: MacTeX ships latexindent's script but not
 # its CPAN dependencies (File::HomeDir, Log::Log4perl, Log::Dispatch,
 # Unicode::GCString), and one of those needs a compiler. tex-fmt is a single
-# binary. Configured not to rewrap prose, so diffs stay reviewable.
+# binary. It indents and breaks long lines but never joins short ones, so
+# texfill.py then refills each prose paragraph to an even 80 columns (only
+# whitespace changes) and a last tex-fmt pass checks the indentation. Run
+# `make fmt` as its own commit: refilling moves whole paragraphs in a diff.
 fmt:
 	@if command -v tex-fmt >/dev/null; then \
-	  cd $(PAPERDIR) && tex-fmt --config tex-fmt.toml $(PAPER).tex; \
+	  cd $(PAPERDIR) && tex-fmt --config tex-fmt.toml $(PAPER).tex && \
+	  ../$(PY)/python texfill.py $(PAPER).tex && \
+	  tex-fmt --config tex-fmt.toml $(PAPER).tex; \
 	else echo "fmt: tex-fmt not installed here; manuscript left as is"; fi
 
 paper: tables figures fmt
