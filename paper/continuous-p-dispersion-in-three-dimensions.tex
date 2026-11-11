@@ -355,9 +355,11 @@ configuration, and its cost is linear in the number of triangles. It is
 ambiguous only when $x$ lies on the boundary of some tetrahedron, a set of
 measure zero. Such a point is counted again from a second origin, and one
 still ambiguous, which can happen only on the plane of a face, is decided by
-ray casting \citep{horvat2012}. On every container in this paper the test
-agrees with a majority vote of eight ray casts on random and near-wall points,
-and it is 10 to 120 times faster than that vote.
+the test it replaced: a parity count of face crossings along rays in eight
+random directions, with the majority vote as the verdict
+\citep{nooruddin2003}. On every container in this paper the two tests agree
+on random and near-wall points, and the signed-tetrahedra test is 10 to 120
+times faster.
 
 A point pressed against a wall, the regime the dispersion points occupy at
 convergence, is delicate for any inclusion test, so we do not leave it to one:
