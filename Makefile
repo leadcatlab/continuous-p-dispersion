@@ -6,6 +6,8 @@
 #                  80 columns (skipped where tex-fmt is not installed)
 #   make paper     tables + figures + fmt + build the PDF (before a sweep has
 #                  finished: committed figures, placeholder tables)
+#   make submission  flat LaTeX source zip for Editorial Manager, test-compiled
+#                  (paper/submission.zip; build the PDF and check it first)
 #   make watch     continuous rebuild on save
 #   make clean     remove LaTeX build artifacts
 #   make format    format the Python code and fix what ruff can (ruff.toml)
@@ -28,7 +30,7 @@ ifeq ($(shell command -v latexmk 2>/dev/null),)
   export PATH := $(if $(wildcard $(TEXLIVE)/latexmk),$(TEXLIVE):)$(PATH)
 endif
 
-.PHONY: all paper figures tables fmt watch clean distclean check help format lint
+.PHONY: all paper figures tables fmt submission watch clean distclean check help format lint
 
 help:
 	@grep -E '^#   make' $(MAKEFILE_LIST) | sed 's/^#   /  /'
@@ -75,6 +77,14 @@ fmt:
 paper: tables figures fmt
 	cd $(PAPERDIR) && $(LATEXMK) $(PAPER).tex
 	@echo "built $(PAPERDIR)/$(PAPER).pdf"
+
+# Editorial Manager rejects LaTeX uploads with subfolders, so this flattens the
+# figure and table paths into paper/submission/, test-compiles a copy there,
+# and zips the sources. Tables come from supplement/tables/latex/ and must
+# match paper/generated/. Upload the highlights (paper/highlights.txt) as
+# their own item, not in the zip.
+submission:
+	cd $(PAPERDIR) && ../$(PY)/python submission.py --paper $(PAPER)
 
 # Rebuild on save. Leaves figures alone; run `make figures` when results change.
 watch:
