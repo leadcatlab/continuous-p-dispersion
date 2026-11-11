@@ -1,6 +1,6 @@
 # Continuous p-dispersion: cluster results suite
 
-Solver commit `baaa92c`, every run with the escape phase on (factor 1.02, 15-min phase limit), one core per run on IllinoisComputes (AMD EPYC 7713). Built by `slurm/submit_all.sh`; regenerate this page with `python slurm/make_report.py`.
+Solver commit `0312aab`, every run with the escape phase on (factor 1.02, 15-min phase limit), one core per run on IllinoisComputes (AMD EPYC 7713). Built by `slurm/submit_all.sh`; regenerate this page with `python slurm/make_report.py`.
 "Previous" is each cell's best radius as published before this suite (commit `f76300c`, Apple M2 Pro, escape phase off). `D` is the radius throughout.
 
 ## 1. Runs

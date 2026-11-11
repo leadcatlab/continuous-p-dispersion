@@ -9,6 +9,8 @@ python verify_packing.py configurations/stoyan-yaskov-8/euclidean/p80.csv # one
 
 All results come from one suite: solver commit in `COMMIT`, every run with the escape phase on, one core per run on the campus cluster. `REPORT.md` summarizes it on one page.
 
+The runs were made on the cluster at commit `baaa92c`, which was squashed into `f35f02c` when it was merged and so is not in the public history. The per-run records (`runs/`, `tables/`, `configurations/`, `figures/PROVENANCE.json`) keep that commit, as they were written. Since `f35f02c` the solver and container code has changed only in formatting, so the commit in `COMMIT` runs the same solver.
+
 ## Layout
 
 | path | what |
