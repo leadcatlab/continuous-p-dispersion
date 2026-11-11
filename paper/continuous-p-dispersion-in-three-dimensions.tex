@@ -679,12 +679,12 @@ where $D > 0$ is fixed and $X = (c_1, \dots, c_p) \in (\R^3)^p$ by
 \end{equation}
 
 \begin{lemma}\label{lem:zero}
-  \textit{For fixed $D > 0$, $O_i = 0$ if and
-    only if $c_i \in C$ and $d(c_i, \partial C) \ge D$. Consequently
-    $E(X, D) = 0$
-  if and only if $(X, D)$ is feasible.}
+  For fixed $D > 0$, $O_i = 0$ if and only if $c_i \in C$ and $d(c_i, \partial
+  C) \ge D$. Consequently $E(X, D) = 0$ if and only if $(X, D)$ is feasible.
+\end{lemma}
 
-  \textit{Proof.} If $c_i \notin C$ then $O_i \ge D^2 > 0$. Suppose $c_i \in
+\begin{proof}
+  If $c_i \notin C$ then $O_i \ge D^2 > 0$. Suppose $c_i \in
   C$. Every term of the interior branch vanishes exactly when $d(c_i, v) \ge D$
   for all $v \in V \cup \mathcal{E} \cup H^i$, so it suffices to prove the
   covering identity
@@ -718,8 +718,7 @@ where $D > 0$ is fixed and $X = (c_1, \dots, c_p) \in (\R^3)^p$ by
   The first term of Equation~\ref{eq:E} vanishes precisely when $d(c_i, c_j)
   \ge 2D$ for all $i \ne j$, which is constraint (\textit{ii}). Both terms are
   non-negative, so their sum vanishes only when each term does.
-  \hfill $\square$
-\end{lemma}
+\end{proof}
 
 The first term of Equation~\ref{eq:E} deals with the dispersion
 constraint (\textit{ii}) of the CpDP, and the second term with the containment
@@ -1326,22 +1325,29 @@ are what put Tabu Search to work. From a start at or below $\hat D$ (Equation~\r
 \textsc{LocalOpt} usually reaches $E_D < \epsilon$ on its own, and Tabu Search
 then performs no iterations at all; a restart at the best radius so far rarely
 does, so there the search has to relocate points to find a feasible
-configuration. The three settings justified below, the restarts, their
-stopping rule and $Q$, were chosen in development experiments on an earlier
-version of the solver, without the escape phase; we report those experiments
-as the basis for the choices, not as results of the final code. In a pilot on
+configuration. The number of restarts, the
+stopping rule, and $Q$ were chosen in development experiments on an earlier
+version of the solver, without the escape phase. We report those experiments
+as the basis for the choices, not as results of the final code. In initial experiments on
 12 cells spanning all five containers and three metrics, with $25$ starts per
-cell either way, four restarts per run (the design then in use) found a larger
+cell, four restarts per run (the design then in use) found a larger
 radius than one start per run in six cells, by $1.0\%$ to $6.7\%$, was behind in none by more than $1.2 \times 10^{-5}$ (relative), and
-used a third of the CPU time. How many restarts to make we settled by
-replaying 160 long runs (cube, tetrahedron, H-box and star; $\ell_2$ and
+used a third of the CPU time. We settled the number of restarts by replaying 160 runs (cube, tetrahedron, H-box and star; $\ell_2$ and
 $\ell_1$; $p = 10$ to $100$; capped at 41 starts or 30 minutes) against
-stopping rules constant in $p$ and growing as $\ln p$, $\sqrt p$ and $p$:
+stopping rules constant in $p$ and growing as $\ln p$, $\sqrt p$ and $p$.
 $\lceil 3 \ln p \rceil$ used $81\%$ of the capped CPU time, lost $0.003\%$ of
 the radius on average, and lost more than $0.01\%$ in one cell of 40. At large
-$p$ the time limit binds first (Section~\ref{sec:runtime}). $Q$ grows with $p$
-because, at a fixed budget, $Q = 5$ beat $3$ and $6$ on the cube at $p = 100$,
-and $Q = 4$ beat $3$ in 12 of 24 paired runs, and lost in 5, on the tetrahedron and H-box at $p = 60$.
+$p$ the time limit binds first (Section~\ref{sec:runtime}).
+
+$Q$ is the number of high-energy points and low-energy vacancy sites that
+Tabu Search pairs at each iteration. As $p$ grows there are more of both to
+choose from, so a fixed $Q$ examines a shrinking share of them. We therefore
+let $Q$ grow with $p$, but only as $\ln p$, so that the $Q^2$ local
+optimizations of an iteration grow as $\ln^2 p$
+(Section~\ref{sec:complexity}). Development runs at a fixed budget supported
+this: on the cube at $p = 100$ the rule's $Q = 5$ did better than both the
+constant $3$ and the larger $6$, and at $p = 60$ its $Q = 4$ was ahead of $3$
+more often than behind.
 
 \textsc{Polish} tightens the run's best configuration by sequential linear
 programming. Every distance in the constraints is a convex function of the
@@ -1407,12 +1413,7 @@ infeasible branch: $D$ is snapped to $B(X)$ for whatever configuration it is
 then holding, and the search continues from that configuration rather than
 from a fresh one. Starting below it, $\Phi_\mu$ drives $D$ upward, but Tabu
 Search has by then settled the points into an arrangement sized for the
-smaller radius, and that arrangement can confine the climb. In development
-runs of an earlier version of the solver, both failures occurred on the unit
-cube under the sup norm: a high start ended at $0.2299$ rather than the
-optimum $\tfrac14$ at $p = 2$, and five of 12 low starts ended at $\tfrac18$
-rather than $\tfrac16$ at $p = 20$. With the ladder and the escape phase,
-all 20 seeds reach the optimum in both cells.
+smaller radius, and that arrangement can confine the climb.
 
 We therefore treat the initial radius as a second multi-start dimension. A
 cell's seeds are distributed over a geometric ladder of $M$ rungs spanning a
@@ -1502,9 +1503,9 @@ cubes of side $\tfrac12$ tile the unit cube, and the $p = 8$ radius
 $\tfrac14$ is exactly $\rho_{\text{init}}^{-1/3} \hat D$.
 The lower bound is what the covering argument can certify, not what a search
 reaches: a start at $\underline{D}(p)$ is guaranteed to admit a feasible
-configuration, but lies below the ladder's second rung ($0.77 \hat D$), among
-the low starts that missed the sup-norm optimum in the development runs
-described above. On the non-convex containers the bound
+configuration, but lies below the ladder's second rung ($0.77 \hat D$), low
+enough that the search risks settling into an arrangement sized for too small
+a radius. On the non-convex containers the bound
 needs a lower estimate of $\operatorname{volume}(C_{-D})$, which a decomposition
 into convex pieces with disjoint interiors supplies, since their inner bodies
 are disjoint subsets of $C_{-D}$; we have not evaluated it there.
@@ -1742,12 +1743,10 @@ $(V / (\kappa_\infty p))^{1/3} = (7 / (8 \cdot 56))^{1/3} = \tfrac14$, and is
 optimal. All 20 of our runs find it, at $\tfrac14$ to within the relative
 $10^{-9}$ by which every reported radius is shrunk (Fig.~\ref{fig:h_box_sup_56}).
 The tiling needs every cube on the grid at once. The monotone basin hopping
-inside Tabu Search cannot make that rearrangement, and a restart at a smaller
-radius such as $\tfrac3{14}$ or $\tfrac16$ is feasible at once, so Tabu Search
-alone leaves it unmoved: in 60 runs of an earlier version of the solver,
-without the escape phase, none found the tiling; 24 settled on
-$D = \tfrac3{14}$ and 36 on $D = \tfrac16$, at $86\%$ and $67\%$ of the
-optimum. The escape phase aims above the best radius, where such a restart is
+inside Tabu Search cannot make that rearrangement. Once a run's best radius
+is a smaller one, such as $\tfrac3{14}$ or $\tfrac16$, a restart at that
+radius can be feasible from the start, and Tabu Search then never moves its
+points. The escape phase aims above the best radius, where such a start is
 infeasible and has to move. This cell is outside the grid of
 Table~\ref{tab:h_box}.
 
@@ -1886,8 +1885,8 @@ rounding of the printed coordinates.
   \caption{Spheres of radius one packed into the eight domains of
     \citet{stoyan2013}: their count, ours, our best radius at their count,
     and the time at which one of our runs first held radius one at their
-    count, against their reported time. $^\dagger$Reached only with further seeds of the
-    same solver; the 10 seeds of the main runs fit 92, 87 and 80 in examples 2, 3 and 8.}
+    count, against their reported time. $^\dagger$With the further seeds described in the
+    text; the 10 seeds of the main runs fit 92, 87 and 80 in examples 2, 3 and 8.}
   \label{tab:stoyan}
   \centering
   \small
@@ -1910,16 +1909,13 @@ rounding of the printed coordinates.
 \end{table}
 
 We fit more spheres than published in seven of the eight domains, by one to
-eight, and as many in the fifth (Table~\ref{tab:stoyan},
-Fig.~\ref{fig:stoyan}). At their published counts, 71 of our 80 runs reach
+eight (Table~\ref{tab:stoyan}, Fig.~\ref{fig:stoyan}). At their published counts, 71 of our 80 runs reach
 radius one, and the first does so within 7 minutes in every domain.
-In three examples the 10 seeds of the main runs fall short of the count we
-report, which further seeds of the same solver reached: 95 in example 2 (3 of
-32 further seeds; main runs 92), 88 in example 3 (1 of 32; main runs 87) and 81
-in example 8 (3 of 64; main runs 80). We report these as an extension of the
-experiment. A further 32 seeds at 82 spheres in example 8 did not fit (best
-radius $0.99906$). Their
-times were measured on an AMD Athlon 64 X2 6000+ in Delphi. Ours is the
+In examples 2, 3 and 8 the main runs came within $0.1\%$ of radius one at a
+higher count, which happened in no other domain. We ran further seeds of the
+same solver there, 32 in examples 2 and 3 and 64 in example 8, and they fit
+95, 88 and 81 spheres. The times of \citet{stoyan2013} were measured on an
+AMD Athlon 64 X2 6000+ in Delphi. Ours is the
 earliest of 10 independent runs, each on its own core, to reach radius one,
 so the time columns indicate scale rather than a like-for-like comparison.
 Fig.~\ref{fig:stoyan_packings} shows each domain at our count. The gain is
@@ -1956,14 +1952,10 @@ one end and $1$ at the other. A sphere that ends in that wall, against the end
 face, the bottom and the sloping floor of the hole, can have radius at most
 $0.93364$, the inradius of that wedge. Once a run holds a sphere there, a
 restart at the best radius found so far is already feasible, and Tabu Search,
-which runs only until the target radius is feasible, never has to move it; in
-an earlier version of the solver, without the escape phase, eight of the 10
-seeds at every count stopped at exactly this radius.
+which runs only until the target radius is feasible, never has to move it.
 
 At the escape phase's target a sphere in the wall is infeasible and must
-move. No run of example 6 ends at this radius: the median radius at counts
-30 to 34 is $0.978$ to $0.999$, four seeds fit 30 spheres and two fit 31, and
-none fits 32. Our count of 31 is unchanged.
+move, and no run of example 6 ends at this radius.
 
 The same domains under $\ell_1$ and $\ell_\infty$ have no published
 counterpart. Our radii move in the direction the volumes of the balls suggest,
