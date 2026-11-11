@@ -760,7 +760,7 @@ strictly inside the container. In a convex box under $\ell_2$ no such event
 occurs, since every interior point's foot lies on its face. At the wall, the interior branch tends to the sum of
 $(D - d_f)^2$ over every feature within $D$, which exceeds the $D^2$ the
 exterior branch takes there whenever more than one feature is in range, as it always is near
-an edge or a corner. Crossing the cube's floor $0.04$ from an edge, $E$
+an edge or a corner. At $D = 0.15$, crossing the cube's floor $0.04$ from an edge, $E$
 steps from $0.0467$ to $0.0225$. This
 does not affect almost-everywhere differentiability, since the argument above is
 local and applies on the open set where the active sets are constant, but
@@ -1979,9 +1979,10 @@ A specialized method should be tested against general-purpose solvers handed
 the same problem. We compare under a protocol written before the first run of
 this comparison, which commits us to reporting every cell, including those we
 lose. Its deviations are listed, each dated, with the protocol in the
-repository. The last of them was made after earlier runs of the comparison:
-our algorithm includes the escape phase, the budgets come from the main
-experiment reported here, and every trial ran on the same cluster.
+repository. The last two were made after earlier runs of the comparison:
+our algorithm includes the escape phase, every trial ran on the same cluster,
+and the budgets come from an earlier cluster run of the main experiment, made
+before the exact inclusion test was adopted.
 
 \paragraph{Solvers and formulation} The baselines are IPOPT 3.14, an
 interior-point method \citep{wachter2006}, and SLSQP, sequential quadratic
@@ -2003,7 +2004,8 @@ our energy model or search.
 $p \in \set{10, 20, 40}$. Each solver makes 10 trials per cell, one core each,
 and every trial on a cell receives the same wall time,
 $\max \set{60\,\text{s},\ 2 t_{\text{med}}}$, where $t_{\text{med}}$ is our
-algorithm's median run time on that cell in the main experiment. Our algorithm runs as in the main experiment and then continues its escape
+algorithm's median run time on that cell in that earlier run; every budget is
+within $15\%$ of what the medians of the run reported here would give. Our algorithm runs as in the main experiment and then continues its escape
 phase until the budget ends. A start or local solve still running when the
 budget ends does not count. Every radius,
 for every solver, is scored as certified by the bound $B(X)$ of
